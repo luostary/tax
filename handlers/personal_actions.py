@@ -305,7 +305,6 @@ async def driverDoneOrder(message):
                 await message.bot.send_message(message.from_user.id, ('Congratulations! You have completed the order. You can go back to online to make a new order'))
     except:
         await message.bot.send_message(message.from_user.id, ("Can`t set done order status"))
-        await message.bot.send_message(message.from_user.id, e)
 
 
 
@@ -361,12 +360,10 @@ async def setDriverPhoto(message):
     await message.bot.send_message(message.from_user.id, t("You can attach your photo if you wish"))
 @dp.message_handler(content_types='photo')
 async def process_car_photo(message: types.Message, state: FSMContext):
-    print(1)
     async with state.proxy() as data:
         dir = data['dir']
         savedKey = data['savedKey']
     await message.photo[-1].download(destination_file=dir + str(message.from_user.id) + '.jpg')
-    print(message.photo[-1])
     await message.bot.send_message(message.chat.id, t("Do you confirm?"), reply_markup = await inlineConfirm(savedKey))
 
 
@@ -507,7 +504,6 @@ async def process_driver_wallet(message: types.Message, state: FSMContext):
     if (message.text == t('Confirm')):
         await state.finish()
         BotDB.update_driver_wallet(message.from_user.id, driver['wallet'])
-        print(driver)
         await message.bot.send_message(message.from_user.id, t('Thank you, we will check the crediting of funds'), reply_markup = await markupRemove())
     else:
         driver['wallet'] = message.text
@@ -681,14 +677,11 @@ async def clientRegistered(message):
     await message.bot.send_message(message.from_user.id, t("Thank you for an order"))
     time.sleep(2)
     await message.bot.send_message(message.from_user.id, t("we are already looking for drivers for you..."))
-    print(client)
-    print(order)
 async def driverRegistered(message):
     driver['status'] = 'offline'
     BotDB.update_driver(message.from_user.id, driver)
     time.sleep(2)
     await message.bot.send_message(message.from_user.id, t("We are looking for clients for you already"))
-    print(driver)
 
 
 
