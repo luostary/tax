@@ -10,6 +10,7 @@ language = {
         "Confirm": "Подтвердить",
         "Client form": "Анкета",
         "Driver form":"Анкета",
+        "Done current order":"Завершить текущий заказ",
         "Do you confirm your phone?": "Подтвердите телефон",
         "Do you confirm your amount?": "Подтвердите сумму",
         "Do you confirm?": "Do you confirm?",

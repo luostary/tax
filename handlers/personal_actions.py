@@ -165,6 +165,8 @@ async def inlineClick(message, state: FSMContext):
         await setDriverPhoto(message)
     elif message.data == 'driverPhotoSaved':
         await setDriverName(message)
+    elif message.data == 'driverDoneOrder':
+        await driverDoneOrder(message)
     elif message.data == 'account':
         driverBalance = (BotDB.get_driver(message.from_user.id))
         if None == driverBalance['balance']:
@@ -220,9 +222,9 @@ async def inlineClick(message, state: FSMContext):
             else:
                 if modelOrder['amount_client'] == None:
                     modelOrder['amount_client'] = 0
-            driverBalance = BotDB.get_driver_balance(message.from_user.id)
-            if driverBalance == None:
-                driverBalance = 0
+            driver = BotDB.get_driver(message.from_user.id)
+            if driver['balance'] == None:
+                driver['balance'] = 0
             income = int(modelOrder['amount_client'] / 100 * PERCENT)
             progressOrder = BotDB.get_order(order_id)
             await message.bot.send_message(message.from_user.id, t("You have taken the order go to the passenger"))
@@ -230,7 +232,8 @@ async def inlineClick(message, state: FSMContext):
             try:
                 BotDB.update_driver_status(message.from_user.id, 'route')
                 BotDB.update_order_status(order_id, 'progress')
-                BotDB.update_driver_balance(message.from_user.id, int(driverBalance - income))
+                BotDB.update_order_driver_id(order_id, driver['id'])
+                BotDB.update_driver_balance(message.from_user.id, int(driver['balance'] - income))
                 # Only here we take a departure-point to the Driver
                 await message.bot.send_location(message.from_user.id, progressOrder['departure_latitude'], progressOrder['departure_longitude'])
             except:
@@ -276,6 +279,26 @@ async def inlineClick(message, state: FSMContext):
 
 
 
+async def driverDoneOrder(message):
+    # try:
+        driverId = BotDB.get_driver_id(message.from_user.id)
+        if (not driverId):
+            await message.bot.send_message(message.from_user.id, ("Driver not found"))
+        else:
+            modelOrder = BotDB.get_order_progress_by_driver_id(driverId)
+            if (not modelOrder):
+                await message.bot.send_message(message.from_user.id, ("You haven`t current order"))
+            else:
+                BotDB.update_driver_status(message.from_user.id, 'offline')
+                BotDB.update_order_status(modelOrder['id'], 'done')
+                await message.bot.send_message(message.from_user.id, ('Congratulations! You have completed the order. You can go back to online to make a new order'))
+    # except:
+    #     await message.bot.send_message(message.from_user.id, ("Can`t set done order status"))
+        # await message.bot.send_message(message.from_user.id, e)
+
+
+
+
 async def menuDriver(message):
     markup = InlineKeyboardMarkup(row_width=3)
     item1 = InlineKeyboardButton(text=t('Driver form') + ' 📝', callback_data='driver-form')
@@ -285,12 +308,14 @@ async def menuDriver(message):
     item5 = InlineKeyboardButton(text=t('My profile') + ' 🔖', callback_data='driver-profile')
     item6 = InlineKeyboardButton(text=('Go online 🟢 30 minutes'), callback_data='switch-online')
     item7 = InlineKeyboardButton(text=('Go offline 🔴'), callback_data='switch-offline')
+    item8 = InlineKeyboardButton(text=t('Done current order'), callback_data='driverDoneOrder')
     modelDriver = BotDB.get_driver(message.from_user.id)
     if modelDriver['status'] != None:
         markup.add(item5, item1)
     else:
         markup.add(item1)
     markup.add(item2, item4).add(item6, item7).add(item3)
+    markup.add(item8)
     await message.bot.send_message(message.from_user.id, t("You are in the driver menu"), reply_markup = markup)
 
 

@@ -15,10 +15,12 @@ class BotDB:
         'online': 'Доступен 🟢',
         'offline': 'Не доступен 🔴',
         'route': 'Везет клиента 🟠',
+
         'waiting': 'Ожидает машину 🟢',
         'progress': 'В пути 🟠',
         'done': 'Выполнен 🔵',
         'cancel': 'Отменен ⚫',
+        
         'unknown': 'Неизвестен ⚪'
     }
 
@@ -84,8 +86,14 @@ class BotDB:
     def update_order_status(self, id, status):
         self.cursor.execute("UPDATE `order` SET status = ? WHERE id = ?", (status, id,))
         return self.conn.commit()
+    def update_order_driver_id(self, id, driver_id):
+        self.cursor.execute("UPDATE `order` SET driver_id = ? WHERE id = ?", (driver_id, id,))
+        return self.conn.commit()
     def get_order(self, id):
         result = self.cursor.execute("SELECT * FROM `order` WHERE `id` = ?", (id,))
+        return result.fetchone()
+    def get_order_progress_by_driver_id(self, id):
+        result = self.cursor.execute("SELECT * FROM `order` WHERE `driver_id` = ? AND status = 'progress'", (id,))
         return result.fetchone()
 
 
