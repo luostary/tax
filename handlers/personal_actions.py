@@ -214,13 +214,27 @@ async def inlineClick(message, state: FSMContext):
         bookOrderArray = message.data.split('_')
         order_id = bookOrderArray[1]
         if BotDB.order_waiting_exists(order_id, 'waiting'):
-            BotDB.update_order_status(order_id, 'progress')
+            modelOrder = BotDB.get_order(order_id)
+            if (not modelOrder):
+                await message.bot.send_message(message.from_user.id, ("Order not found"))
+            else:
+                if modelOrder['amount_client'] == None:
+                    modelOrder['amount_client'] = 0
+            driverBalance = BotDB.get_driver_balance(message.from_user.id)
+            if driverBalance == None:
+                driverBalance = 0
+            income = int(modelOrder['amount_client'] / 100 * PERCENT)
             progressOrder = BotDB.get_order(order_id)
             await message.bot.send_message(message.from_user.id, t("You have taken the order go to the passenger"))
 
-            # Only here we take a departure-point to the Driver
-            await message.bot.send_location(message.from_user.id, progressOrder['departure_latitude'], progressOrder['departure_longitude'])
-            BotDB.update_driver_status(message.from_user.id, 'route')
+            try:
+                BotDB.update_driver_status(message.from_user.id, 'route')
+                BotDB.update_order_status(order_id, 'progress')
+                BotDB.update_driver_balance(message.from_user.id, int(driverBalance - income))
+                # Only here we take a departure-point to the Driver
+                await message.bot.send_location(message.from_user.id, progressOrder['departure_latitude'], progressOrder['departure_longitude'])
+            except:
+                await message.bot.send_message(message.from_user.id, t("Order can not be taken"))
         else:
             await message.bot.send_message(message.from_user.id, t("This order cannot be taken, it is already taken"))
     elif message.data == 'switch-online':
