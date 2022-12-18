@@ -120,37 +120,39 @@ async def inlineClick(message, state: FSMContext):
         pass
     elif message.data == 'driver-profile':
         modelDriver = BotDB.get_driver(message.from_user.id)
-
-        Path("merged").mkdir(parents=True, exist_ok=True)
-        car = 'cars/' + str(message.from_user.id) + '.jpg';
-        driverFileName = 'drivers/' + str(message.from_user.id) + '.jpg';
-        fileCarExist = exists(car)
-        fileDriverExist = exists(driverFileName)
-        statusIcon = str(BotDB.statuses[modelDriver['status']])
-        caption = '\n'.join((
-            '<b>Имя</b> ' + str(modelDriver['name']),
-            '<b>Статус</b> ' + str(statusIcon),
-            '<b>Телефон</b> ' + str(modelDriver['phone']),
-            '<b>Номер машины</b> ' + str(modelDriver['car_number']),
-        ))
-
-        if fileCarExist & fileDriverExist:
-            image1 = Image.open(car)
-            image2 = Image.open(driverFileName)
-            image1 = image1.resize((240, 320))
-            image2 = image2.resize((240, 320))
-            image1_size = image1.size
-            image2_size = image2.size
-            merged_image = Image.new(mode='RGB', size=(2*240, 320), color=(250,250,250))
-            merged_image.paste(image1,(0,0))
-            merged_image.paste(image2,(240,0))
-            bio = BytesIO()
-            bio.name = 'merged/' + str(message.from_user.id) + '.jpg'
-            merged_image.save(bio, 'JPEG')
-            bio.seek(0)
-            await message.bot.send_photo(message.from_user.id, bio, caption=caption, parse_mode='HTML')
+        if (not modelDriver):
+            await message.bot.send_message(message.from_user.id, "Can`t do it, begin to /start")
         else:
-            await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML')
+            Path("merged").mkdir(parents=True, exist_ok=True)
+            car = 'cars/' + str(message.from_user.id) + '.jpg';
+            driverFileName = 'drivers/' + str(message.from_user.id) + '.jpg';
+            fileCarExist = exists(car)
+            fileDriverExist = exists(driverFileName)
+            statusIcon = str(BotDB.statuses[modelDriver['status']])
+            caption = '\n'.join((
+                '<b>Имя</b> ' + str(modelDriver['name']),
+                '<b>Статус</b> ' + str(statusIcon),
+                '<b>Телефон</b> ' + str(modelDriver['phone']),
+                '<b>Номер машины</b> ' + str(modelDriver['car_number']),
+            ))
+
+            if fileCarExist & fileDriverExist:
+                image1 = Image.open(car)
+                image2 = Image.open(driverFileName)
+                image1 = image1.resize((240, 320))
+                image2 = image2.resize((240, 320))
+                image1_size = image1.size
+                image2_size = image2.size
+                merged_image = Image.new(mode='RGB', size=(2*240, 320), color=(250,250,250))
+                merged_image.paste(image1,(0,0))
+                merged_image.paste(image2,(240,0))
+                bio = BytesIO()
+                bio.name = 'merged/' + str(message.from_user.id) + '.jpg'
+                merged_image.save(bio, 'JPEG')
+                bio.seek(0)
+                await message.bot.send_photo(message.from_user.id, bio, caption=caption, parse_mode='HTML')
+            else:
+                await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML')
     elif message.data == "driver-form":
         async with state.proxy() as data:
             data['dir'] = 'cars/'
@@ -189,26 +191,29 @@ async def inlineClick(message, state: FSMContext):
         await setDriverWallet(message)
         pass
     elif message.data == 'orders':
-        driver = BotDB.get_driver(message.from_user.id)
-        if driver['balance'] == None:
-            driver['balance'] = 0
         modelDriver = BotDB.get_driver(message.from_user.id)
-        if (driver['balance'] < minBalanceAmount):
-            localMessage = t("You cant see orders, your balance is less than {minAmount:d} usdt")
-            localMessage = localMessage.format(minAmount = minBalanceAmount)
-            await message.bot.send_message(message.from_user.id, localMessage)
-        elif modelDriver['phone'] == None:
-            await message.bot.send_message(message.from_user.id, t('Phone is required, set it in client form'))
-        elif modelDriver['status'] == 'offline':
-            localMessage = ("You cant see orders, your are offline")
-            await message.bot.send_message(message.from_user.id, localMessage)
-        elif modelDriver['status'] == 'route':
-            localMessage = ("You cant see orders, your are at route")
-            await message.bot.send_message(message.from_user.id, localMessage)
-        elif modelDriver['status'] == 'online':
-            await getActiveOrders(message)
+        if (not modelDriver):
+            await message.bot.send_message(message.from_user.id, "Can`t do it, begin to /start")
         else:
-            await message.bot.send_message(message.from_user.id, ('You have unknown status'))
+            if modelDriver['balance'] == None:
+                modelDriver['balance'] = 0
+            else:
+                if (modelDriver['balance'] < minBalanceAmount):
+                    localMessage = t("You cant see orders, your balance is less than {minAmount:d} usdt")
+                    localMessage = localMessage.format(minAmount = minBalanceAmount)
+                    await message.bot.send_message(message.from_user.id, localMessage)
+                elif modelDriver['phone'] == None:
+                    await message.bot.send_message(message.from_user.id, t('Phone is required, set it in client form'))
+                elif modelDriver['status'] == 'offline':
+                    localMessage = ("You cant see orders, your are offline")
+                    await message.bot.send_message(message.from_user.id, localMessage)
+                elif modelDriver['status'] == 'route':
+                    localMessage = ("You cant see orders, your are at route")
+                    await message.bot.send_message(message.from_user.id, localMessage)
+                elif modelDriver['status'] == 'online':
+                    await getActiveOrders(message)
+                else:
+                    await message.bot.send_message(message.from_user.id, ('You have unknown status'))
     elif message.data == 'client-orders':
         await getClientOrders(message)
         pass
@@ -223,21 +228,27 @@ async def inlineClick(message, state: FSMContext):
                 if modelOrder['amount_client'] == None:
                     modelOrder['amount_client'] = 0
             driver = BotDB.get_driver(message.from_user.id)
-            if driver['balance'] == None:
-                driver['balance'] = 0
-            income = int(modelOrder['amount_client'] / 100 * PERCENT)
-            progressOrder = BotDB.get_order(order_id)
-            await message.bot.send_message(message.from_user.id, t("You have taken the order go to the passenger"))
+            if (not driver):
+                await message.bot.send_message(message.from_user.id, "Can`t do it, begin to /start")
+            else:
+                if driver['balance'] == None:
+                    driver['balance'] = 0
+                income = int(modelOrder['amount_client'] / 100 * PERCENT)
+                progressOrder = BotDB.get_order(order_id)
+                if (not progressOrder):
+                    await message.bot.send_message(message.from_user.id, "Can`t do it, begin to /start")
+                else:
+                    await message.bot.send_message(message.from_user.id, t("You have taken the order go to the passenger"))
 
-            try:
-                BotDB.update_driver_status(message.from_user.id, 'route')
-                BotDB.update_order_status(order_id, 'progress')
-                BotDB.update_order_driver_id(order_id, driver['id'])
-                BotDB.update_driver_balance(message.from_user.id, int(driver['balance'] - income))
-                # Only here we take a departure-point to the Driver
-                await message.bot.send_location(message.from_user.id, progressOrder['departure_latitude'], progressOrder['departure_longitude'])
-            except:
-                await message.bot.send_message(message.from_user.id, t("Order can not be taken"))
+                    try:
+                        BotDB.update_driver_status(message.from_user.id, 'route')
+                        BotDB.update_order_status(order_id, 'progress')
+                        BotDB.update_order_driver_id(order_id, driver['id'])
+                        BotDB.update_driver_balance(message.from_user.id, int(driver['balance'] - income))
+                        # Only here we take a departure-point to the Driver
+                        await message.bot.send_location(message.from_user.id, progressOrder['departure_latitude'], progressOrder['departure_longitude'])
+                    except:
+                        await message.bot.send_message(message.from_user.id, t("Order can not be taken"))
         else:
             await message.bot.send_message(message.from_user.id, t("This order cannot be taken, it is already taken"))
     elif message.data == 'switch-online':
@@ -280,7 +291,7 @@ async def inlineClick(message, state: FSMContext):
 
 
 async def driverDoneOrder(message):
-    # try:
+    try:
         driverId = BotDB.get_driver_id(message.from_user.id)
         if (not driverId):
             await message.bot.send_message(message.from_user.id, ("Driver not found"))
@@ -292,9 +303,9 @@ async def driverDoneOrder(message):
                 BotDB.update_driver_status(message.from_user.id, 'offline')
                 BotDB.update_order_status(modelOrder['id'], 'done')
                 await message.bot.send_message(message.from_user.id, ('Congratulations! You have completed the order. You can go back to online to make a new order'))
-    # except:
-    #     await message.bot.send_message(message.from_user.id, ("Can`t set done order status"))
-        # await message.bot.send_message(message.from_user.id, e)
+    except:
+        await message.bot.send_message(message.from_user.id, ("Can`t set done order status"))
+        await message.bot.send_message(message.from_user.id, e)
 
 
 
@@ -310,13 +321,16 @@ async def menuDriver(message):
     item7 = InlineKeyboardButton(text=('Go offline 🔴'), callback_data='switch-offline')
     item8 = InlineKeyboardButton(text=t('Done current order'), callback_data='driverDoneOrder')
     modelDriver = BotDB.get_driver(message.from_user.id)
-    if modelDriver['status'] != None:
-        markup.add(item5, item1)
+    if (not modelDriver):
+        await message.bot.send_message(message.from_user.id, "Can`t do it, begin to /start")
     else:
-        markup.add(item1)
-    markup.add(item2, item4).add(item6, item7).add(item3)
-    markup.add(item8)
-    await message.bot.send_message(message.from_user.id, t("You are in the driver menu"), reply_markup = markup)
+        if modelDriver['status'] != None:
+            markup.add(item5, item1)
+        else:
+            markup.add(item1)
+        markup.add(item2, item4).add(item6, item7).add(item3)
+        markup.add(item8)
+        await message.bot.send_message(message.from_user.id, t("You are in the driver menu"), reply_markup = markup)
 
 
 
