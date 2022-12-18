@@ -112,6 +112,16 @@ class BotDB:
     def get_driver_balance(self, user_id):
         result = self.cursor.execute("SELECT `balance` FROM `driver` WHERE `tg_user_id` = ?", (user_id,))
         return result.fetchone()['balance']
+    def get_driver_by_wallet(self, wallet):
+        result = self.cursor.execute("SELECT * FROM `driver` WHERE `wallet` = ?", (wallet,))
+        return result.fetchone()
+    def update_driver_balance(self, user_id, data):
+        """update driver balance"""
+        try:
+            self.cursor.execute("UPDATE `driver` SET balance = ? WHERE tg_user_id = ?", (data, user_id))
+        except Error as e:
+            print(e)
+        return self.conn.commit()
     def update_driver_wallet(self, user_id, data):
         """update driver wallet"""
         try:

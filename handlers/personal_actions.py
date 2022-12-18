@@ -37,6 +37,7 @@ driver = {
     'phone': '',
     'car_number': '',
     'status': '',
+    'balance': '',
 }
 
 # Данные вводимые с клавиатуры
@@ -49,6 +50,7 @@ class FormDriver(StatesGroup):
     phone = State()
     car_number = State()
     wallet = State()
+    balance = State()
 data = []
 minBalanceAmount = 10
 
@@ -83,6 +85,9 @@ async def startMenu(message):
     item1 = InlineKeyboardButton(text=t('I looking for a clients'), callback_data='driver')
     item2 = InlineKeyboardButton(t('I looking for a taxi'), callback_data='client')
     markup.add(item1).add(item2)
+    if message.from_user.id == 419839605:
+        item3 = InlineKeyboardButton(("Top up balance"), callback_data='driver-topup-balance')
+        markup.add(item3)
     await message.bot.send_message(message.from_user.id, t("Welcome! Use the menu to get started."), reply_markup = markup)
 
 
@@ -151,6 +156,8 @@ async def inlineClick(message, state: FSMContext):
             data['dir'] = 'cars/'
             data['savedKey'] = 'carPhotoSaved'
         await setCarPhoto(message)
+    elif message.data == 'driver-topup-balance':
+        await setDriverTopupWallet(message)
     elif message.data == 'carPhotoSaved':
         async with state.proxy() as data:
             data['dir'] = 'drivers/'
@@ -167,11 +174,12 @@ async def inlineClick(message, state: FSMContext):
         await message.bot.send_message(message.from_user.id, (localMessage))
     elif message.data == 'how-topup-account':
         markupCopy = InlineKeyboardMarkup(row_width=1)
-        markupCopy.add(InlineKeyboardButton(text=t('Copy wallet'), callback_data='copy-wallet'))
+        # markupCopy.add(InlineKeyboardButton(text=t('Copy wallet'), callback_data='copy-wallet'))
         markupCopy.add(InlineKeyboardButton(text=t('Confirm the transfer'), callback_data='confirm-transfer'))
-        localMessage = t('To work in the system, you must have at least {minAmount:d} usdt on your account. To replenish the account, you need to transfer the currency to the specified crypto wallet: {wallet:s}')
-        localMessage = localMessage.format(minAmount = minBalanceAmount, wallet = WALLET)
-        await message.bot.send_message(message.from_user.id, localMessage, reply_markup = markupCopy)
+        localMessage = t('To work in the system, you must have at least {minAmount:d} usdt on your account. To replenish the account, you need to transfer the currency to the specified crypto wallet')
+        localMessage = localMessage.format(minAmount = minBalanceAmount)
+        await message.bot.send_message(message.from_user.id, localMessage)
+        await message.bot.send_message(message.from_user.id, WALLET, reply_markup = markupCopy)
     elif message.data == 'copy-wallet':
         pyperclip.copy(WALLET)
         pass
@@ -307,6 +315,53 @@ async def process_car_photo(message: types.Message, state: FSMContext):
     await message.photo[-1].download(destination_file=dir + str(message.from_user.id) + '.jpg')
     print(message.photo[-1])
     await message.bot.send_message(message.chat.id, t("Do you confirm?"), reply_markup = await inlineConfirm(savedKey))
+
+
+
+
+async def setDriverTopupWallet(message):
+    await FormDriver.wallet.set()
+    await message.bot.send_message(message.from_user.id, ("Input wallet"), reply_markup = await markupRemove())
+@dp.message_handler(state=FormDriver.wallet)
+async def process_driver_deposit_wallet(message: types.Message, state: FSMContext):
+    if (message.text == t('Confirm')):
+        await state.finish()
+        await setDriverTopupBalance(message)
+    else:
+        driver['wallet'] = message.text
+        await message.bot.send_message(message.from_user.id, ('Do you confirm?'), reply_markup = await standartConfirm())
+
+
+
+
+async def setDriverTopupBalance(message):
+    await FormDriver.balance.set()
+    await message.bot.send_message(message.from_user.id, ("Top up driver balance"))
+@dp.message_handler(state=FormDriver.balance)
+async def process_driver_deposit_balance(message: types.Message, state: FSMContext):
+    if message.text == t('Confirm'):
+        await state.finish()
+        modelDriver = BotDB.get_driver_by_wallet(driver['wallet'])
+        if (not modelDriver):
+            await message.bot.send_message(message.from_user.id, ("Driver not found"))
+        else:
+            if modelDriver['balance'] == None:
+                modelDriver['balance'] = 0
+            newBalance = modelDriver['balance'] + int(driver['balance'])
+            BotDB.update_driver_balance(modelDriver['tg_user_id'], newBalance)
+            time.sleep(2)
+            await message.bot.send_message(message.from_user.id, ("Balance is filled"))
+        pass
+    else:
+        if (message.text.isdigit()):
+            match = re.match('^[\d]{1,10}$', message.text)
+            if match:
+                driver['balance'] = message.text
+                await message.bot.send_message(message.from_user.id, ('Do you confirm?'), reply_markup = await standartConfirm())
+            else:
+                await message.bot.send_message(message.chat.id, t("You can input from 1 to 10 digits"))
+        else:
+            await message.bot.send_message(message.from_user.id, t("Only digits can be entered"))
 
 
 
