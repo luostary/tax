@@ -88,7 +88,8 @@ async def startMenu(message):
     if message.from_user.id == 419839605:
         item3 = InlineKeyboardButton(("Top up balance"), callback_data='driver-topup-balance')
         markup.add(item3)
-    await message.bot.send_message(message.from_user.id, t("Welcome! Use the menu to get started."), reply_markup = markup)
+    await message.bot.send_message(message.from_user.id, ("Welcome!"), reply_markup = await markupRemove())
+    await message.bot.send_message(message.from_user.id, ("Use the menu to get started"), reply_markup = markup)
 
 
 
@@ -313,11 +314,11 @@ async def menuDriver(message):
     markup = InlineKeyboardMarkup(row_width=3)
     item1 = InlineKeyboardButton(text=t('Driver form') + ' 📝', callback_data='driver-form')
     item2 = InlineKeyboardButton(text=t('Account'), callback_data='account')
-    item4 = InlineKeyboardButton(text=t('How to top up an account') + ' ❓', callback_data='how-topup-account')
+    item4 = InlineKeyboardButton(text=t('How to top up') + ' ❓', callback_data='how-topup-account')
     item3 = InlineKeyboardButton(text=t('Orders'), callback_data='orders')
     item5 = InlineKeyboardButton(text=t('My profile') + ' 🔖', callback_data='driver-profile')
-    item6 = InlineKeyboardButton(text=('Go online 🟢 30 minutes'), callback_data='switch-online')
-    item7 = InlineKeyboardButton(text=('Go offline 🔴'), callback_data='switch-offline')
+    item6 = InlineKeyboardButton(text=t("Go online 🟢"), callback_data='switch-online')
+    item7 = InlineKeyboardButton(text=t('Go offline 🔴'), callback_data='switch-offline')
     item8 = InlineKeyboardButton(text=t('Done current order'), callback_data='driverDoneOrder')
     modelDriver = BotDB.get_driver(message.from_user.id)
     if (not modelDriver):
@@ -336,12 +337,11 @@ async def menuDriver(message):
 
 from threading import Timer
 async def switchDriverOnline(message):
-    onlineTime = 600
     BotDB.update_driver_status(message.from_user.id, 'online')
-    localMessage = 'Вы онлайн. В течении {onlineTime:d} минут Вам будут приходить заказы'.format(onlineTime = round(onlineTime/60))
+    localMessage = 'Вы онлайн. В течении {onlineTime:d} минут Вам будут приходить заказы'.format(onlineTime = round(ONLINE_TIME_SEC/60))
     await message.bot.send_message(message.from_user.id, localMessage)
     # выполнить функцию switchDriverOffline() через onlineTime секунд
-    Timer(onlineTime, switchDriverOffline, args=(message,)).start()
+    Timer(ONLINE_TIME_SEC, switchDriverOffline, args=(message,)).start()
     pass
 
 
@@ -676,7 +676,7 @@ async def clientRegistered(message):
     BotDB.create_order(order)
     await message.bot.send_message(message.from_user.id, t("Thank you for an order"))
     time.sleep(2)
-    await message.bot.send_message(message.from_user.id, t("we are already looking for drivers for you..."))
+    await message.bot.send_message(message.from_user.id, t("We are already looking for drivers for you.."))
 async def driverRegistered(message):
     driver['status'] = 'offline'
     BotDB.update_driver(message.from_user.id, driver)
@@ -685,7 +685,8 @@ async def driverRegistered(message):
 
 
 
-
+async def gotoStart(message):
+    await message.bot.send_message(message.from_user.id, t("Can't do it, start with the /start command"))
 async def standartConfirm():
     markup = types.ReplyKeyboardMarkup(resize_keyboard = True)
     markup.add(types.KeyboardButton(t('Confirm')))
