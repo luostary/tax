@@ -198,23 +198,22 @@ async def inlineClick(message, state: FSMContext):
         else:
             if modelDriver['balance'] == None:
                 modelDriver['balance'] = 0
+            if (modelDriver['balance'] < minBalanceAmount):
+                localMessage = t("You cant see orders, your balance is less than {minAmount:d} usdt")
+                localMessage = localMessage.format(minAmount = minBalanceAmount)
+                await message.bot.send_message(message.from_user.id, localMessage)
+            elif modelDriver['phone'] == None:
+                await message.bot.send_message(message.from_user.id, t('Phone is required, set it in client form'))
+            elif modelDriver['status'] == 'offline':
+                localMessage = ("You cant see orders, your are offline")
+                await message.bot.send_message(message.from_user.id, localMessage)
+            elif modelDriver['status'] == 'route':
+                localMessage = ("You cant see orders, your are at route")
+                await message.bot.send_message(message.from_user.id, localMessage)
+            elif modelDriver['status'] == 'online':
+                await getActiveOrders(message)
             else:
-                if (modelDriver['balance'] < minBalanceAmount):
-                    localMessage = t("You cant see orders, your balance is less than {minAmount:d} usdt")
-                    localMessage = localMessage.format(minAmount = minBalanceAmount)
-                    await message.bot.send_message(message.from_user.id, localMessage)
-                elif modelDriver['phone'] == None:
-                    await message.bot.send_message(message.from_user.id, t('Phone is required, set it in client form'))
-                elif modelDriver['status'] == 'offline':
-                    localMessage = ("You cant see orders, your are offline")
-                    await message.bot.send_message(message.from_user.id, localMessage)
-                elif modelDriver['status'] == 'route':
-                    localMessage = ("You cant see orders, your are at route")
-                    await message.bot.send_message(message.from_user.id, localMessage)
-                elif modelDriver['status'] == 'online':
-                    await getActiveOrders(message)
-                else:
-                    await message.bot.send_message(message.from_user.id, ('You have unknown status'))
+                await message.bot.send_message(message.from_user.id, ('You have unknown status'))
     elif message.data == 'client-orders':
         await getClientOrders(message)
         pass
@@ -355,9 +354,9 @@ def switchDriverOffline(message):
 
 
 async def setCarPhoto(message):
-    await message.bot.send_message(message.from_user.id, t("Attach a photo of your car"))
+    await message.bot.send_message(message.from_user.id, t("Attach a photo of your car"), reply_markup = await markupRemove())
 async def setDriverPhoto(message):
-    await message.bot.send_message(message.from_user.id, t("You can attach your photo if you wish"))
+    await message.bot.send_message(message.from_user.id, t("You can attach your photo if you wish"), reply_markup = await markupRemove())
 @dp.message_handler(content_types='photo')
 async def process_car_photo(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
@@ -393,7 +392,7 @@ async def process_driver_deposit_balance(message: types.Message, state: FSMConte
         await state.finish()
         modelDriver = BotDB.get_driver_by_wallet(driver['wallet'])
         if (not modelDriver):
-            await message.bot.send_message(message.from_user.id, ("Driver not found"))
+            await message.bot.send_message(message.from_user.id, ("Wallet not found, you can see right wallet to your profile"))
         else:
             if modelDriver['balance'] == None:
                 modelDriver['balance'] = 0
@@ -460,7 +459,7 @@ async def process_driver_name(message: types.Message, state: FSMContext):
 
 async def setDriverCarNumber(message):
     await FormDriver.car_number.set()
-    await message.bot.send_message(message.from_user.id, t("What's your car number?"))
+    await message.bot.send_message(message.from_user.id, t("What's your car number?"), reply_markup = await markupRemove())
 @dp.message_handler(state=FormDriver.car_number)
 async def process_driver_car_number(message: types.Message, state: FSMContext):
     if (message.text == t('Confirm')):
@@ -497,8 +496,12 @@ async def getActiveOrders(message):
 
 
 async def setDriverWallet(message):
-    await FormDriver.wallet.set()
-    await message.bot.send_message(message.from_user.id, t("Enter the sender's wallet"))
+    modelDriver = BotDB.get_driver(message.from_user.id)
+    if (not modelDriver):
+        await message.bot.send_message(message.from_user.id, t("You need fill the form"))
+    else:
+        await FormDriver.wallet.set()
+        await message.bot.send_message(message.from_user.id, t("Enter the sender's wallet"))
 @dp.message_handler(state=FormDriver.wallet)
 async def process_driver_wallet(message: types.Message, state: FSMContext):
     if (message.text == t('Confirm')):
@@ -517,10 +520,10 @@ async def process_driver_wallet(message: types.Message, state: FSMContext):
 async def menuClient(message):
     markup = InlineKeyboardMarkup(row_width=1)
     item10 = InlineKeyboardButton(text=t('Profile'), callback_data='client-profile')
-    item20 = InlineKeyboardButton(text=t('Make an order'), callback_data='make-order')
-    item30 = InlineKeyboardButton(text=t('Free drivers'), callback_data='free-drivers')
+    item20 = InlineKeyboardButton(text=t('Make an order') + ' 🚕', callback_data='make-order')
+    # item30 = InlineKeyboardButton(text=t('Free drivers'), callback_data='free-drivers')
     item40 = InlineKeyboardButton(text=t('My orders'), callback_data='client-orders')
-    markup.add(item10).add(item20).add(item30).add(item40)
+    markup.add(item10).add(item20).add(item40)
     await message.bot.send_message(message.from_user.id, t("You are in the client menu"), reply_markup = markup)
 
 
