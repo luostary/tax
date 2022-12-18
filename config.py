@@ -1,10 +1,5 @@
 BOT_TOKEN="5724870575:AAHL9vSkV9bmZdhVja3hSHgAN5vBnVyrhTs"
 
-HOST = "localhost"
-USER = "root"
-PASSWORD = "rootPass"
-DATABASE = "taxi"
-
 LANGUAGE = "RU"
 
 WALLET = "TCdxp8ScdjRDRNDf7Xc37vFLvLCgPXyQWL"

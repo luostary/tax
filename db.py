@@ -1,6 +1,5 @@
 import sqlite3
-import mysql.connector
-from mysql.connector import connect, Error
+from sqlite3 import Error
 import config
 import os.path
 
@@ -24,7 +23,6 @@ class BotDB:
     }
 
     def __init__(self, db_file):
-        # self.conn = connect(host=config.HOST, user=config.USER, password=config.PASSWORD, database=config.DATABASE)
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
         db_path = os.path.join(BASE_DIR, db_file)
         self.conn = sqlite3.connect(db_path, check_same_thread=False)
