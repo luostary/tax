@@ -9,7 +9,6 @@ from bot import BotDB
 from language import t
 from config import *
 from os.path import exists
-from datetime import datetime
 import PIL
 from PIL import Image
 from pathlib import Path
@@ -28,10 +27,10 @@ order = {
     'status': '',
     'dt_order': '',
     'amount_client': '',
-    'departure_latitude': '',
-    'departure_longitude': '',
-    'destination_latitude': '',
-    'destination_longitude': '',
+    'departure_latitude': 0,
+    'departure_longitude': 0,
+    'destination_latitude': 0,
+    'destination_longitude': 0,
 }
 driver = {
     'name': '',
@@ -66,16 +65,22 @@ async def start(message: types.Message):
 
 
 
-async def setLength(message):
-    x1, y1 = order['departure_longitude'], order['departure_latitude']
-    x2, y2 = order['destination_longitude'], order['destination_latitude']
-
-    y = math.radians((y1 + y2) / 2)
+async def getLength(dept_lt, dept_ln, dest_lt, dest_ln):
+    x1, y1 = (dept_ln), (dept_lt)
+    x2, y2 = (dest_ln), (dest_lt)
+    y = math.radians(float(y1 + y2) / 2)
     x = math.cos(y)
     n = abs(x1 - x2) * 111000 * x
     n2 = abs(y1 - y2) * 111000
-    order['route_length'] = round(math.sqrt(n * n + n2 * n2))
+    return float(round(math.sqrt(n * n + n2 * n2)))
+
+
+
+
+async def setLength(message):
+    order['route_length'] = await getLength(order['departure_latitude'], order['departure_longitude'], order['destination_latitude'], order['destination_longitude'])
     order['route_time'] = round(order['route_length'] / (40 * 1000) * 60)
+    order['amount_client'] = math.floor((order['route_length'] / 1000) * RATE_1_KM)
     pass
 
 
@@ -234,7 +239,7 @@ async def inlineClick(message, state: FSMContext):
             else:
                 if driver['balance'] == None:
                     driver['balance'] = 0
-                income = int(modelOrder['amount_client'] / 100 * PERCENT)
+                income = int(math.ceil(modelOrder['amount_client'] / 100 * PERCENT) / RATE_1_USDT)
                 progressOrder = BotDB.get_order(order_id)
                 if (not progressOrder):
                     await message.bot.send_message(message.from_user.id, "Can`t do it, begin to /start")
@@ -335,7 +340,6 @@ async def menuDriver(message):
 
 
 
-from threading import Timer
 async def switchDriverOnline(message):
     BotDB.update_driver_status(message.from_user.id, 'online')
     localMessage = 'Вы онлайн. В течении {onlineTime:d} минут Вам будут приходить заказы'.format(onlineTime = round(ONLINE_TIME_SEC/60))
@@ -568,8 +572,8 @@ async def process_name(message: types.Message, state: FSMContext):
     """
     if (message.text == t('Confirm')):
         await state.finish()
-        await message.bot.send_message(message.from_user.id, t("We saved your name"), reply_markup = await markupRemove())
-        await setDate(message)
+        await setPhone(message)
+        # to Phone()
     else:
         async with state.proxy() as data:
             client['name'] = message.text
@@ -580,31 +584,31 @@ async def process_name(message: types.Message, state: FSMContext):
 
 
 
-async def setDate(message):
-    markup = InlineKeyboardMarkup(row_width=6)
-    item1 = InlineKeyboardButton(text=t('Now'), callback_data='dateRightNow')
-    item2 = InlineKeyboardButton(text=t('After 10 minutes'), callback_data='dateAfter10min')
-    item3 = InlineKeyboardButton(text=t('After 15 minutes'), callback_data='dateAfter15min')
-    item4 = InlineKeyboardButton(text=t('In 30 minutes'), callback_data='dateIn30min')
-    item5 = InlineKeyboardButton(text=t('In one hour'), callback_data='dateIn1hour')
-    item6 = InlineKeyboardButton(text=t('In 2 hours'), callback_data='dateIn2hours')
-
-    markup.add(item1).add(item2).add(item3,item4,item5,item6)
-    await message.bot.send_message(message.from_user.id, t("What time do you need a taxi?"), reply_markup = markup)
+# async def setDate(message):
+#     markup = InlineKeyboardMarkup(row_width=6)
+#     item1 = InlineKeyboardButton(text=t('Now'), callback_data='dateRightNow')
+#     item2 = InlineKeyboardButton(text=t('After 10 minutes'), callback_data='dateAfter10min')
+#     item3 = InlineKeyboardButton(text=t('After 15 minutes'), callback_data='dateAfter15min')
+#     item4 = InlineKeyboardButton(text=t('In 30 minutes'), callback_data='dateIn30min')
+#     item5 = InlineKeyboardButton(text=t('In one hour'), callback_data='dateIn1hour')
+#     item6 = InlineKeyboardButton(text=t('In 2 hours'), callback_data='dateIn2hours')
+#
+#     markup.add(item1).add(item2).add(item3,item4,item5,item6)
+#     await message.bot.send_message(message.from_user.id, t("What time do you need a taxi?"), reply_markup = markup)
 
 
 
 
 async def setPhone(message):
     await FormClient.phone.set()
-    await message.bot.send_message(message.from_user.id, t("Enter phone number?"))
+    await message.bot.send_message(message.from_user.id, t("Enter phone number?"), reply_markup = await markupRemove())
 @dp.message_handler(state=FormClient.phone)
 async def process_phone(message: types.Message, state: FSMContext):
 
     if message.text == t('Confirm'):
         await state.finish()
-        await message.bot.send_message(message.from_user.id, t("We saved your phone"), reply_markup = await markupRemove())
-        await setAmount(message)
+        await setDeparture(message)
+        # to departure
         pass
     else:
         if (message.text.isdigit()):
@@ -624,38 +628,38 @@ async def process_phone(message: types.Message, state: FSMContext):
 
 
 
-async def setAmount(message):
-    await FormClient.amount.set()
-    await message.bot.send_message(message.chat.id, t("How much do you want to pay?"))
-    pass
-@dp.message_handler(state=FormClient.amount)
-async def process_amount(message: types.Message, state: FSMContext):
-    if message.text == t('Confirm'):
-        await state.finish()
-        await message.bot.send_message(message.from_user.id, t("We saved your amount"), reply_markup = await markupRemove())
-        await setDeparture(message)
-        pass
-    else:
-        if (message.text.isdigit()):
-            async with state.proxy() as data:
-                order['amount_client'] = message.text
-            await message.bot.send_message(message.chat.id, t("Do you confirm your amount?"), reply_markup = await standartConfirm())
-        else:
-            await message.bot.send_message(message.chat.id, t("Only digits can be entered as a amount"))
+# async def setAmount(message):
+#     await FormClient.amount.set()
+#     await message.bot.send_message(message.chat.id, t("How much do you want to pay?"))
+#     pass
+# @dp.message_handler(state=FormClient.amount)
+# async def process_amount(message: types.Message, state: FSMContext):
+#     if message.text == t('Confirm'):
+#         await state.finish()
+#         await message.bot.send_message(message.from_user.id, t("We saved your amount"), reply_markup = await markupRemove())
+#         await setDeparture(message)
+#         pass
+#     else:
+#         if (message.text.isdigit()):
+#             async with state.proxy() as data:
+#                 order['amount_client'] = message.text
+#             await message.bot.send_message(message.chat.id, t("Do you confirm your amount?"), reply_markup = await standartConfirm())
+#         else:
+#             await message.bot.send_message(message.chat.id, t("Only digits can be entered as a amount"))
 
 
 
 
 async def setDeparture(message):
-    await message.bot.send_message(message.from_user.id, t("Set departure location"))
+    await message.bot.send_message(message.from_user.id, t("Set departure location"), reply_markup = await markupRemove())
     pass
 async def setDestination(message):
-    await message.bot.send_message(message.from_user.id, t("Set destination location"))
+    await message.bot.send_message(message.from_user.id, t("Set destination location"), reply_markup = await markupRemove())
     pass
 @dp.message_handler(content_types=['location'])
 async def process_location(message):
     markup = types.InlineKeyboardMarkup(row_width=2)
-    if order['departure_latitude'] == '':
+    if order['departure_latitude'] == 0:
         order['departure_latitude'] = message.location.latitude
         order['departure_longitude'] = message.location.longitude
         markup.add(types.InlineKeyboardButton(text=t('Confirm'), callback_data='departureLocationSaved'))
@@ -688,12 +692,19 @@ class Timer:
 
 
 async def clientRegistered(message):
-    BotDB.update_client(message.from_user.id, client)
-    order['status'] = 'waiting'
-    BotDB.create_order(order)
-    await message.bot.send_message(message.from_user.id, t("Thank you for an order"))
-    time.sleep(2)
-    await message.bot.send_message(message.from_user.id, t("We are already looking for drivers for you.."))
+    try:
+        BotDB.update_client(message.from_user.id, client)
+        order['status'] = 'waiting'
+        BotDB.create_order(order)
+        order['departure_latitude'] = 0
+        order['departure_longitude'] = 0
+        order['destination_latitude'] = 0
+        order['destination_longitude'] = 0
+        await message.bot.send_message(message.from_user.id, t("Thank you for an order"))
+        time.sleep(2)
+        await message.bot.send_message(message.from_user.id, t("We are already looking for drivers for you.."))
+    except:
+        await gotoStart(message)
 async def driverRegistered(message):
     driver['status'] = 'offline'
     BotDB.update_driver(message.from_user.id, driver)
