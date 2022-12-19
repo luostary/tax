@@ -413,8 +413,12 @@ async def setDriverPhone(message):
 async def process_driver_phone(message: types.Message, state: FSMContext):
 
     if message.text == t('Confirm'):
-        await state.finish()
-        await driverRegistered(message)
+        try:
+            await state.finish()
+            await driverRegistered(message)
+            await menuDriver(message)
+        except:
+            await message.bot.send_message(message.from_user.id, ("We cant create your form"), reply_markup = markupRemove())
         pass
     else:
         if (message.text.isdigit()):
