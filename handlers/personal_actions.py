@@ -14,6 +14,7 @@ import PIL
 from PIL import Image
 from pathlib import Path
 from io import BytesIO
+import asyncio
 
 # sudo apt-get install xclip
 import pyperclip
@@ -670,6 +671,25 @@ async def process_location(message):
         markup.add(types.InlineKeyboardButton(text=t('Confirm'), callback_data='destinationLocationSaved'))
     await message.bot.send_message(message.chat.id, t("Confirm entry or correct value"), reply_markup = markup)
     pass
+
+
+
+
+# Тимер для Асинхронных методов
+class Timer:
+    def __init__(self, timeout, callback, args):
+        self._timeout = timeout
+        self._callback = callback
+        self._args = args
+        self._task = asyncio.ensure_future(self._job())
+
+    async def _job(self):
+        await asyncio.sleep(self._timeout)
+        await self._callback(self._args)
+
+    def cancel(self):
+        self._task.cancel()
+
 
 
 
