@@ -370,30 +370,20 @@ async def process_car_photo(message: types.Message, state: FSMContext):
 
 
 async def setDriverTopupWallet(message):
-    await FormDriver.wallet.set()
-    await message.bot.send_message(message.from_user.id, ("Input wallet"), reply_markup = await markupRemove())
-@dp.message_handler(state=FormDriver.wallet)
-async def process_driver_deposit_wallet(message: types.Message, state: FSMContext):
-    if (message.text == t('Confirm')):
-        await state.finish()
-        await setDriverTopupBalance(message)
-    else:
-        driver['wallet'] = message.text
-        await message.bot.send_message(message.from_user.id, ('Do you confirm?'), reply_markup = await standartConfirm())
-
+    await setDriverTopupBalance(message)
 
 
 
 async def setDriverTopupBalance(message):
     await FormDriver.balance.set()
-    await message.bot.send_message(message.from_user.id, ("Top up driver balance"))
+    await message.bot.send_message(message.from_user.id, ("Top up driver balance"), reply_markup = await markupRemove())
 @dp.message_handler(state=FormDriver.balance)
 async def process_driver_deposit_balance(message: types.Message, state: FSMContext):
     if message.text == t('Confirm'):
         await state.finish()
         modelDriver = BotDB.get_driver_by_wallet(driver['wallet'])
         if (not modelDriver):
-            await message.bot.send_message(message.from_user.id, ("Wallet not found, you can see right wallet to your profile"))
+            await message.bot.send_message(message.from_user.id, ("Wallet not found, you can see right wallet to your profile"), reply_markup = await markupRemove())
         else:
             if modelDriver['balance'] == None:
                 modelDriver['balance'] = 0
