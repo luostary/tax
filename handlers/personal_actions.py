@@ -598,10 +598,11 @@ async def process_name(message: types.Message, state: FSMContext):
 
 
 
-
+#  Need check via internet
 async def setPhone(message):
     await FormClient.phone.set()
     await message.bot.send_message(message.from_user.id, t("Enter phone number?"), reply_markup = await markupRemove())
+    await message.bot.send_message(message.from_user.id, t("Examples of phone number: +905331234567, +79031234567"))
 @dp.message_handler(state=FormClient.phone)
 async def process_phone(message: types.Message, state: FSMContext):
 
@@ -611,19 +612,16 @@ async def process_phone(message: types.Message, state: FSMContext):
         # to departure
         pass
     else:
-        if (message.text.isdigit()):
-            match = re.match('^[\d]{11,12}$', message.text)
-            if match:
-                async with state.proxy() as data:
-                    client['phone'] = message.text
-                markup = types.ReplyKeyboardMarkup(resize_keyboard = True)
-                markup.add(types.KeyboardButton(t('Confirm')))
-                await message.bot.send_message(message.from_user.id, t('Do you confirm your phone?'), reply_markup = markup)
-                pass
-            else:
-                await message.bot.send_message(message.chat.id, t("Number of digits is incorrect"))
+        match = re.match('^[+]{1,1}[\d]{11,12}$', message.text)
+        if match:
+            async with state.proxy() as data:
+                client['phone'] = message.text
+            markup = types.ReplyKeyboardMarkup(resize_keyboard = True)
+            markup.add(types.KeyboardButton(t('Confirm')))
+            await message.bot.send_message(message.from_user.id, t('Do you confirm your phone?'), reply_markup = markup)
+            pass
         else:
-            await message.bot.send_message(message.chat.id, t("Only digits can be entered as a phone number"))
+            await message.bot.send_message(message.chat.id, t("Number of digits is incorrect"))
 
 
 
