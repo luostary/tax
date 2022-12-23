@@ -261,7 +261,7 @@ async def inlineClick(message, state: FSMContext):
         await switchDriverOnline(message)
         pass
     elif message.data == 'switch-offline':
-        switchDriverOffline(message)
+        await switchDriverOffline(message)
         pass
     elif message.data == 'departureLocationSaved':
         await setDestination(message)
@@ -341,18 +341,20 @@ async def menuDriver(message):
 
 
 async def switchDriverOnline(message):
+    # await message.bot.send_message(message.from_user.id, 'You need set a current location')
     BotDB.update_driver_status(message.from_user.id, 'online')
     localMessage = 'Вы онлайн. В течении {onlineTime:d} минут Вам будут приходить заказы'.format(onlineTime = round(ONLINE_TIME_SEC/60))
     await message.bot.send_message(message.from_user.id, localMessage)
     # выполнить функцию switchDriverOffline() через onlineTime секунд
-    Timer(ONLINE_TIME_SEC, switchDriverOffline, args=(message,)).start()
+    Timer(ONLINE_TIME_SEC, switchDriverOffline, args=message)
     pass
 
 
 
 
-def switchDriverOffline(message):
+async def switchDriverOffline(message):
     BotDB.update_driver_status(message.from_user.id, 'offline')
+    await message.bot.send_message(message.from_user.id, ("You switch offline. Orders unavailable"), reply_markup = await markupRemove())
     pass
 
 
