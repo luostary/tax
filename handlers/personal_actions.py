@@ -41,7 +41,8 @@ driver = {
 }
 
 var = {
-    'locationType': ''
+    'locationType': '',
+    'orderTimer': False
 }
 
 # Данные вводимые с клавиатуры
@@ -351,6 +352,11 @@ async def switchDriverOnline(message):
     BotDB.update_driver_status(message.from_user.id, 'online')
     localMessage = 'Вы онлайн. В течении {onlineTime:d} минут Вам будут приходить заказы'.format(onlineTime = round(ONLINE_TIME_SEC/60))
     await message.bot.send_message(message.from_user.id, localMessage)
+
+    # Запуск заявок
+    time.sleep(3)
+    await getNearWaitingOrder(message)
+
     # выполнить функцию switchDriverOffline() через onlineTime секунд
     Timer(ONLINE_TIME_SEC, switchDriverOffline, args=message)
     pass
@@ -358,10 +364,37 @@ async def switchDriverOnline(message):
 
 
 
+async def getNearWaitingOrder(message):
+    modelDriver = BotDB.get_driver(message.from_user.id)
+    order = BotDB.get_near_order('waiting', modelDriver['latitude'], modelDriver['longitude'])
+    await getOrderCard(message, order)
+    var['orderTimer'] = Timer(ORDER_REPEAT_TIME_SEC, getNearWaitingOrder, args=message)
+
+
+
+
 async def switchDriverOffline(message):
     BotDB.update_driver_status(message.from_user.id, 'offline')
-    await message.bot.send_message(message.from_user.id, ("You switch offline. Orders unavailable"), reply_markup = await markupRemove())
+    await message.bot.send_message(message.from_user.id, t("You switch offline. Orders unavailable"), reply_markup = await markupRemove())
+    var['orderTimer'].cancel()
+    var['orderTimer'] = False
     pass
+
+
+
+
+async def getOrderCard(message, order):
+    markup = InlineKeyboardMarkup(row_width=3)
+    item1 = InlineKeyboardButton(text=t('Cancel') + ' ❌', callback_data='orderCancel')
+    item2 = InlineKeyboardButton(text=t('Confirm') + ' ✅', callback_data='orderConfirm')
+    markup.add(item1, item2)
+    caption = '\n'.join((
+        '<b>Заказ №' + str(order['id']) + '</b>',
+        'Имя <b>' + str(order['name']) + '</b>',
+        'Расстояние <b>' + str(order['route_length'] / 1000) + ' км' + '</b>',
+        'Сумма <b>' + str(order['amount_client']) + '</b>',
+    ))
+    await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML', reply_markup = markup)
 
 
 
@@ -657,7 +690,7 @@ async def process_phone(message: types.Message, state: FSMContext):
 
 async def setDriverLocation(message):
     var['locationType'] = 'driverCurLoc'
-    await message.bot.send_message(message.from_user.id, 'Set current location')
+    await message.bot.send_message(message.from_user.id, t('Set current location'))
     pass
 async def setDeparture(message):
     var['locationType'] = 'clientDptLoc'

@@ -20,7 +20,7 @@ class BotDB:
         'progress': 'В пути 🟠',
         'done': 'Выполнен 🔵',
         'cancel': 'Отменен ⚫',
-        
+
         'unknown': 'Неизвестен ⚪'
     }
 
@@ -151,6 +151,24 @@ class BotDB:
         except Error as e:
             print(e)
         return self.conn.commit()
+    def update_driver_location(self, user_id, latitude, longitude):
+        try:
+            self.cursor.execute("UPDATE `driver` SET latitude = ?, longitude = ? WHERE tg_user_id = ?", (latitude, longitude, user_id))
+        except Error as e:
+            print(e)
+        return self.conn.commit()
+    def get_near_order(self, status, latitude, longitude):
+        sql = '''
+            select
+                ABS(max(o.departure_latitude - ?)) as l1
+                , ABS(max(o.departure_longitude - ?)) as l2
+                , *
+            from `order` o
+            left join client c ON c.id = o.client_id
+            where o.status = ? AND o.departure_latitude > 0 AND o.departure_longitude > 0
+        '''
+        result = self.cursor.execute(sql, (latitude, longitude, status))
+        return result.fetchone()
 
 
 
