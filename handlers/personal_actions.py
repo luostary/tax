@@ -40,6 +40,10 @@ driver = {
     'balance': '',
 }
 
+var = {
+    'locationType': ''
+}
+
 # Данные вводимые с клавиатуры
 class FormClient(StatesGroup):
     name = State()
@@ -258,7 +262,7 @@ async def inlineClick(message, state: FSMContext):
         else:
             await message.bot.send_message(message.from_user.id, t("This order cannot be taken, it is already taken"))
     elif message.data == 'switch-online':
-        await switchDriverOnline(message)
+        await setDriverLocation(message)
         pass
     elif message.data == 'switch-offline':
         await switchDriverOffline(message)
@@ -270,6 +274,8 @@ async def inlineClick(message, state: FSMContext):
         await setLength(message)
         await clientRegistered(message)
         pass
+    elif message.data == 'driverLocationSaved':
+        await switchDriverOnline(message)
     elif "date" in message.data:
         if message.data == 'dateRightNow':
             date = datetime.now()
@@ -603,8 +609,8 @@ async def process_name(message: types.Message, state: FSMContext):
 #  Need check via internet
 async def setPhone(message):
     await FormClient.phone.set()
-    await message.bot.send_message(message.from_user.id, t("Enter phone number?"), reply_markup = await markupRemove())
-    await message.bot.send_message(message.from_user.id, t("Examples of phone number: +905331234567, +79031234567"))
+    await message.bot.send_message(message.from_user.id, t("Enter phone number?"))
+    await message.bot.send_message(message.from_user.id, t("Examples of phone number: +905331234567, +79031234567"), reply_markup = await markupRemove())
 @dp.message_handler(state=FormClient.phone)
 async def process_phone(message: types.Message, state: FSMContext):
 
@@ -649,24 +655,34 @@ async def process_phone(message: types.Message, state: FSMContext):
 
 
 
-
+async def setDriverLocation(message):
+    var['locationType'] = 'driverCurLoc'
+    await message.bot.send_message(message.from_user.id, 'Set current location')
+    pass
 async def setDeparture(message):
+    var['locationType'] = 'clientDptLoc'
     await message.bot.send_message(message.from_user.id, t("Set departure location"), reply_markup = await markupRemove())
     pass
 async def setDestination(message):
+    var['locationType'] = 'clientDstLoc'
     await message.bot.send_message(message.from_user.id, t("Set destination location"), reply_markup = await markupRemove())
     pass
 @dp.message_handler(content_types=['location'])
 async def process_location(message):
     markup = types.InlineKeyboardMarkup(row_width=2)
-    if order['departure_latitude'] == 0:
+    if var['locationType'] == 'clientDptLoc':
         order['departure_latitude'] = message.location.latitude
         order['departure_longitude'] = message.location.longitude
         markup.add(types.InlineKeyboardButton(text=t('Confirm'), callback_data='departureLocationSaved'))
-    else:
+    elif var['locationType'] == 'clientDstLoc':
         order['destination_latitude'] = message.location.latitude
         order['destination_longitude'] = message.location.longitude
         markup.add(types.InlineKeyboardButton(text=t('Confirm'), callback_data='destinationLocationSaved'))
+    elif var['locationType'] == 'driverCurLoc':
+        BotDB.update_driver_location(message.from_user.id, message.location.latitude, message.location.longitude)
+        markup.add(types.InlineKeyboardButton(text=t('Confirm'), callback_data='driverLocationSaved'))
+    else:
+        await message.bot.send_message(message.chat.id, ("Sorry cant saved data"))
     await message.bot.send_message(message.chat.id, t("Confirm entry or correct value"), reply_markup = markup)
     pass
 
