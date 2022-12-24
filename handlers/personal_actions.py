@@ -14,6 +14,7 @@ from PIL import Image
 from pathlib import Path
 from io import BytesIO
 import asyncio
+from geopy.distance import geodesic
 
 # sudo apt-get install xclip
 import pyperclip
@@ -67,9 +68,16 @@ minBalanceAmount = 10
 @dp.message_handler(commands=["start", "Back"])
 async def start(message: types.Message):
     await startMenu(message)
+    x = await getLength(35.155697,	33.897665, 35.253486,	33.899746)
+    print(x)
+    x = await getLengthV2(35.155697,	33.897665, 35.253486,	33.899746)
+    print(x)
     # await setDriverPhone(message)
 
 
+async def getLengthV2(dept_lt, dept_ln, dest_lt, dest_ln):
+    distance = geodesic((dept_lt, dept_ln), (dest_lt, dest_ln)).kilometers
+    return f'{distance:.2f}'
 
 
 async def getLength(dept_lt, dept_ln, dest_lt, dest_ln):
@@ -443,6 +451,13 @@ async def switchDriverOffline(message):
 
 
 async def getOrderCard(message, order):
+    modelDriver = BotDB.get_driver(message.from_user.id)
+    distanceToClient = await getLengthV2(
+        modelDriver['latitude'],
+        modelDriver['longitude'],
+        order['departure_latitude'],
+        order['departure_longitude']
+    )
     markup = InlineKeyboardMarkup(row_width=3)
     item1 = InlineKeyboardButton(text=t('Cancel') + ' ❌', callback_data='orderCancel_' + str(order['order_id']))
     item2 = InlineKeyboardButton(text=t('Confirm') + ' ✅', callback_data='orderConfirm_' + str(order['order_id']))
@@ -450,8 +465,9 @@ async def getOrderCard(message, order):
     caption = '\n'.join((
         '<b>Заказ №' + str(order['order_id']) + '</b>',
         'Имя <b>' + str(order['name']) + '</b>',
-        'Расстояние <b>' + str(order['route_length'] / 1000) + ' км' + '</b>',
-        'Сумма <b>' + str(order['amount_client']) + '</b>',
+        'Расстояние до клиента, км. <b>' + str(distanceToClient) + ' км' + '</b>',
+        'Длина маршрута, км. <b>' + str(order['route_length'] / 1000) + ' км' + '</b>',
+        'Сумма, tl. <b>' + str(order['amount_client']) + '</b>',
     ))
     await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML', reply_markup = markup)
 async def getOrderCardClient(message, order):
