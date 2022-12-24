@@ -314,6 +314,28 @@ async def inlineClick(message, state: FSMContext):
         pass
     elif message.data == 'switch-online':
         await setDriverLocation(message)
+        modelDriver = BotDB.get_driver(message.from_user.id)
+        if (not modelDriver):
+            print('can`t get driver from db')
+        else:
+            if modelDriver['balance'] == None:
+                modelDriver['balance'] = 0
+            if (modelDriver['balance'] < minBalanceAmount):
+                localMessage = t("You can`t see orders, your balance is less than {minAmount:d} usdt")
+                localMessage = localMessage.format(minAmount = minBalanceAmount)
+                await message.bot.send_message(message.from_user.id, localMessage)
+            elif modelDriver['phone'] == None:
+                await message.bot.send_message(message.from_user.id, t('Phone is required, set it in client form'))
+            elif modelDriver['status'] == 'offline':
+                await setDriverLocation(message)
+            elif modelDriver['status'] == 'route':
+                localMessage = t("You cannot switch to online, you must complete the route")
+                await message.bot.send_message(message.from_user.id, localMessage)
+            elif modelDriver['status'] == 'online':
+                localMessage = t("You are online, already")
+                await message.bot.send_message(message.from_user.id, localMessage)
+            else:
+                await message.bot.send_message(message.from_user.id, t('You have unknown status'))
         pass
     elif message.data == 'switch-offline':
         await switchDriverOffline(message)
@@ -625,6 +647,30 @@ async def getActiveOrders(message):
             ));
             # await message.bot.send_location(message.from_user.id, row['departure_latitude'], row['departure_longitude'])
             await message.bot.send_message(message.from_user.id, text, reply_markup = await bookOrder('bookOrder_' + str(row['id'])))
+            pass
+
+
+
+
+async def getDriverDoneOrders(message):
+    modelOrders = BotDB.get_orders(message.from_user.id, 'done')
+    if len(modelOrders) == 0:
+        await message.bot.send_message(message.from_user.id, t('Has not done orders'))
+    else:
+        for row in modelOrders:
+            if not row['dt_order']:
+                dateFormat = 'Не указана'
+            else:
+                dateFormat = datetime.strptime(row['dt_order'], "%Y-%m-%d %H:%M").strftime("%H:%M %d-%m-%Y")
+            text = '\n'.join((
+                '<b>Заказ № ' + str(row['id']) + '</b>',
+                'Статус <b>' + BotDB.statuses[row['status']] + '</b>',
+                'Дата <b>' + str(dateFormat) + '</b>',
+                'Стоимость, t.l. <b>' + str(row['amount_client']) + '</b>',
+                'Длина маршрута, км. <b>' + str(row['route_length'] / 1000) + '</b>',
+                'Время поездки, мин. <b>' + str(row['route_time']) + '</b>'
+            ));
+            await message.bot.send_message(message.from_user.id, text, reply_markup = await menuDriver(message))
             pass
 
 
