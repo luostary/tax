@@ -107,6 +107,61 @@ async def startMenu(message):
 
 
 
+async def clientProfile(message, client_id):
+    modelClient = BotDB.get_client(client_id)
+    if ( modelClient):
+        await message.bot.send_message(message.from_user.id, t("Client profile not found"))
+    else:
+        caption = '\n'.join((
+            '<b>Имя</b> ' + str(modelClient['name']),
+            '<b>Телефон</b> ' + str(modelClient['phone']),
+        ))
+        await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML')
+    pass
+
+
+
+
+async def driverProfile(message, driver_id):
+    modelDriver = BotDB.get_driver(driver_id)
+    if (not modelDriver):
+        await message.bot.send_message(message.from_user.id, "Can`t do it, begin to /start")
+    else:
+        Path("merged").mkdir(parents=True, exist_ok=True)
+        car = 'cars/' + str(driver_id) + '.jpg';
+        driverFileName = 'drivers/' + str(driver_id) + '.jpg';
+        fileCarExist = exists(car)
+        fileDriverExist = exists(driverFileName)
+        statusIcon = str(BotDB.statuses[modelDriver['status']])
+        caption = '\n'.join((
+            '<b>Имя</b> ' + str(modelDriver['name']),
+            '<b>Статус</b> ' + str(statusIcon),
+            '<b>Телефон</b> ' + str(modelDriver['phone']),
+            '<b>Номер машины</b> ' + str(modelDriver['car_number']),
+        ))
+
+        if fileCarExist & fileDriverExist:
+            image1 = Image.open(car)
+            image2 = Image.open(driverFileName)
+            image1 = image1.resize((240, 320))
+            image2 = image2.resize((240, 320))
+            image1_size = image1.size
+            image2_size = image2.size
+            merged_image = Image.new(mode='RGB', size=(2*240, 320), color=(250,250,250))
+            merged_image.paste(image1,(0,0))
+            merged_image.paste(image2,(240,0))
+            bio = BytesIO()
+            bio.name = 'merged/' + str(driver_id) + '.jpg'
+            merged_image.save(bio, 'JPEG')
+            bio.seek(0)
+            await message.bot.send_photo(message.from_user.id, bio, caption=caption, parse_mode='HTML')
+        else:
+            await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML')
+    pass
+
+
+
+
 # Перехватчик кликов по инлайновой клавиатуре
 @dp.callback_query_handler(lambda message:True)
 async def inlineClick(message, state: FSMContext):
@@ -115,15 +170,7 @@ async def inlineClick(message, state: FSMContext):
             BotDB.add_client(message.from_user.id)
         await menuClient(message)
     elif message.data == 'client-profile':
-        modelClient = BotDB.get_client(message.from_user.id)
-        if (not modelClient):
-            await message.bot.send_message(message.from_user.id, t("We couldn't find your profile"))
-        else:
-            caption = '\n'.join((
-                '<b>Имя</b> ' + str(modelClient['name']),
-                '<b>Телефон</b> ' + str(modelClient['phone']),
-            ))
-            await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML')
+        await clientProfile(message, message.from_user.id)
     elif message.data == 'make-order':
         order['client_id'] = BotDB.get_client_id(message.from_user.id)
         await setName(message)
@@ -133,40 +180,8 @@ async def inlineClick(message, state: FSMContext):
         await menuDriver(message)
         pass
     elif message.data == 'driver-profile':
-        modelDriver = BotDB.get_driver(message.from_user.id)
-        if (not modelDriver):
-            await message.bot.send_message(message.from_user.id, "Can`t do it, begin to /start")
-        else:
-            Path("merged").mkdir(parents=True, exist_ok=True)
-            car = 'cars/' + str(message.from_user.id) + '.jpg';
-            driverFileName = 'drivers/' + str(message.from_user.id) + '.jpg';
-            fileCarExist = exists(car)
-            fileDriverExist = exists(driverFileName)
-            statusIcon = str(BotDB.statuses[modelDriver['status']])
-            caption = '\n'.join((
-                '<b>Имя</b> ' + str(modelDriver['name']),
-                '<b>Статус</b> ' + str(statusIcon),
-                '<b>Телефон</b> ' + str(modelDriver['phone']),
-                '<b>Номер машины</b> ' + str(modelDriver['car_number']),
-            ))
-
-            if fileCarExist & fileDriverExist:
-                image1 = Image.open(car)
-                image2 = Image.open(driverFileName)
-                image1 = image1.resize((240, 320))
-                image2 = image2.resize((240, 320))
-                image1_size = image1.size
-                image2_size = image2.size
-                merged_image = Image.new(mode='RGB', size=(2*240, 320), color=(250,250,250))
-                merged_image.paste(image1,(0,0))
-                merged_image.paste(image2,(240,0))
-                bio = BytesIO()
-                bio.name = 'merged/' + str(message.from_user.id) + '.jpg'
-                merged_image.save(bio, 'JPEG')
-                bio.seek(0)
-                await message.bot.send_photo(message.from_user.id, bio, caption=caption, parse_mode='HTML')
-            else:
-                await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML')
+        await driverProfile(message, message.from_user.id)
+        pass
     elif message.data == "driver-form":
         async with state.proxy() as data:
             data['dir'] = 'cars/'
@@ -259,7 +274,7 @@ async def inlineClick(message, state: FSMContext):
                     try:
                         BotDB.update_driver_status(message.from_user.id, 'route')
                         BotDB.update_order_status(order_id, 'progress')
-                        BotDB.update_order_driver_id(order_id, driver['id'])
+                        BotDB.update_order_driver_id(order_id, driver['tg_user_id'])
                         BotDB.update_driver_balance(message.from_user.id, int(driver['balance'] - income))
                         # Only here we take a departure-point to the Driver
                         await message.bot.send_location(message.from_user.id, progressOrder['departure_latitude'], progressOrder['departure_longitude'])
@@ -608,7 +623,10 @@ async def getClientOrders(message):
                         status = BotDB.statuses[row['status']]
                     except:
                         status = BotDB.statuses['unknown']
-                    dateFormat = datetime.strptime(row['dt_order'], "%Y-%m-%d %H:%M").strftime("%H:%M %d-%m-%Y")
+                    if not row['dt_order']:
+                        dateFormat = 'Не указана'
+                    else:
+                        dateFormat = datetime.strptime(row['dt_order'], "%Y-%m-%d %H:%M").strftime("%H:%M %d-%m-%Y")
                     text = '\n'.join((
                         'Имя <b>' + str(client['name']) + '</b>',
                         'Статус <b>' + status + '</b>',
@@ -617,7 +635,10 @@ async def getClientOrders(message):
                         'Длина маршрута, км. <b>' + str(row['route_length'] / 1000) + '</b>',
                         'Время поездки, мин. <b>' + str(row['route_time']) + '</b>'
                     ));
+                    await message.bot.send_message(message.from_user.id, t('Order'))
                     await message.bot.send_message(message.from_user.id, text)
+                    await message.bot.send_message(message.from_user.id, t('Driver'))
+                    await driverProfile(message, row['driver_id'])
                     pass
             pass
 
