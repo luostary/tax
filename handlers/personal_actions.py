@@ -172,7 +172,7 @@ async def inlineClick(message, state: FSMContext):
     elif message.data == 'client-profile':
         await clientProfile(message, message.from_user.id)
     elif message.data == 'make-order':
-        order['client_id'] = BotDB.get_client_id(message.from_user.id)
+        order['client_id'] = message.from_user.id
         await setName(message)
     elif message.data == "driver":
         if(not BotDB.driver_exists(message.from_user.id)):
@@ -614,7 +614,7 @@ async def getClientOrders(message):
             await message.bot.send_message(message.from_user.id, ("Unable to find customer"))
             pass
         else:
-            modelOrders = BotDB.get_client_orders(client['id'])
+            modelOrders = BotDB.get_client_orders(message.from_user.id)
             if len(modelOrders) == 0:
                 await message.bot.send_message(message.from_user.id, ("You haven`t orders"))
             else:
