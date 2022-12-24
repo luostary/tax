@@ -65,13 +65,10 @@ minBalanceAmount = 10
 
 
 
-@dp.message_handler(commands=["start", "Back"])
-async def start(message: types.Message):
+@dp.message_handler(commands=["start", "Back"], state='*')
+async def start(message: types.Message, state: FSMContext):
+    await state.finish()
     await startMenu(message)
-    x = await getLength(35.155697,	33.897665, 35.253486,	33.899746)
-    print(x)
-    x = await getLengthV2(35.155697,	33.897665, 35.253486,	33.899746)
-    print(x)
     # await setDriverPhone(message)
 
 
@@ -109,8 +106,8 @@ async def startMenu(message):
     if message.from_user.id == 419839605:
         item3 = InlineKeyboardButton(("Top up balance"), callback_data='drivers')
         markup.add(item3)
-    await message.bot.send_message(message.from_user.id, ("Welcome!"), reply_markup = await markupRemove())
-    await message.bot.send_message(message.from_user.id, ("Use the menu to get started"), reply_markup = markup)
+    await message.bot.send_message(message.from_user.id, t("Welcome!"), reply_markup = await markupRemove())
+    await message.bot.send_message(message.from_user.id, t("Use the menu to get started"), reply_markup = markup)
 
 
 
@@ -227,29 +224,29 @@ async def inlineClick(message, state: FSMContext):
     elif message.data == 'confirm-transfer':
         await setDriverWallet(message)
         pass
-    elif message.data == 'orders':
+    elif message.data == 'driver-done-orders':
         modelDriver = BotDB.get_driver(message.from_user.id)
         if (not modelDriver):
-            await message.bot.send_message(message.from_user.id, "Can`t do it, begin to /start")
+            print('can`t get driver from db')
         else:
             if modelDriver['balance'] == None:
                 modelDriver['balance'] = 0
             if (modelDriver['balance'] < minBalanceAmount):
-                localMessage = t("You cant see orders, your balance is less than {minAmount:d} usdt")
+                localMessage = t("You can`t see orders, your balance is less than {minAmount:d} usdt")
                 localMessage = localMessage.format(minAmount = minBalanceAmount)
                 await message.bot.send_message(message.from_user.id, localMessage)
             elif modelDriver['phone'] == None:
                 await message.bot.send_message(message.from_user.id, t('Phone is required, set it in client form'))
             elif modelDriver['status'] == 'offline':
-                localMessage = ("You cant see orders, your are offline")
-                await message.bot.send_message(message.from_user.id, localMessage)
+                await getDriverDoneOrders(message)
             elif modelDriver['status'] == 'route':
-                localMessage = ("You cant see orders, your are at route")
+                localMessage = t("You can`t see orders, your are at route")
                 await message.bot.send_message(message.from_user.id, localMessage)
             elif modelDriver['status'] == 'online':
-                await getActiveOrders(message)
+                localMessage = t("You can`t see orders, your are online")
+                await message.bot.send_message(message.from_user.id, localMessage)
             else:
-                await message.bot.send_message(message.from_user.id, ('You have unknown status'))
+                await message.bot.send_message(message.from_user.id, t('You have unknown status'))
     elif message.data == 'client-orders':
         await getClientOrders(message)
         pass
@@ -262,7 +259,7 @@ async def inlineClick(message, state: FSMContext):
         if BotDB.order_waiting_exists(order_id, 'waiting'):
             modelOrder = BotDB.get_order(order_id)
             if (not modelOrder):
-                await message.bot.send_message(message.from_user.id, ("Order not found"))
+                await message.bot.send_message(message.from_user.id, t("Order not found"))
             else:
                 if modelOrder['amount_client'] == None:
                     modelOrder['amount_client'] = 0
@@ -303,7 +300,7 @@ async def inlineClick(message, state: FSMContext):
         if BotDB.order_waiting_exists(order_id, 'waiting'):
             BotDB.driver_order_increment_cancel_cn(message.from_user.id, order_id)
         else:
-            await message.bot.send_message(message.from_user.id, ("This order cannot be canceled, it is already taken"))
+            await message.bot.send_message(message.from_user.id, t("This order cannot be canceled, it is already taken"))
         pass
     elif 'orderCancelClient' in message.data:
         # switch order to cancel
@@ -313,7 +310,6 @@ async def inlineClick(message, state: FSMContext):
         #  What we doing here?
         pass
     elif message.data == 'switch-online':
-        await setDriverLocation(message)
         modelDriver = BotDB.get_driver(message.from_user.id)
         if (not modelDriver):
             print('can`t get driver from db')
@@ -376,13 +372,13 @@ async def inlineClick(message, state: FSMContext):
         order_id = Array[1]
         modelOrder = BotDB.get_order(order_id)
         if (not modelOrder):
-            await message.bot.send_message(message.from_user.id, ("Order not found"))
+            await message.bot.send_message(message.from_user.id, t("Order not found"))
         else:
             try:
                 BotDB.update_driver_status(message.from_user.id, 'offline')
                 BotDB.update_order_status(order_id, 'done')
             except:
-                print("Cant switch order to done")
+                print("can`t switch order to done")
             await message.bot.send_message(message.from_user.id, t("Order is done"))
 
 
@@ -390,17 +386,17 @@ async def driverDoneOrder(message):
     try:
         driverId = BotDB.get_driver_id(message.from_user.id)
         if (not driverId):
-            await message.bot.send_message(message.from_user.id, ("Driver not found"))
+            await message.bot.send_message(message.from_user.id, t("Driver not found"))
         else:
             modelOrder = BotDB.get_order_progress_by_driver_id(driverId)
             if (not modelOrder):
-                await message.bot.send_message(message.from_user.id, ("You haven`t current order"))
+                await message.bot.send_message(message.from_user.id, t("You haven`t current order"))
             else:
                 BotDB.update_driver_status(message.from_user.id, 'offline')
                 BotDB.update_order_status(modelOrder['id'], 'done')
-                await message.bot.send_message(message.from_user.id, ('Congratulations! You have completed the order. You can go back to online to make a new order'))
+                await message.bot.send_message(message.from_user.id, t('Congratulations! You have completed the order. You can go back to online to make a new order'))
     except:
-        await message.bot.send_message(message.from_user.id, ("Can`t set done order status"))
+        await message.bot.send_message(message.from_user.id, t("Can`t set done order status"))
 
 
 
@@ -410,7 +406,7 @@ async def menuDriver(message):
     item1 = InlineKeyboardButton(text=t('Driver form') + ' 📝', callback_data='driver-form')
     item2 = InlineKeyboardButton(text=t('Account'), callback_data='account')
     item4 = InlineKeyboardButton(text=t('How to top up') + ' ❓', callback_data='how-topup-account')
-    item3 = InlineKeyboardButton(text=t('Orders'), callback_data='orders')
+    item3 = InlineKeyboardButton(text=t('Done orders'), callback_data='driver-done-orders')
     item5 = InlineKeyboardButton(text=t('My profile') + ' 🔖', callback_data='driver-profile')
     item6 = InlineKeyboardButton(text=t("Go online 🟢"), callback_data='switch-online')
     item7 = InlineKeyboardButton(text=t('Go offline 🔴'), callback_data='switch-offline')
@@ -459,7 +455,7 @@ async def getNearWaitingOrder(message):
 async def switchDriverOffline(message):
     modelDriver = BotDB.get_driver(message.from_user.id)
     if not modelDriver:
-        print('cant switch to offline')
+        print('can`t switch to offline')
     else:
         if modelDriver['status'] != 'offline':
             BotDB.update_driver_status(message.from_user.id, 'offline')
@@ -538,28 +534,28 @@ async def getWalletDrivers(message):
 async def setDriverTopupBalance(message, wallet):
     driver['wallet'] = wallet
     await FormDriver.balance.set()
-    await message.bot.send_message(message.from_user.id, ("Top up driver balance"), reply_markup = await markupRemove())
+    await message.bot.send_message(message.from_user.id, t("Top up driver balance"), reply_markup = await markupRemove())
 @dp.message_handler(state=FormDriver.balance)
 async def process_driver_deposit_balance(message: types.Message, state: FSMContext):
     if message.text == t('Confirm'):
         await state.finish()
         modelDriver = BotDB.get_driver_by_wallet(driver['wallet'])
         if (not modelDriver):
-            await message.bot.send_message(message.from_user.id, ("Wallet not found, you can see right wallet to your profile"), reply_markup = await markupRemove())
+            await message.bot.send_message(message.from_user.id, t("Wallet not found, you can see right wallet to your profile"), reply_markup = await markupRemove())
         else:
             if modelDriver['balance'] == None:
                 modelDriver['balance'] = 0
             newBalance = modelDriver['balance'] + int(driver['balance'])
             BotDB.update_driver_balance(modelDriver['tg_user_id'], newBalance)
             time.sleep(2)
-            await message.bot.send_message(message.from_user.id, ("Balance is filled"))
+            await message.bot.send_message(message.from_user.id, t("Balance is filled"))
         pass
     else:
         if (message.text.isdigit()):
             match = re.match('^[\d]{1,10}$', message.text)
             if match:
                 driver['balance'] = message.text
-                await message.bot.send_message(message.from_user.id, ('Do you confirm?'), reply_markup = await standartConfirm())
+                await message.bot.send_message(message.from_user.id, t('Do you confirm?'), reply_markup = await standartConfirm())
             else:
                 await message.bot.send_message(message.chat.id, t("You can input from 1 to 10 digits"))
         else:
@@ -580,7 +576,7 @@ async def process_driver_phone(message: types.Message, state: FSMContext):
             await driverRegistered(message)
             await menuDriver(message)
         except:
-            await message.bot.send_message(message.from_user.id, ("We cant create your form"), reply_markup = await markupRemove())
+            await message.bot.send_message(message.from_user.id, t("We can`t create your form"), reply_markup = await markupRemove())
         pass
     else:
         if (message.text.isdigit()):
@@ -635,7 +631,7 @@ async def process_driver_car_number(message: types.Message, state: FSMContext):
 async def getActiveOrders(message):
     waitingOrders = BotDB.get_orders(message.from_user.id, 'waiting')
     if len(waitingOrders) == 0:
-        await message.bot.send_message(message.from_user.id, ('Has not waiting orders'))
+        await message.bot.send_message(message.from_user.id, t('Has not waiting orders'))
     else:
         for row in waitingOrders:
             text = '\n'.join((
@@ -712,16 +708,16 @@ async def menuClient(message):
 
 async def getClientOrders(message):
     if (not BotDB.client_exists(message.from_user.id)):
-        await message.bot.send_message(message.from_user.id, ('Client not found'))
+        await message.bot.send_message(message.from_user.id, t('Client not found'))
     else:
         client = BotDB.get_client(message.from_user.id)
         if (not client):
-            await message.bot.send_message(message.from_user.id, ("Unable to find customer"))
+            await message.bot.send_message(message.from_user.id, t("Unable to find customer"))
             pass
         else:
             modelOrders = BotDB.get_client_orders(message.from_user.id)
             if len(modelOrders) == 0:
-                await message.bot.send_message(message.from_user.id, ("You haven`t orders"))
+                await message.bot.send_message(message.from_user.id, t("You haven`t orders"))
             else:
                 for row in modelOrders:
                     try:
@@ -863,7 +859,7 @@ async def process_location(message):
         BotDB.update_driver_location(message.from_user.id, message.location.latitude, message.location.longitude)
         markup.add(types.InlineKeyboardButton(text=t('Confirm'), callback_data='driverLocationSaved'))
     else:
-        await message.bot.send_message(message.chat.id, ("Sorry cant saved data"))
+        await message.bot.send_message(message.chat.id, t("Sorry can`t saved data"))
     await message.bot.send_message(message.chat.id, t("Confirm entry or correct value"), reply_markup = markup)
     pass
 
@@ -892,6 +888,7 @@ async def clientRegistered(message):
     try:
         BotDB.update_client(message.from_user.id, client)
         order['status'] = 'waiting'
+        order['dt_order'] = datetime.now()
         BotDB.create_order(order)
         order['departure_latitude'] = 0
         order['departure_longitude'] = 0
@@ -916,7 +913,7 @@ async def driverRegistered(message):
 
 
 async def gotoStart(message):
-    await message.bot.send_message(message.from_user.id, t("Can't do it, start with the /start command"))
+    await message.bot.send_message(message.from_user.id, t("can`t do it, start with the /start command"))
 async def standartConfirm():
     markup = types.ReplyKeyboardMarkup(resize_keyboard = True)
     markup.add(types.KeyboardButton(t('Confirm')))
