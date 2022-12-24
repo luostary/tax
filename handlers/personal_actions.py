@@ -317,19 +317,19 @@ async def inlineClick(message, state: FSMContext):
             if modelDriver['balance'] == None:
                 modelDriver['balance'] = 0
             if (modelDriver['balance'] < minBalanceAmount):
-                localMessage = t("You can`t see orders, your balance is less than {minAmount:d} usdt")
+                localMessage = t("You can`t switch to online, your balance is less than {minAmount:d} usdt")
                 localMessage = localMessage.format(minAmount = minBalanceAmount)
                 await message.bot.send_message(message.from_user.id, localMessage)
             elif modelDriver['phone'] == None:
                 await message.bot.send_message(message.from_user.id, t('Phone is required, set it in client form'))
-            elif modelDriver['status'] == 'offline':
-                await setDriverLocation(message)
             elif modelDriver['status'] == 'route':
                 localMessage = t("You cannot switch to online, you must complete the route")
                 await message.bot.send_message(message.from_user.id, localMessage)
             elif modelDriver['status'] == 'online':
                 localMessage = t("You are online, already")
                 await message.bot.send_message(message.from_user.id, localMessage)
+            elif modelDriver['status'] == 'offline':
+                await setDriverLocation(message)
             else:
                 await message.bot.send_message(message.from_user.id, t('You have unknown status'))
         pass
