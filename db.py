@@ -101,7 +101,9 @@ class BotDB:
         """Проверяем, есть ли driver в базе"""
         result = self.cursor.execute("SELECT `id` FROM `driver` WHERE `tg_user_id` = ?", (user_id,))
         return bool(len(result.fetchall()))
-
+    def get_drivers(self):
+        result = self.cursor.execute("SELECT * FROM `driver`")
+        return result.fetchall()
     def get_driver_id(self, user_id):
         """Достаем id driver в базе по его user_id"""
         result = self.cursor.execute("SELECT `id` FROM `driver` WHERE `tg_user_id` = ?", (user_id,))

@@ -38,6 +38,7 @@ driver = {
     'car_number': '',
     'status': '',
     'balance': '',
+    'wallet': '',
 }
 
 var = {
@@ -98,7 +99,7 @@ async def startMenu(message):
     item2 = InlineKeyboardButton(t('I looking for a taxi'), callback_data='client')
     markup.add(item1).add(item2)
     if message.from_user.id == 419839605:
-        item3 = InlineKeyboardButton(("Top up balance"), callback_data='driver-topup-balance')
+        item3 = InlineKeyboardButton(("Top up balance"), callback_data='drivers')
         markup.add(item3)
     await message.bot.send_message(message.from_user.id, ("Welcome!"), reply_markup = await markupRemove())
     await message.bot.send_message(message.from_user.id, ("Use the menu to get started"), reply_markup = markup)
@@ -171,8 +172,8 @@ async def inlineClick(message, state: FSMContext):
             data['dir'] = 'cars/'
             data['savedKey'] = 'carPhotoSaved'
         await setCarPhoto(message)
-    elif message.data == 'driver-topup-balance':
-        await setDriverTopupWallet(message)
+    elif message.data == 'drivers':
+        await getWalletDrivers(message)
     elif message.data == 'carPhotoSaved':
         async with state.proxy() as data:
             data['dir'] = 'drivers/'
@@ -229,6 +230,9 @@ async def inlineClick(message, state: FSMContext):
     elif message.data == 'client-orders':
         await getClientOrders(message)
         pass
+    elif 'wallet' in message.data:
+        Array = message.data.split('_')
+        await setDriverTopupBalance(message, Array[1])
     elif "bookOrder" in message.data:
         bookOrderArray = message.data.split('_')
         order_id = bookOrderArray[1]
@@ -423,12 +427,20 @@ async def process_car_photo(message: types.Message, state: FSMContext):
 
 
 
-async def setDriverTopupWallet(message):
-    await setDriverTopupBalance(message)
+async def getWalletDrivers(message):
+    drivers = BotDB.get_drivers()
+    markup = InlineKeyboardMarkup(row_width=3)
+    for modelDriver in drivers:
+        print(modelDriver)
+        item = InlineKeyboardButton(text=modelDriver['tg_user_id'], callback_data='wallet_' + str(modelDriver['wallet']))
+        markup.add(item)
+    await message.bot.send_message(message.from_user.id, 'Выберите водителя', reply_markup = markup)
 
 
 
-async def setDriverTopupBalance(message):
+
+async def setDriverTopupBalance(message, wallet):
+    driver['wallet'] = wallet
     await FormDriver.balance.set()
     await message.bot.send_message(message.from_user.id, ("Top up driver balance"), reply_markup = await markupRemove())
 @dp.message_handler(state=FormDriver.balance)
