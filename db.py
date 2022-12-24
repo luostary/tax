@@ -74,6 +74,9 @@ class BotDB:
         except Error as e:
             print(e)
         return self.conn.commit()
+    def get_last_order(self):
+        result = self.cursor.execute("SELECT *, o.id order_id FROM `order` o LEFT JOIN client c ON c.tg_user_id = o.tg_user_id ORDER BY id DESC LIMIT 1")
+        return self.cursor.fetchone()
     def get_orders(self, user_id, status):
         result = self.cursor.execute("SELECT * FROM `order` WHERE `status` = ? ORDER BY `dt_order`", (status,))
         return result.fetchall()
@@ -167,7 +170,7 @@ class BotDB:
                 , *
                 , o.id order_id
             from `order` o
-            left join client c ON c.id = o.client_id
+            left join client c ON c.tg_user_id = o.client_id
             left join driver_order do ON do.order_id = o.id
             where o.status = ? AND o.departure_latitude > 0 AND o.departure_longitude > 0
             and (do.driver_id IS NULL OR (do.driver_id = ? and do.driver_cancel_cn < 2))

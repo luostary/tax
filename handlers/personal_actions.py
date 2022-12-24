@@ -297,6 +297,13 @@ async def inlineClick(message, state: FSMContext):
         else:
             await message.bot.send_message(message.from_user.id, ("This order cannot be canceled, it is already taken"))
         pass
+    elif 'orderCancelClient' in message.data:
+        # switch order to cancel
+        # message to client about it
+        pass
+    elif 'orderWaitingClient' in message.data:
+        #  What we doing here?
+        pass
     elif message.data == 'switch-online':
         await setDriverLocation(message)
         pass
@@ -447,6 +454,18 @@ async def getOrderCard(message, order):
         'Сумма <b>' + str(order['amount_client']) + '</b>',
     ))
     await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML', reply_markup = markup)
+async def getOrderCardClient(message, order):
+    markup = InlineKeyboardMarkup(row_width=3)
+    item1 = InlineKeyboardButton(text=t('Cancel trip') + ' ❌', callback_data='orderCancelClient_' + str(order['order_id']))
+    item2 = InlineKeyboardButton(text=t('Waiting driver') + ' ⏳', callback_data='orderWaitingClient_' + str(order['order_id']))
+    markup.add(item1, item2)
+    caption = '\n'.join((
+        '<b>Заказ №' + str(order['order_id']) + '</b>',
+        'Имя <b>' + str(order['name']) + '</b>',
+        'Расстояние <b>' + str(order['route_length'] / 1000) + ' км' + '</b>',
+        'Сумма <b>' + str(order['amount_client']) + ' t.l.</b>',
+    ))
+    await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML', reply_markup = markup)
 
 
 
@@ -523,7 +542,7 @@ async def process_driver_phone(message: types.Message, state: FSMContext):
             await driverRegistered(message)
             await menuDriver(message)
         except:
-            await message.bot.send_message(message.from_user.id, ("We cant create your form"), reply_markup = markupRemove())
+            await message.bot.send_message(message.from_user.id, ("We cant create your form"), reply_markup = await markupRemove())
         pass
     else:
         if (message.text.isdigit()):
@@ -661,8 +680,9 @@ async def getClientOrders(message):
                     ));
                     await message.bot.send_message(message.from_user.id, t('Order'))
                     await message.bot.send_message(message.from_user.id, text)
-                    await message.bot.send_message(message.from_user.id, t('Driver'))
-                    await driverProfile(message, row['driver_id'])
+                    if BotDB.get_driver(row['driver_id']):
+                        await message.bot.send_message(message.from_user.id, t('Driver'))
+                        await driverProfile(message, row['driver_id'])
                     pass
             pass
 
@@ -815,10 +835,15 @@ async def clientRegistered(message):
         order['departure_longitude'] = 0
         order['destination_latitude'] = 0
         order['destination_longitude'] = 0
+
+        modelOrder = BotDB.get_last_order()
+        await getOrderCardClient(message, modelOrder)
+
         await message.bot.send_message(message.from_user.id, t("Thank you for an order"))
         time.sleep(2)
         await message.bot.send_message(message.from_user.id, t("We are already looking for drivers for you.."))
     except:
+        print('error method clientRegistered(message)')
         await gotoStart(message)
 async def driverRegistered(message):
     driver['status'] = 'offline'
