@@ -42,7 +42,8 @@ driver = {
 
 var = {
     'locationType': '',
-    'orderTimer': False
+    'orderTimer': False,
+    'currentOrder': None,
 }
 
 # Данные вводимые с клавиатуры
@@ -262,6 +263,14 @@ async def inlineClick(message, state: FSMContext):
                         await message.bot.send_message(message.from_user.id, t("Order can not be taken"))
         else:
             await message.bot.send_message(message.from_user.id, t("This order cannot be taken, it is already taken"))
+    elif 'orderCancel' in message.data:
+        Array = message.data.split('_')
+        order_id = Array[1]
+        if BotDB.order_waiting_exists(order_id, 'waiting'):
+            BotDB.driver_order_increment_cancel_cn(message.from_user.id, order_id)
+        else:
+            await message.bot.send_message(message.from_user.id, ("This order cannot be canceled, it is already taken"))
+        pass
     elif message.data == 'switch-online':
         await setDriverLocation(message)
         pass
@@ -366,7 +375,7 @@ async def switchDriverOnline(message):
 
 async def getNearWaitingOrder(message):
     modelDriver = BotDB.get_driver(message.from_user.id)
-    order = BotDB.get_near_order('waiting', modelDriver['latitude'], modelDriver['longitude'])
+    order = BotDB.get_near_order('waiting', modelDriver['latitude'], modelDriver['longitude'], message.from_user.id)
     await getOrderCard(message, order)
     var['orderTimer'] = Timer(ORDER_REPEAT_TIME_SEC, getNearWaitingOrder, args=message)
 
@@ -385,11 +394,11 @@ async def switchDriverOffline(message):
 
 async def getOrderCard(message, order):
     markup = InlineKeyboardMarkup(row_width=3)
-    item1 = InlineKeyboardButton(text=t('Cancel') + ' ❌', callback_data='orderCancel')
-    item2 = InlineKeyboardButton(text=t('Confirm') + ' ✅', callback_data='orderConfirm')
+    item1 = InlineKeyboardButton(text=t('Cancel') + ' ❌', callback_data='orderCancel_' + str(order['order_id']))
+    item2 = InlineKeyboardButton(text=t('Confirm') + ' ✅', callback_data='orderConfirm_' + str(order['order_id']))
     markup.add(item1, item2)
     caption = '\n'.join((
-        '<b>Заказ №' + str(order['id']) + '</b>',
+        '<b>Заказ №' + str(order['order_id']) + '</b>',
         'Имя <b>' + str(order['name']) + '</b>',
         'Расстояние <b>' + str(order['route_length'] / 1000) + ' км' + '</b>',
         'Сумма <b>' + str(order['amount_client']) + '</b>',

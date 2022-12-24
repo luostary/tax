@@ -157,23 +157,43 @@ class BotDB:
         except Error as e:
             print(e)
         return self.conn.commit()
-    def get_near_order(self, status, latitude, longitude):
+    def get_near_order(self, status, latitude, longitude, driver_id):
         sql = '''
             select
-                ABS(max(o.departure_latitude - ?)) as l1
-                , ABS(max(o.departure_longitude - ?)) as l2
+                MIN(ABS(o.departure_latitude - ?)) as l1
+                , MIN(ABS(o.departure_longitude - ?)) as l2
                 , *
+                , o.id order_id
             from `order` o
             left join client c ON c.id = o.client_id
+            left join driver_order do ON do.order_id = o.id
             where o.status = ? AND o.departure_latitude > 0 AND o.departure_longitude > 0
+            and (do.driver_id IS NULL OR (do.driver_id = ? and do.driver_cancel_cn < 2))
         '''
-        result = self.cursor.execute(sql, (latitude, longitude, status))
+        result = self.cursor.execute(sql, (latitude, longitude, status, driver_id))
         return result.fetchone()
 
 
 
 
 
+    def driver_order_exists(self, driver_id, order_id):
+        result = self.cursor.execute("SELECT `driver_id` FROM `driver_order` WHERE `driver_id` = ? AND order_id = ?", (driver_id, order_id))
+        return bool(self.cursor.fetchall())
+    def driver_order_create(self, driver_id, order_id):
+        try:
+            self.cursor.execute("INSERT INTO `driver_order` (`driver_id`, `order_id`) VALUES (?, ?)", (driver_id, order_id,))
+        except Error as e:
+            print(e)
+        return self.conn.commit()
+    def driver_order_increment_cancel_cn(self, driver_id, order_id):
+        try:
+            if (not self.driver_order_exists(driver_id, order_id)):
+                self.driver_order_create(driver_id, order_id)
+            self.cursor.execute("UPDATE `driver_order` SET driver_cancel_cn = IFNULL(driver_cancel_cn, 0) + 1 WHERE driver_id = ? AND order_id = ?", (driver_id, order_id))
+        except Error as e:
+            print(e)
+        return self.conn.commit()
     def add_record(self, user_id, operation, value):
         """Создаем запись о доходах/расходах"""
         self.cursor.execute("INSERT INTO `records` (`users_id`, `operation`, `value`) VALUES (?, ?, ?)",
