@@ -87,10 +87,16 @@ class BotDB:
         result = self.cursor.execute("SELECT `id` FROM `order` WHERE id = ? AND status = ?", (id, status))
         return bool(len(result.fetchall()))
     def update_order_status(self, id, status):
-        self.cursor.execute("UPDATE `order` SET status = ? WHERE id = ?", (status, id,))
+        try:
+            self.cursor.execute("UPDATE `order` SET status = ? WHERE id = ?", (status, id,))
+        except Error as e:
+            print(e)
         return self.conn.commit()
     def update_order_driver_id(self, id, driver_id):
-        self.cursor.execute("UPDATE `order` SET driver_id = ? WHERE id = ?", (driver_id, id,))
+        try:
+            self.cursor.execute("UPDATE `order` SET driver_id = ? WHERE id = ?", (driver_id, id,))
+        except Error as e:
+            print(e)
         return self.conn.commit()
     def get_order(self, id):
         result = self.cursor.execute("SELECT * FROM `order` WHERE `id` = ?", (id,))
@@ -119,7 +125,10 @@ class BotDB:
 
     def add_driver(self, user_id):
         """Добавляем driver в базу"""
-        self.cursor.execute("INSERT INTO `driver` (`tg_user_id`) VALUES (?)", (user_id,))
+        try:
+            self.cursor.execute("INSERT INTO `driver` (`tg_user_id`) VALUES (?)", (user_id,))
+        except Error as e:
+            print(e)
         return self.conn.commit()
 
     def get_driver_balance(self, user_id):
@@ -201,10 +210,13 @@ class BotDB:
         return self.conn.commit()
     def add_record(self, user_id, operation, value):
         """Создаем запись о доходах/расходах"""
-        self.cursor.execute("INSERT INTO `records` (`users_id`, `operation`, `value`) VALUES (?, ?, ?)",
-            (self.get_user_id(user_id),
-            operation == "+",
-            value))
+        try:
+            self.cursor.execute("INSERT INTO `records` (`users_id`, `operation`, `value`) VALUES (?, ?, ?)",
+                (self.get_user_id(user_id),
+                operation == "+",
+                value))
+        except Error as e:
+            print(e)
         return self.conn.commit()
 
     def get_records(self, user_id, within = "all"):
