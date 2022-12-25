@@ -52,7 +52,6 @@ var = {
 class FormClient(StatesGroup):
     name = State()
     phone = State()
-    amount = State()
 class FormDriver(StatesGroup):
     name = State()
     phone = State()
@@ -820,27 +819,6 @@ async def process_phone(message: types.Message, state: FSMContext):
         else:
             await message.bot.send_message(message.chat.id, t("Number of digits is incorrect"))
 
-
-
-
-# async def setAmount(message):
-#     await FormClient.amount.set()
-#     await message.bot.send_message(message.chat.id, t("How much do you want to pay?"))
-#     pass
-# @dp.message_handler(state=FormClient.amount)
-# async def process_amount(message: types.Message, state: FSMContext):
-#     if message.text == t('Confirm'):
-#         await state.finish()
-#         await message.bot.send_message(message.from_user.id, t("We saved your amount"), reply_markup = await markupRemove())
-#         await setDeparture(message)
-#         pass
-#     else:
-#         if (message.text.isdigit()):
-#             async with state.proxy() as data:
-#                 order['amount_client'] = message.text
-#             await message.bot.send_message(message.chat.id, t("Do you confirm your amount?"), reply_markup = await standartConfirm())
-#         else:
-#             await message.bot.send_message(message.chat.id, t("Only digits can be entered as a amount"))
 
 
 
