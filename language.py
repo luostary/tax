@@ -4,7 +4,7 @@ from config import *
 
 language = {
     'RU':{
-        "Account":"Счет",
+        "Account":"Баланс",
         "Attach a photo of your car": "Прикрепите фото Вашего автомобиля",
         "Back to menu":"Вернуться в меню",
         "Balance is filled":"Баланс заполнен",
@@ -69,7 +69,7 @@ language = {
         "This order cannot be taken, it is already taken":"Этот заказ нельзя взять, он уже занят другим водителем",
         "Top up driver balance":"Пополнить баланс водителя",
         "To use the service you need to enter some data":"Чтобы пользоваться сервисом необходимо ввести некоторые данные",
-        "To work in the system, you must have at least {minAmount:d} usdt on your account. To replenish the account, you need to transfer the currency to the specified crypto wallet": "Для работы в системе необходимо иметь на счету не меньше {minAmount:d} usdt. Чтобы пополнить счёт необходимо перевести валюту на указанный криптокошелёк",
+        "To work in the system, you must have at least {minAmount:d} usdt on your account. To replenish the account, you need to transfer the currency to the specified crypto wallet": "Для работы в системе необходимо иметь на балансе не меньше {minAmount:d} usdt. Чтобы пополнить счёт необходимо перевести валюту на указанный криптокошелёк",
         "Unable to find customer":"Не удалось найти клиента",
         "Under construction..": "В разработке..",
         "Use the menu to get started": "Используйте меню чтобы начать",
