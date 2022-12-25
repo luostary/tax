@@ -12,6 +12,7 @@ $ caribou create -d m migration_name
 
 update migration
 caribou upgrade taxi.db m
+"""
 
 def upgrade(connection):
     # rows query
