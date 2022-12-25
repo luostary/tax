@@ -113,6 +113,9 @@ class BotDB:
     def get_drivers(self):
         result = self.cursor.execute("SELECT * FROM `driver`")
         return result.fetchall()
+    def get_drivers_with_wallets(self):
+        result = self.cursor.execute("SELECT * FROM `driver` WHERE wallet not NULL")
+        return result.fetchall()
     def get_driver_id(self, user_id):
         """Достаем id driver в базе по его user_id"""
         result = self.cursor.execute("SELECT `id` FROM `driver` WHERE `tg_user_id` = ?", (user_id,))
@@ -137,6 +140,9 @@ class BotDB:
     def get_driver_by_wallet(self, wallet):
         result = self.cursor.execute("SELECT * FROM `driver` WHERE `wallet` = ?", (wallet,))
         return result.fetchone()
+    def get_drivers_by_wallet(self, wallet):
+        result = self.cursor.execute("SELECT * FROM `driver` WHERE `wallet` = ?", (wallet,))
+        return result.fetchall()
     def update_driver_balance(self, user_id, data):
         """update driver balance"""
         try:

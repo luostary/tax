@@ -168,7 +168,7 @@ async def driverProfile(message, driver_id):
 
 
 # Перехватчик кликов по инлайновой клавиатуре
-@dp.callback_query_handler(lambda message:True)
+@dp.callback_query_handler(lambda message:True, state='*')
 async def inlineClick(message, state: FSMContext):
     if message.data == "client":
         if(not BotDB.client_exists(message.from_user.id)):
@@ -203,6 +203,22 @@ async def inlineClick(message, state: FSMContext):
         await setDriverName(message)
     elif message.data == 'driverDoneOrder':
         await driverDoneOrder(message)
+    elif message.data == 'driverTopupBalanceConfirm':
+        async with state.proxy() as data:
+            localWallet = (data['wallet'])
+            localBalance = int(data['changeBalance'])
+        modelDriver = BotDB.get_driver_by_wallet(localWallet)
+        if (not modelDriver):
+            await message.bot.send_message(message.from_user.id, t("Wallet not found, you can see right wallet to your profile"), reply_markup = await markupRemove())
+        else:
+            if modelDriver['balance'] == None:
+                modelDriver['balance'] = 0
+            newBalance = modelDriver['balance'] + localBalance
+            BotDB.update_driver_balance(modelDriver['tg_user_id'], newBalance)
+            time.sleep(2)
+            await message.bot.send_message(message.from_user.id, t("Balance is filled"))
+        await state.finish()
+        pass
     elif message.data == 'account':
         driverBalance = (BotDB.get_driver(message.from_user.id))
         if None == driverBalance['balance']:
@@ -520,10 +536,9 @@ async def process_car_photo(message: types.Message, state: FSMContext):
 
 
 async def getWalletDrivers(message):
-    drivers = BotDB.get_drivers()
+    drivers = BotDB.get_drivers_with_wallets()
     markup = InlineKeyboardMarkup(row_width=3)
     for modelDriver in drivers:
-        print(modelDriver)
         item = InlineKeyboardButton(text=modelDriver['tg_user_id'], callback_data='wallet_' + str(modelDriver['wallet']))
         markup.add(item)
     await message.bot.send_message(message.from_user.id, 'Выберите водителя', reply_markup = markup)
@@ -533,33 +548,29 @@ async def getWalletDrivers(message):
 
 async def setDriverTopupBalance(message, wallet):
     driver['wallet'] = wallet
-    await FormDriver.balance.set()
-    await message.bot.send_message(message.from_user.id, t("Top up driver balance"), reply_markup = await markupRemove())
+    drivers = len(BotDB.get_drivers_by_wallet(wallet))
+    if (drivers > 1):
+        localMessage = "Нельзя пополнить кашелек поскольку найдено {drivers:d} водителей с таким кошельком"
+        localMessage = localMessage.format(drivers = drivers)
+        await message.bot.send_message(message.from_user.id, localMessage, reply_markup = await markupRemove())
+    else:
+        await FormDriver.balance.set()
+        await message.bot.send_message(message.from_user.id, t("Top up driver balance"), reply_markup = await markupRemove())
 @dp.message_handler(state=FormDriver.balance)
 async def process_driver_deposit_balance(message: types.Message, state: FSMContext):
+
     if message.text == t('Confirm'):
-        await state.finish()
-        modelDriver = BotDB.get_driver_by_wallet(driver['wallet'])
-        if (not modelDriver):
-            await message.bot.send_message(message.from_user.id, t("Wallet not found, you can see right wallet to your profile"), reply_markup = await markupRemove())
-        else:
-            if modelDriver['balance'] == None:
-                modelDriver['balance'] = 0
-            newBalance = modelDriver['balance'] + int(driver['balance'])
-            BotDB.update_driver_balance(modelDriver['tg_user_id'], newBalance)
-            time.sleep(2)
-            await message.bot.send_message(message.from_user.id, t("Balance is filled"))
         pass
     else:
-        if (message.text.isdigit()):
-            match = re.match('^[\d]{1,10}$', message.text)
-            if match:
-                driver['balance'] = message.text
-                await message.bot.send_message(message.from_user.id, t('Do you confirm?'), reply_markup = await standartConfirm())
-            else:
-                await message.bot.send_message(message.chat.id, t("You can input from 1 to 10 digits"))
+        match = re.match('^[\-]?[\d]{1,10}$', message.text)
+        if match:
+            async with state.proxy() as data:
+                data['changeBalance'] = message.text
+                data['wallet'] = driver['wallet']
+            await message.bot.send_message(message.from_user.id, t('Do you confirm?'), reply_markup = await inlineConfirm('driverTopupBalanceConfirm'))
         else:
             await message.bot.send_message(message.from_user.id, t("Only digits can be entered"))
+            await message.bot.send_message(message.chat.id, t("You can input from 1 to 10 digits"))
 
 
 
