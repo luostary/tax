@@ -181,6 +181,12 @@ async def inlineClick(message, state: FSMContext):
     elif message.data == 'make-order':
         order['client_id'] = message.from_user.id
         await setName(message)
+    elif message.data == 'clientNameSaved':
+        await state.finish()
+        await setPhone(message)
+    elif message.data == 'clientPhoneSaved':
+        await state.finish()
+        await setDeparture(message)
     elif message.data == "driver":
         if(not BotDB.driver_exists(message.from_user.id)):
             BotDB.add_driver(message.from_user.id)
@@ -763,19 +769,9 @@ async def setName(message):
     await message.bot.send_message(message.from_user.id, t("What's your name?"))
 @dp.message_handler(state=FormClient.name)
 async def process_name(message: types.Message, state: FSMContext):
-    """
-    Process user name
-    """
-    if (message.text == t('Confirm')):
-        await state.finish()
-        await setPhone(message)
-        # to Phone()
-    else:
-        async with state.proxy() as data:
-            client['name'] = message.text
-        markup = types.ReplyKeyboardMarkup(resize_keyboard = True)
-        markup.add(types.KeyboardButton(t('Confirm')))
-        await message.bot.send_message(message.from_user.id, client['name'] + t(', do you confirm your name?'), reply_markup = markup)
+    async with state.proxy() as data:
+        client['name'] = message.text
+    await message.bot.send_message(message.from_user.id, client['name'] + t(', do you confirm your name?'), reply_markup = await inlineConfirm('clientNameSaved'))
 
 
 
@@ -801,23 +797,14 @@ async def setPhone(message):
     await message.bot.send_message(message.from_user.id, t("Examples of phone number: +905331234567, +79031234567"), reply_markup = await markupRemove())
 @dp.message_handler(state=FormClient.phone)
 async def process_phone(message: types.Message, state: FSMContext):
-
-    if message.text == t('Confirm'):
-        await state.finish()
-        await setDeparture(message)
-        # to departure
+    match = re.match(PHONE_MASK, message.text)
+    if match:
+        async with state.proxy() as data:
+            client['phone'] = message.text
+        await message.bot.send_message(message.from_user.id, t('Do you confirm your phone?'), reply_markup = await inlineConfirm('clientPhoneSaved'))
         pass
     else:
-        match = re.match(PHONE_MASK, message.text)
-        if match:
-            async with state.proxy() as data:
-                client['phone'] = message.text
-            markup = types.ReplyKeyboardMarkup(resize_keyboard = True)
-            markup.add(types.KeyboardButton(t('Confirm')))
-            await message.bot.send_message(message.from_user.id, t('Do you confirm your phone?'), reply_markup = markup)
-            pass
-        else:
-            await message.bot.send_message(message.chat.id, t("Number of digits is incorrect"))
+        await message.bot.send_message(message.chat.id, t("Number of digits is incorrect"))
 
 
 
@@ -891,9 +878,9 @@ async def clientRegistered(message):
         await message.bot.send_message(message.from_user.id, t("Thank you for an order"))
         time.sleep(2)
         await message.bot.send_message(message.from_user.id, t("We are already looking for drivers for you.."))
-    # except:
-    #     print('error method clientRegistered(message)')
-    #     await gotoStart(message)
+    except:
+        print('error method clientRegistered(message)')
+        await gotoStart(message)
 async def driverRegistered(message):
     driver['status'] = 'offline'
     BotDB.update_driver(message.from_user.id, driver)
