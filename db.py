@@ -75,7 +75,7 @@ class BotDB:
             print(e)
         return self.conn.commit()
     def get_last_order(self):
-        result = self.cursor.execute("SELECT *, o.id order_id FROM `order` o LEFT JOIN client c ON c.tg_user_id = o.tg_user_id ORDER BY id DESC LIMIT 1")
+        result = self.cursor.execute("SELECT *, o.id order_id FROM `order` o LEFT JOIN client c ON c.tg_user_id = o.client_id ORDER BY id DESC LIMIT 1")
         return self.cursor.fetchone()
     def get_orders(self, user_id, status):
         result = self.cursor.execute("SELECT * FROM `order` WHERE `status` = ? ORDER BY `dt_order`", (status,))

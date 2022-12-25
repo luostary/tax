@@ -62,6 +62,7 @@ class FormDriver(StatesGroup):
 data = []
 minBalanceAmount = 10
 
+PHONE_MASK = '^[+]{1,1}[\d]{11,12}$'
 
 
 
@@ -92,7 +93,9 @@ async def getLength(dept_lt, dept_ln, dest_lt, dest_ln):
 async def setLength(message):
     order['route_length'] = await getLength(order['departure_latitude'], order['departure_longitude'], order['destination_latitude'], order['destination_longitude'])
     order['route_time'] = round(order['route_length'] / (40 * 1000) * 60)
-    order['amount_client'] = math.floor((order['route_length'] / 1000) * RATE_1_KM)
+    order['amount_client'] = math.ceil((order['route_length'] / 1000) * RATE_1_KM)
+    if order['amount_client'] < MIN_AMOUNT:
+        order['amount_client'] = MIN_AMOUNT
     pass
 
 
@@ -247,11 +250,7 @@ async def inlineClick(message, state: FSMContext):
         else:
             if modelDriver['balance'] == None:
                 modelDriver['balance'] = 0
-            if (modelDriver['balance'] < minBalanceAmount):
-                localMessage = t("You can`t see orders, your balance is less than {minAmount:d} usdt")
-                localMessage = localMessage.format(minAmount = minBalanceAmount)
-                await message.bot.send_message(message.from_user.id, localMessage)
-            elif modelDriver['phone'] == None:
+            if modelDriver['phone'] == None:
                 await message.bot.send_message(message.from_user.id, t('Phone is required, set it in client form'))
             elif modelDriver['status'] == 'offline':
                 await getDriverDoneOrders(message)
@@ -287,7 +286,7 @@ async def inlineClick(message, state: FSMContext):
                     driver['balance'] = 0
                 if not modelOrder['amount_client']:
                     modelOrder['amount_client'] = 0
-                income = int(math.ceil(modelOrder['amount_client'] / 100 * PERCENT) / RATE_1_USDT)
+                income = int(math.ceil((modelOrder['amount_client'] / 100 * PERCENT) / RATE_1_USDT))
                 progressOrder = BotDB.get_order(order_id)
                 if (not progressOrder):
                     await message.bot.send_message(message.from_user.id, "Can`t do it, begin to /start")
@@ -577,30 +576,28 @@ async def process_driver_deposit_balance(message: types.Message, state: FSMConte
 
 async def setDriverPhone(message):
     await FormDriver.phone.set()
-    await message.bot.send_message(message.from_user.id, t("Enter phone number?"), reply_markup = types.ReplyKeyboardRemove())
+    await message.bot.send_message(message.from_user.id, t("Enter phone number?"))
+    await message.bot.send_message(message.from_user.id, t("Examples of phone number: +905331234567, +79031234567"), reply_markup = await markupRemove())
 @dp.message_handler(state=FormDriver.phone)
 async def process_driver_phone(message: types.Message, state: FSMContext):
 
     if message.text == t('Confirm'):
         try:
             await state.finish()
-            await driverRegistered(message)
             await menuDriver(message)
+            await driverRegistered(message)
         except:
             await message.bot.send_message(message.from_user.id, t("We can`t create your form"), reply_markup = await markupRemove())
         pass
     else:
-        if (message.text.isdigit()):
-            match = re.match('^[\d]{11,12}$', message.text)
-            if match:
-                # async with state.proxy() as data:
-                driver['phone'] = message.text
-                await message.bot.send_message(message.from_user.id, t('Do you confirm your phone?'), reply_markup = await standartConfirm())
-                pass
-            else:
-                await message.bot.send_message(message.chat.id, t("Number of digits is incorrect"))
+        match = re.match(PHONE_MASK, message.text)
+        if match:
+            # async with state.proxy() as data:
+            driver['phone'] = message.text
+            await message.bot.send_message(message.from_user.id, t('Do you confirm your phone?'), reply_markup = await standartConfirm())
+            pass
         else:
-            await message.bot.send_message(message.chat.id, t("Only digits can be entered as a phone number"))
+            await message.bot.send_message(message.chat.id, t("Number of digits is incorrect"))
 
 
 
@@ -664,6 +661,7 @@ async def getDriverDoneOrders(message):
     if len(modelOrders) == 0:
         await message.bot.send_message(message.from_user.id, t('Has not done orders'))
     else:
+        await menuDriver(message)
         for row in modelOrders:
             if not row['dt_order']:
                 dateFormat = 'Не указана'
@@ -677,7 +675,7 @@ async def getDriverDoneOrders(message):
                 'Длина маршрута, км. <b>' + str(row['route_length'] / 1000) + '</b>',
                 'Время поездки, мин. <b>' + str(row['route_time']) + '</b>'
             ));
-            await message.bot.send_message(message.from_user.id, text, reply_markup = await menuDriver(message))
+            await message.bot.send_message(message.from_user.id, text, reply_markup = await markupRemove())
             pass
 
 
@@ -706,12 +704,15 @@ async def process_driver_wallet(message: types.Message, state: FSMContext):
 
 
 async def menuClient(message):
+    modelClient = BotDB.get_client(message.from_user.id)
     markup = InlineKeyboardMarkup(row_width=1)
     item10 = InlineKeyboardButton(text=t('Profile'), callback_data='client-profile')
     item20 = InlineKeyboardButton(text=t('Make an order') + ' 🚕', callback_data='make-order')
     # item30 = InlineKeyboardButton(text=t('Free drivers'), callback_data='free-drivers')
     item40 = InlineKeyboardButton(text=t('My orders'), callback_data='client-orders')
-    markup.add(item10).add(item20).add(item40)
+    if modelClient['name'] and modelClient['phone']:
+        markup.add(item10)
+    markup.add(item20).add(item40)
     await message.bot.send_message(message.from_user.id, t("You are in the client menu"), reply_markup = markup)
 
 
@@ -808,7 +809,7 @@ async def process_phone(message: types.Message, state: FSMContext):
         # to departure
         pass
     else:
-        match = re.match('^[+]{1,1}[\d]{11,12}$', message.text)
+        match = re.match(PHONE_MASK, message.text)
         if match:
             async with state.proxy() as data:
                 client['phone'] = message.text
@@ -899,7 +900,7 @@ async def clientRegistered(message):
     try:
         BotDB.update_client(message.from_user.id, client)
         order['status'] = 'waiting'
-        order['dt_order'] = datetime.now()
+        order['dt_order'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         BotDB.create_order(order)
         order['departure_latitude'] = 0
         order['departure_longitude'] = 0
@@ -912,9 +913,9 @@ async def clientRegistered(message):
         await message.bot.send_message(message.from_user.id, t("Thank you for an order"))
         time.sleep(2)
         await message.bot.send_message(message.from_user.id, t("We are already looking for drivers for you.."))
-    except:
-        print('error method clientRegistered(message)')
-        await gotoStart(message)
+    # except:
+    #     print('error method clientRegistered(message)')
+    #     await gotoStart(message)
 async def driverRegistered(message):
     driver['status'] = 'offline'
     BotDB.update_driver(message.from_user.id, driver)
