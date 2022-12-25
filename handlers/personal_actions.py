@@ -204,6 +204,10 @@ async def inlineClick(message, state: FSMContext):
         await getWalletDrivers(message)
     elif message.data == 'carPhotoSaved':
         async with state.proxy() as data:
+            dMessage = data['dMessage']
+            pass
+        await deleteMessage(message, dMessage)
+        async with state.proxy() as data:
             data['dir'] = 'drivers/'
             data['savedKey'] = 'driverPhotoSaved'
         await setDriverPhoto(message)
@@ -534,7 +538,9 @@ async def process_car_photo(message: types.Message, state: FSMContext):
         dir = data['dir']
         savedKey = data['savedKey']
     await message.photo[-1].download(destination_file=dir + str(message.from_user.id) + '.jpg')
-    await message.bot.send_message(message.chat.id, t("Do you confirm?"), reply_markup = await inlineConfirm(savedKey))
+    dMessage = await message.bot.send_message(message.chat.id, t("Do you confirm?"), reply_markup = await inlineConfirm(savedKey))
+    async with state.proxy() as data:
+        data['dMessage'] = dMessage
 
 
 
@@ -886,6 +892,12 @@ async def driverRegistered(message):
     BotDB.update_driver(message.from_user.id, driver)
     time.sleep(2)
     await message.bot.send_message(message.from_user.id, t("We are looking for clients for you already"))
+
+
+
+async def deleteMessage(aio, dMessage):
+    await aio.bot.delete_message(dMessage.chat.id, dMessage.message_id)
+    pass
 
 
 
