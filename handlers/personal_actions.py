@@ -677,7 +677,7 @@ async def getDriverDoneOrders(message):
             if not row['dt_order']:
                 dateFormat = 'Не указана'
             else:
-                dateFormat = datetime.strptime(row['dt_order'], "%Y-%m-%d %H:%M").strftime("%H:%M %d-%m-%Y")
+                dateFormat = datetime.strptime(row['dt_order'], "%Y-%m-%d %H:%M:%S").strftime("%H:%M %d-%m-%Y")
             text = '\n'.join((
                 '<b>Заказ № ' + str(row['id']) + '</b>',
                 'Статус <b>' + BotDB.statuses[row['status']] + '</b>',
@@ -750,7 +750,7 @@ async def getClientOrders(message):
                     if not row['dt_order']:
                         dateFormat = 'Не указана'
                     else:
-                        dateFormat = datetime.strptime(row['dt_order'], "%Y-%m-%d %H:%M").strftime("%H:%M %d-%m-%Y")
+                        dateFormat = datetime.strptime(row['dt_order'], "%Y-%m-%d %H:%M:%S").strftime("%H:%M %d-%m-%Y")
                     text = '\n'.join((
                         'Имя <b>' + str(client['name']) + '</b>',
                         'Статус <b>' + status + '</b>',
