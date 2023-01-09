@@ -102,6 +102,7 @@ language = {
         "You haven`t orders":"У вас нет заказов",
         "You haven`t current order":"У вас нет текущего заказа",
         "Your balance is {driverBalance:d} usdt, min balance for use bot is {minBalance:d} usdt": "Ваш баланс {driverBalance:d} usdt, минимальный баланс для работы в системе {minBalance:d} usdt",
+        "Your order is accepted. The driver drove to you":"Ваш заказ принят. Водитель выехал к Вам",
         "You switch offline. Orders unavailable":"Вы отключены. Заказы недоступны",
         "How to top up":"Как пополнять",
         "My profile":"Мой профиль",

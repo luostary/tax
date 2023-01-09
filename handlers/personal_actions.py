@@ -129,10 +129,10 @@ async def clientProfile(message, client_id):
 
 
 
-async def driverProfile(message, driver_id):
+async def driverProfile(message, driver_id, user_id):
     modelDriver = BotDB.get_driver(driver_id)
     if (not modelDriver):
-        await message.bot.send_message(message.from_user.id, "Can`t do it, begin to /start")
+        await message.bot.send_message(user_id, "Can`t do it, begin to /start")
     else:
         Path("merged").mkdir(parents=True, exist_ok=True)
         car = 'cars/' + str(driver_id) + '.jpg';
@@ -161,9 +161,9 @@ async def driverProfile(message, driver_id):
             bio.name = 'merged/' + str(driver_id) + '.jpg'
             merged_image.save(bio, 'JPEG')
             bio.seek(0)
-            await message.bot.send_photo(message.from_user.id, bio, caption=caption, parse_mode='HTML')
+            await message.bot.send_photo(user_id, bio, caption=caption, parse_mode='HTML')
         else:
-            await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML')
+            await message.bot.send_message(user_id, caption, parse_mode='HTML')
     pass
 
 
@@ -193,7 +193,7 @@ async def inlineClick(message, state: FSMContext):
         await menuDriver(message)
         pass
     elif message.data == 'driver-profile':
-        await driverProfile(message, message.from_user.id)
+        await driverProfile(message, message.from_user.id, message.from_user.id)
         pass
     elif message.data == "driver-form":
         async with state.proxy() as data:
@@ -314,6 +314,9 @@ async def inlineClick(message, state: FSMContext):
                         markupDoneOrder = types.InlineKeyboardMarkup(row_width=1)
                         markupDoneOrder.add(types.InlineKeyboardButton(text=t('Done current order'), callback_data='driverDoneOrder_' + str(order_id)))
                         await message.bot.send_message(message.from_user.id, t('When you deliver the passenger, please press the button to done the order'), reply_markup = markupDoneOrder)
+
+                        modelOrder = BotDB.get_order(order_id)
+                        await sendClientNotification(message, modelOrder)
                     except:
                         await message.bot.send_message(message.from_user.id, t("Order can not be taken"))
         else:
@@ -763,7 +766,7 @@ async def getClientOrders(message):
                     await message.bot.send_message(message.from_user.id, text)
                     if BotDB.get_driver(row['driver_id']):
                         await message.bot.send_message(message.from_user.id, t('Driver'))
-                        await driverProfile(message, row['driver_id'])
+                        await driverProfile(message, row['driver_id'], message.from_user.id)
                     pass
             pass
 
@@ -844,6 +847,14 @@ async def process_location(message):
     else:
         await message.bot.send_message(message.chat.id, t("Sorry can`t saved data"))
     await message.bot.send_message(message.chat.id, t("Confirm entry or correct value"), reply_markup = markup)
+    pass
+
+
+
+
+async def sendClientNotification(message, order):
+    await message.bot.send_message(order['client_id'], t("Your order is accepted. The driver drove to you"))
+    await driverProfile(message, order['driver_id'], order['client_id'])
     pass
 
 
