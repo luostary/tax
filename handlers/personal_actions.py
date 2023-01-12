@@ -552,7 +552,7 @@ async def getWalletDrivers(message):
     drivers = BotDB.get_drivers_with_wallets()
     markup = InlineKeyboardMarkup(row_width=3)
     for modelDriver in drivers:
-        item = InlineKeyboardButton(text=str(modelDriver['tg_user_id']) + ' - ' + str(modelDriver['tg_first_name']), callback_data='wallet_' + str(modelDriver['wallet']))
+        item = InlineKeyboardButton(text=str(modelDriver['tg_user_id']) + ' - ' + str(modelDriver['wallet']) + ' - ' + str(modelDriver['tg_first_name']), callback_data='wallet_' + str(modelDriver['wallet']))
         markup.add(item)
     await message.bot.send_message(message.from_user.id, 'Выберите водителя', reply_markup = markup)
 
