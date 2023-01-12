@@ -6,10 +6,10 @@ Migration Version: 20230112235043
 """
 
 def upgrade(connection):
-    sql = 'ALTER TABLE client ADD tg_first_name TEXT after name;';
+    sql = 'ALTER TABLE client ADD tg_first_name TEXT;';
     connection.execute(sql)
 
-    sql = 'ALTER TABLE driver ADD tg_first_name TEXT after name;';
+    sql = 'ALTER TABLE driver ADD tg_first_name TEXT;';
     connection.execute(sql)
     connection.commit()
     pass
