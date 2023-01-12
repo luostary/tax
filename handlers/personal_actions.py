@@ -563,7 +563,7 @@ async def setDriverTopupBalance(message, wallet):
     driver['wallet'] = wallet
     drivers = len(BotDB.get_drivers_by_wallet(wallet))
     if (drivers > 1):
-        localMessage = "Нельзя пополнить кашелек поскольку найдено {drivers:d} водителей с таким кошельком"
+        localMessage = "Нельзя пополнить кошелек поскольку найдено {drivers:d} водителей с таким кошельком"
         localMessage = localMessage.format(drivers = drivers)
         await message.bot.send_message(message.from_user.id, localMessage, reply_markup = await markupRemove())
     else:
