@@ -51,10 +51,10 @@ class BotDB:
         result = self.cursor.execute("SELECT * FROM `client` WHERE `tg_user_id` = ?", (user_id,))
         return self.cursor.fetchone()
 
-    def add_client(self, user_id):
+    def add_client(self, user_id, first_name):
         """Добавляем client в базу"""
         try:
-            self.cursor.execute("INSERT INTO `client` (`tg_user_id`) VALUES (?)", (user_id,))
+            self.cursor.execute("INSERT INTO `client` (`tg_user_id`, `tg_first_name`) VALUES (?, ?)", (user_id, first_name,))
         except Error as e:
             print(e)
         return self.conn.commit()
@@ -126,10 +126,10 @@ class BotDB:
         result = self.cursor.execute("SELECT * FROM `driver` WHERE `tg_user_id` = ?", (user_id,))
         return result.fetchone()
 
-    def add_driver(self, user_id):
+    def add_driver(self, user_id, first_name):
         """Добавляем driver в базу"""
         try:
-            self.cursor.execute("INSERT INTO `driver` (`tg_user_id`) VALUES (?)", (user_id,))
+            self.cursor.execute("INSERT INTO `driver` (`tg_user_id`, `tg_first_name`) VALUES (?, ?)", (user_id, first_name,))
         except Error as e:
             print(e)
         return self.conn.commit()

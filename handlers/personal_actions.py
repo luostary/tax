@@ -174,7 +174,7 @@ async def driverProfile(message, driver_id, user_id):
 async def inlineClick(message, state: FSMContext):
     if message.data == "client":
         if(not BotDB.client_exists(message.from_user.id)):
-            BotDB.add_client(message.from_user.id)
+            BotDB.add_client(message.from_user.id, message.from_user.first_name)
         await menuClient(message)
     elif message.data == 'client-profile':
         await clientProfile(message, message.from_user.id)
@@ -189,7 +189,7 @@ async def inlineClick(message, state: FSMContext):
         await setDeparture(message)
     elif message.data == "driver":
         if(not BotDB.driver_exists(message.from_user.id)):
-            BotDB.add_driver(message.from_user.id)
+            BotDB.add_driver(message.from_user.id, message.from_user.first_name)
         await menuDriver(message)
         pass
     elif message.data == 'driver-profile':
@@ -552,7 +552,7 @@ async def getWalletDrivers(message):
     drivers = BotDB.get_drivers_with_wallets()
     markup = InlineKeyboardMarkup(row_width=3)
     for modelDriver in drivers:
-        item = InlineKeyboardButton(text=modelDriver['tg_user_id'], callback_data='wallet_' + str(modelDriver['wallet']))
+        item = InlineKeyboardButton(text=str(modelDriver['tg_user_id']) + ' - ' + str(modelDriver['tg_first_name']), callback_data='wallet_' + str(modelDriver['wallet']))
         markup.add(item)
     await message.bot.send_message(message.from_user.id, 'Выберите водителя', reply_markup = markup)
 
