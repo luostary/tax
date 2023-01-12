@@ -242,7 +242,7 @@ async def inlineClick(message, state: FSMContext):
         markupCopy = InlineKeyboardMarkup(row_width=1)
         # markupCopy.add(InlineKeyboardButton(text=t('Copy wallet'), callback_data='copy-wallet'))
         markupCopy.add(InlineKeyboardButton(text=t('Confirm the transfer'), callback_data='confirm-transfer'))
-        localMessage = t('To work in the system, you must have at least {minAmount:d} usdt on your account. To replenish the account, you need to transfer the currency to the specified crypto wallet')
+        localMessage = t('To work in the system, you must have at least {minAmount:d} usdt on your account. To replenish the account, you need to transfer the currency to the specified crypto wallet. After the payment has been made Confirm the transfer with the button')
         localMessage = localMessage.format(minAmount = minBalanceAmount)
         await message.bot.send_message(message.from_user.id, localMessage)
         await message.bot.send_message(message.from_user.id, WALLET, reply_markup = markupCopy)
