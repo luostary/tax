@@ -63,6 +63,7 @@ minBalanceAmount = 10
 
 PHONE_MASK = '^[+]{1,1}[\d]{11,12}$'
 
+hasConfirmStepsDriver = False
 
 
 @dp.message_handler(commands=["start", "Back"], state='*')
@@ -211,6 +212,20 @@ async def inlineClick(message, state: FSMContext):
             data['dir'] = 'drivers/'
             data['savedKey'] = 'driverPhotoSaved'
         await setDriverPhoto(message)
+    elif message.data == 'driverCarNumberSaved':
+        await state.finish()
+        await setDriverPhone(message)
+    elif message.data == 'driverNameSaved':
+        await state.finish()
+        await setDriverCarNumber(message)
+    elif message.data == 'driverPhoneSaved':
+        try:
+            await state.finish()
+            await menuDriver(message)
+            await driverRegistered(message)
+        except:
+            await message.bot.send_message(message.from_user.id, t("We can`t create your form"), reply_markup = await markupRemove())
+        pass
     elif message.data == 'driverPhotoSaved':
         await setDriverName(message)
     elif message.data == 'driverDoneOrder':
@@ -594,24 +609,22 @@ async def setDriverPhone(message):
     await message.bot.send_message(message.from_user.id, t("Examples of phone number: +905331234567, +79031234567"), reply_markup = await markupRemove())
 @dp.message_handler(state=FormDriver.phone)
 async def process_driver_phone(message: types.Message, state: FSMContext):
-
-    if message.text == t('Confirm'):
-        try:
-            await state.finish()
-            await menuDriver(message)
-            await driverRegistered(message)
-        except:
-            await message.bot.send_message(message.from_user.id, t("We can`t create your form"), reply_markup = await markupRemove())
-        pass
-    else:
-        match = re.match(PHONE_MASK, message.text)
-        if match:
-            # async with state.proxy() as data:
-            driver['phone'] = message.text
-            await message.bot.send_message(message.from_user.id, t('Do you confirm your phone?'), reply_markup = await standartConfirm())
+    match = re.match(PHONE_MASK, message.text)
+    if match:
+        driver['phone'] = message.text
+        if (not hasConfirmStepsDriver):
+            try:
+                await state.finish()
+                await menuDriver(message)
+                await driverRegistered(message)
+            except:
+                await message.bot.send_message(message.from_user.id, t("We can`t create your form"), reply_markup = await markupRemove())
             pass
         else:
-            await message.bot.send_message(message.chat.id, t("Number of digits is incorrect"))
+            await message.bot.send_message(message.from_user.id, t('Do you confirm?'), reply_markup = await inlineConfirm('driverPhoneSaved'))
+        pass
+    else:
+        await message.bot.send_message(message.chat.id, t("Number of digits is incorrect"))
 
 
 
@@ -621,13 +634,12 @@ async def setDriverName(message):
     await message.bot.send_message(message.from_user.id, t("What's your name?"), reply_markup = types.ReplyKeyboardRemove())
 @dp.message_handler(state=FormDriver.name)
 async def process_driver_name(message: types.Message, state: FSMContext):
-    if (message.text == t('Confirm')):
+    driver['name'] = message.text
+    if (not hasConfirmStepsDriver):
         await state.finish()
         await setDriverCarNumber(message)
     else:
-        # async with state.proxy() as data:
-        driver['name'] = message.text
-        await message.bot.send_message(message.from_user.id, driver['name'] + t(', do you confirm your name?'), reply_markup = await standartConfirm())
+        await message.bot.send_message(message.from_user.id, t('Do you confirm?'), reply_markup = await inlineConfirm('driverNameSaved'))
 
 
 
@@ -637,15 +649,12 @@ async def setDriverCarNumber(message):
     await message.bot.send_message(message.from_user.id, t("What's your car number?"), reply_markup = await markupRemove())
 @dp.message_handler(state=FormDriver.car_number)
 async def process_driver_car_number(message: types.Message, state: FSMContext):
-    if (message.text == t('Confirm')):
+    driver['car_number'] = message.text
+    if (not hasConfirmStepsDriver):
         await state.finish()
         await setDriverPhone(message)
     else:
-        # async with state.proxy() as data:
-        driver['car_number'] = message.text
-        markup = types.ReplyKeyboardMarkup(resize_keyboard = True)
-        markup.add(types.KeyboardButton(t('Confirm')))
-        await message.bot.send_message(message.from_user.id, t('Do you confirm?'), reply_markup = markup)
+        await message.bot.send_message(message.from_user.id, t('Do you confirm?'), reply_markup = await inlineConfirm('driverCarNumberSaved'))
 
 
 
@@ -901,8 +910,8 @@ async def clientRegistered(message):
 async def driverRegistered(message):
     driver['status'] = 'offline'
     BotDB.update_driver(message.from_user.id, driver)
-    time.sleep(2)
-    await message.bot.send_message(message.from_user.id, t("We are looking for clients for you already"))
+    # time.sleep(2)
+    # await message.bot.send_message(message.from_user.id, t("We are looking for clients for you already"))
 
 
 
