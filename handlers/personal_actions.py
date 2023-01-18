@@ -417,6 +417,7 @@ async def inlineClick(message, state: FSMContext):
         await clientRegistered(message)
         pass
     elif message.data == 'switch-online':
+        await menuDriver(message)
         modelDriver = BotDB.get_driver(message.from_user.id)
         if (not modelDriver):
             print('can`t get driver from db')
@@ -432,6 +433,12 @@ async def inlineClick(message, state: FSMContext):
             elif modelDriver['status'] == 'route':
                 localMessage = t("You cannot switch to online, you must complete the route")
                 await message.bot.send_message(message.from_user.id, localMessage)
+                modelOrder = BotDB.get_order_progress_by_driver_id(message.from_user.id)
+                print(modelOrder)
+                markupDoneOrder = types.InlineKeyboardMarkup(row_width=1)
+                markupDoneOrder.add(types.InlineKeyboardButton(text=t('Done current order'), callback_data='driverDoneOrder_' + str(modelOrder['id'])))
+                await message.bot.send_message(message.from_user.id, t('When you deliver the passenger, please press the button to done the order'), reply_markup = markupDoneOrder)
+
             elif modelDriver['status'] == 'online':
                 localMessage = t("You are online, already")
                 await message.bot.send_message(message.from_user.id, localMessage)
@@ -473,7 +480,7 @@ async def inlineClick(message, state: FSMContext):
         order['dt_order'] = date.strftime("%Y-%m-%d %H:%M")
         await setPhone(message)
         pass
-    elif 'driverDoneOrder' in message.data:
+    elif 'driverDoneOrder_' in message.data:
         Array = message.data.split('_')
         order_id = Array[1]
         modelOrder = BotDB.get_order(order_id)
@@ -481,13 +488,17 @@ async def inlineClick(message, state: FSMContext):
             await message.bot.send_message(message.from_user.id, t("Order not found"))
         else:
             try:
-                BotDB.update_driver_status(message.from_user.id, 'offline')
                 BotDB.update_order_status(order_id, 'done')
+                modelOrder = BotDB.get_order_progress_by_driver_id(modelOrder['driver_id'])
+                if modelOrder:
+                    BotDB.update_driver_status(message.from_user.id, 'route')
+                else:
+                    BotDB.update_driver_status(message.from_user.id, 'offline')
             except:
                 print("can`t switch order to done")
             await message.bot.send_message(message.from_user.id, t("Order is done"))
 
-
+# Помоему метод вообще не работает
 async def driverDoneOrder(message):
     try:
         driverId = BotDB.get_driver_id(message.from_user.id)
@@ -498,8 +509,12 @@ async def driverDoneOrder(message):
             if (not modelOrder):
                 await message.bot.send_message(message.from_user.id, t("You haven`t current order"))
             else:
-                BotDB.update_driver_status(message.from_user.id, 'offline')
                 BotDB.update_order_status(modelOrder['id'], 'done')
+                modelOrder = BotDB.get_order_progress_by_driver_id(driverId)
+                if modelOrder:
+                    BotDB.update_driver_status(message.from_user.id, 'route')
+                else:
+                    BotDB.update_driver_status(message.from_user.id, 'offline')
                 await message.bot.send_message(message.from_user.id, t('Congratulations! You have completed the order. You can go back to online to make a new order'))
     except:
         await message.bot.send_message(message.from_user.id, t("Can`t set done order status"))
@@ -561,15 +576,19 @@ async def getNearWaitingOrder(message, onTimer = True):
 
 async def switchDriverOffline(message):
     modelDriver = BotDB.get_driver(message.from_user.id)
+    modelOrder = BotDB.get_order_progress_by_driver_id(message.from_user.id)
     if not modelDriver:
         print('can`t switch to offline')
+    elif modelOrder:
+        BotDB.update_driver_status(message.from_user.id, 'route')
+        await message.bot.send_message(message.from_user.id, t("You switch route. Orders unavailable"), reply_markup = await markupRemove())
     else:
         if modelDriver['status'] != 'offline':
             BotDB.update_driver_status(message.from_user.id, 'offline')
+            await message.bot.send_message(message.from_user.id, t("You switch offline. Orders unavailable"), reply_markup = await markupRemove())
             if var['orderTimer'] != False:
                 var['orderTimer'].cancel()
                 var['orderTimer'] = False
-    await message.bot.send_message(message.from_user.id, t("You switch offline. Orders unavailable"), reply_markup = await markupRemove())
     pass
 
 
