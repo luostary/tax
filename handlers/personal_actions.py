@@ -951,8 +951,11 @@ async def process_location(message):
             await destinationLocationSaved(message)
     elif var['locationType'] == 'driverCurLoc':
         BotDB.update_driver_location(message.from_user.id, message.location.latitude, message.location.longitude)
-        markup.add(types.InlineKeyboardButton(text=t('Confirm'), callback_data='driverLocationSaved'))
-        await message.bot.send_message(message.chat.id, t("Confirm entry or correct value"), reply_markup = markup)
+        if HAS_CONFIRM_STEPS_DRIVER:
+            markup.add(types.InlineKeyboardButton(text=t('Confirm'), callback_data='driverLocationSaved'))
+            await message.bot.send_message(message.chat.id, t("Confirm entry or correct value"), reply_markup = markup)
+        else:
+            await switchDriverOnline(message)
     else:
         await message.bot.send_message(message.chat.id, t("Sorry can`t saved data"))
     pass
