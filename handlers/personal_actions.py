@@ -397,6 +397,7 @@ async def inlineClick(message, state: FSMContext):
         order_id = Array[1]
         if BotDB.order_waiting_exists(order_id, 'waiting'):
             BotDB.driver_order_increment_cancel_cn(message.from_user.id, order_id)
+            await getNearWaitingOrder(message, False)
         else:
             await message.bot.send_message(message.from_user.id, t("This order cannot be canceled, it is already taken"))
         pass
@@ -548,11 +549,12 @@ async def switchDriverOnline(message):
 
 
 
-async def getNearWaitingOrder(message):
+async def getNearWaitingOrder(message, onTimer = True):
     modelDriver = BotDB.get_driver(message.from_user.id)
     order = BotDB.get_near_order('waiting', modelDriver['latitude'], modelDriver['longitude'], message.from_user.id)
     await getOrderCard(message, order)
-    var['orderTimer'] = Timer(ORDER_REPEAT_TIME_SEC, getNearWaitingOrder, args=message)
+    if onTimer:
+        var['orderTimer'] = Timer(ORDER_REPEAT_TIME_SEC, getNearWaitingOrder, args=message)
 
 
 
@@ -585,13 +587,18 @@ async def getOrderCard(message, order):
     item1 = InlineKeyboardButton(text=t('Cancel') + ' ❌', callback_data='orderCancel_' + str(order['order_id']))
     item2 = InlineKeyboardButton(text=t('Confirm') + ' ✅', callback_data='orderConfirm_' + str(order['order_id']))
     markup.add(item1, item2)
-    caption = '\n'.join((
+    if not order['driver_cancel_cn']:
+        order['driver_cancel_cn'] = 0
+    caption = [
         '<b>Заказ №' + str(order['order_id']) + '</b>',
         'Имя <b>' + str(order['name']) + '</b>',
         'Расстояние до клиента, км. <b>' + str(distanceToClient) + ' км' + '</b>',
         'Длина маршрута, км. <b>' + str(order['route_length'] / 1000) + ' км' + '</b>',
         'Сумма, tl. <b>' + str(order['amount_client']) + '</b>',
-    ))
+    ]
+    if order['driver_cancel_cn'] > 0:
+        caption.append('Вы отклоняли <b>' + str(order['driver_cancel_cn']) + ' раз</b>',)
+    caption = '\n'.join(caption)
     await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML', reply_markup = markup)
 async def getOrderCardClient(message, order):
     markup = InlineKeyboardMarkup(row_width=3)
