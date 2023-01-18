@@ -63,7 +63,7 @@ minBalanceAmount = 10
 
 PHONE_MASK = '^[+]{1,1}[\d]{11,12}$'
 
-hasConfirmStepsDriver = False
+
 
 
 @dp.message_handler(commands=["start", "Back"], state='*')
@@ -141,14 +141,16 @@ async def driverProfile(message, driver_id, user_id):
         fileCarExist = exists(car)
         fileDriverExist = exists(driverFileName)
         statusIcon = str(BotDB.statuses[modelDriver['status']])
-        caption = '\n'.join((
+        caption = [
             '<b>Имя</b> ' + str(modelDriver['name']),
             '<b>Статус</b> ' + str(statusIcon),
-            '<b>Телефон</b> ' + str(modelDriver['phone']),
             '<b>Номер машины</b> ' + str(modelDriver['car_number']),
-        ))
+        ]
+        if driver_id == user_id:
+            caption.insert(1, '<b>Телефон</b> ' + str(modelDriver['phone']))
+        caption = '\n'.join(caption)
+        versionMerge = 0
 
-        await menuDriver(message)
         if fileCarExist & fileDriverExist:
             x = 240
             y = 320
@@ -171,6 +173,13 @@ async def driverProfile(message, driver_id, user_id):
                     merged_image = Image.new(mode='RGB', size=(y, x+yy), color=(250,250,250))
                     merged_image.paste(image1,(0,0))
                     merged_image.paste(image2,(0,yy))
+                elif image2.size[0] == image2.size[1]:
+                    versionMerge=6
+                    image1 = image1.resize((x, y))
+                    image2 = image2.resize((y, y))
+                    merged_image = Image.new(mode='RGB', size=(x+y, y), color=(250,250,250))
+                    merged_image.paste(image1,(0,0))
+                    merged_image.paste(image2,(x,0))
             elif image1.size[0] > image1.size[1]:
                 if image2.size[0] > image2.size[1]:
                     versionMerge=2
@@ -187,7 +196,22 @@ async def driverProfile(message, driver_id, user_id):
                     merged_image = Image.new(mode='RGB', size=(y, yy+x), color=(250,250,250))
                     merged_image.paste(image1,(0,0))
                     merged_image.paste(image2,(0,x))
+                elif image2.size[0] == image2.size[1]:
+                    versionMerge=7
+                    image1 = image1.resize((y, x))
+                    image2 = image2.resize((y, y))
+                    merged_image = Image.new(mode='RGB', size=(y, y+x), color=(250,250,250))
+                    merged_image.paste(image1,(0,0))
+                    merged_image.paste(image2,(0,x))
+            elif image1.size[0] == image1.size[1] & image2.size[0] == image2.size[1]:
+                versionMerge=5
+                image1 = image1.resize((y, y))
+                image2 = image2.resize((y, y))
+                merged_image = Image.new(mode='RGB', size=(y+y, y), color=(250,250,250))
+                merged_image.paste(image1,(0,0))
+                merged_image.paste(image2,(y,0))
 
+        if versionMerge > 0:
             bio = BytesIO()
             bio.name = 'merged/' + str(driver_id) + '.jpg'
             merged_image.save(bio, 'JPEG')
@@ -225,6 +249,7 @@ async def inlineClick(message, state: FSMContext):
         await menuDriver(message)
         pass
     elif message.data == 'driver-profile':
+        await menuDriver(message)
         await driverProfile(message, message.from_user.id, message.from_user.id)
         pass
     elif message.data == "driver-form":
@@ -421,16 +446,7 @@ async def inlineClick(message, state: FSMContext):
         await setDestination(message)
         pass
     elif message.data == 'destinationLocationSaved':
-        await setLength(message)
-        order['status'] = 'create'
-        order['dt_order'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        BotDB.create_order(order)
-        # order['departure_latitude'] = 0
-        # order['departure_longitude'] = 0
-        # order['destination_latitude'] = 0
-        # order['destination_longitude'] = 0
-        modelOrder = BotDB.get_last_order()
-        await getOrderCardClient(message, modelOrder)
+        await destinationLocationSaved(message)
         pass
     elif message.data == 'driverLocationSaved':
         await switchDriverOnline(message)
@@ -610,6 +626,18 @@ async def process_car_photo(message: types.Message, state: FSMContext):
 
 
 
+async def carPhotoSaved(message):
+    async with state.proxy() as data:
+        dMessage = data['dMessage']
+        pass
+    await deleteMessage(message, dMessage)
+    async with state.proxy() as data:
+        data['dir'] = 'drivers/'
+        data['savedKey'] = 'driverPhotoSaved'
+
+
+
+
 async def getWalletDrivers(message):
     drivers = BotDB.get_drivers_with_wallets()
     markup = InlineKeyboardMarkup(row_width=3)
@@ -659,11 +687,12 @@ async def process_driver_phone(message: types.Message, state: FSMContext):
     match = re.match(PHONE_MASK, message.text)
     if match:
         driver['phone'] = message.text
-        if (not hasConfirmStepsDriver):
+        if (not HAS_CONFIRM_STEPS_DRIVER):
             try:
                 await state.finish()
-                await menuDriver(message)
                 await driverRegistered(message)
+                time.sleep(1)
+                await menuDriver(message)
             except:
                 await message.bot.send_message(message.from_user.id, t("We can`t create your form"), reply_markup = await markupRemove())
             pass
@@ -682,7 +711,7 @@ async def setDriverName(message):
 @dp.message_handler(state=FormDriver.name)
 async def process_driver_name(message: types.Message, state: FSMContext):
     driver['name'] = message.text
-    if (not hasConfirmStepsDriver):
+    if (not HAS_CONFIRM_STEPS_DRIVER):
         await state.finish()
         await setDriverCarNumber(message)
     else:
@@ -697,7 +726,7 @@ async def setDriverCarNumber(message):
 @dp.message_handler(state=FormDriver.car_number)
 async def process_driver_car_number(message: types.Message, state: FSMContext):
     driver['car_number'] = message.text
-    if (not hasConfirmStepsDriver):
+    if (not HAS_CONFIRM_STEPS_DRIVER):
         await state.finish()
         await setDriverPhone(message)
     else:
@@ -836,7 +865,11 @@ async def setName(message):
 async def process_name(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         client['name'] = message.text
-    await message.bot.send_message(message.from_user.id, client['name'] + t(', do you confirm your name?'), reply_markup = await inlineConfirm('clientNameSaved'))
+    if HAS_CONFIRM_STEPS_CLIENT:
+        await message.bot.send_message(message.from_user.id, client['name'] + t(', do you confirm your name?'), reply_markup = await inlineConfirm('clientNameSaved'))
+    else:
+        await state.finish()
+        await setPhone(message)
 
 
 
@@ -866,7 +899,11 @@ async def process_phone(message: types.Message, state: FSMContext):
     if match:
         async with state.proxy() as data:
             client['phone'] = message.text
-        await message.bot.send_message(message.from_user.id, t('Do you confirm your phone?'), reply_markup = await inlineConfirm('clientPhoneSaved'))
+        if HAS_CONFIRM_STEPS_CLIENT:
+            await message.bot.send_message(message.from_user.id, t('Do you confirm your phone?'), reply_markup = await inlineConfirm('clientPhoneSaved'))
+        else:
+            await state.finish()
+            await setDeparture(message)
         pass
     else:
         await message.bot.send_message(message.chat.id, t("Number of digits is incorrect"))
@@ -892,19 +929,41 @@ async def process_location(message):
     if var['locationType'] == 'clientDptLoc':
         order['departure_latitude'] = message.location.latitude
         order['departure_longitude'] = message.location.longitude
-        markup.add(types.InlineKeyboardButton(text=t('Confirm'), callback_data='departureLocationSaved'))
+        if HAS_CONFIRM_STEPS_CLIENT:
+            markup.add(types.InlineKeyboardButton(text=t('Confirm'), callback_data='departureLocationSaved'))
+            await message.bot.send_message(message.chat.id, t("Confirm entry or correct value"), reply_markup = markup)
+        else:
+            await setDestination(message)
     elif var['locationType'] == 'clientDstLoc':
         order['destination_latitude'] = message.location.latitude
         order['destination_longitude'] = message.location.longitude
-        markup.add(types.InlineKeyboardButton(text=t('Confirm'), callback_data='destinationLocationSaved'))
+        if HAS_CONFIRM_STEPS_CLIENT:
+            markup.add(types.InlineKeyboardButton(text=t('Confirm'), callback_data='destinationLocationSaved'))
+            await message.bot.send_message(message.chat.id, t("Confirm entry or correct value"), reply_markup = markup)
+        else:
+            await destinationLocationSaved(message)
     elif var['locationType'] == 'driverCurLoc':
         BotDB.update_driver_location(message.from_user.id, message.location.latitude, message.location.longitude)
         markup.add(types.InlineKeyboardButton(text=t('Confirm'), callback_data='driverLocationSaved'))
+        await message.bot.send_message(message.chat.id, t("Confirm entry or correct value"), reply_markup = markup)
     else:
         await message.bot.send_message(message.chat.id, t("Sorry can`t saved data"))
-    await message.bot.send_message(message.chat.id, t("Confirm entry or correct value"), reply_markup = markup)
     pass
 
+
+
+
+async def destinationLocationSaved(message):
+    await setLength(message)
+    order['status'] = 'create'
+    order['dt_order'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    BotDB.create_order(order)
+    # order['departure_latitude'] = 0
+    # order['departure_longitude'] = 0
+    # order['destination_latitude'] = 0
+    # order['destination_longitude'] = 0
+    modelOrder = BotDB.get_last_order()
+    await getOrderCardClient(message, modelOrder)
 
 
 
@@ -947,12 +1006,12 @@ async def driverRegistered(message):
     driver['status'] = 'offline'
     BotDB.update_driver(message.from_user.id, driver)
     # time.sleep(2)
-    # await message.bot.send_message(message.from_user.id, t("We are looking for clients for you already"))
+    await message.bot.send_message(message.from_user.id, t("Your profile is saved"))
 
 
 
 async def deleteMessage(aio, dMessage):
-    await aio.bot.delete_message(dMessage.chat.id, dMessage.message_id)
+    await dMessage.bot.delete_message(dMessage.chat.id, dMessage.message_id)
     pass
 
 
