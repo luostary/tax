@@ -431,13 +431,13 @@ async def inlineClick(message, state: FSMContext):
             elif modelDriver['phone'] == None:
                 await message.bot.send_message(message.from_user.id, t('Phone is required, set it in client form'))
             elif modelDriver['status'] == 'route':
-                localMessage = t("You cannot switch to online, you must complete the route")
-                await message.bot.send_message(message.from_user.id, localMessage)
                 modelOrder = BotDB.get_order_progress_by_driver_id(message.from_user.id)
-                print(modelOrder)
-                markupDoneOrder = types.InlineKeyboardMarkup(row_width=1)
-                markupDoneOrder.add(types.InlineKeyboardButton(text=t('Done current order'), callback_data='driverDoneOrder_' + str(modelOrder['id'])))
-                await message.bot.send_message(message.from_user.id, t('When you deliver the passenger, please press the button to done the order'), reply_markup = markupDoneOrder)
+                if modelOrder:
+                    localMessage = t("You cannot switch to online, you must complete the route")
+                    await message.bot.send_message(message.from_user.id, localMessage)
+                    markupDoneOrder = types.InlineKeyboardMarkup(row_width=1)
+                    markupDoneOrder.add(types.InlineKeyboardButton(text=t('Done current order'), callback_data='driverDoneOrder_' + str(modelOrder['id'])))
+                    await message.bot.send_message(message.from_user.id, t('When you deliver the passenger, please press the button to done the order'), reply_markup = markupDoneOrder)
 
             elif modelDriver['status'] == 'online':
                 localMessage = t("You are online, already")
