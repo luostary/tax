@@ -367,7 +367,7 @@ async def inlineClick(message, state: FSMContext):
                         await message.bot.send_message(message.from_user.id, t("Order can not be taken"))
         else:
             await message.bot.send_message(message.from_user.id, t("This order cannot be taken, it is already taken"))
-    elif 'orderCancel' in message.data:
+    elif 'orderCancel_' in message.data:
         Array = message.data.split('_')
         order_id = Array[1]
         if BotDB.order_waiting_exists(order_id, 'waiting'):
@@ -375,12 +375,20 @@ async def inlineClick(message, state: FSMContext):
         else:
             await message.bot.send_message(message.from_user.id, t("This order cannot be canceled, it is already taken"))
         pass
-    elif 'orderCancelClient' in message.data:
+    elif 'orderCancelClient_' in message.data:
         # switch order to cancel
+        Array = message.data.split('_')
+        order_id = Array[1]
+        BotDB.update_order_status(order_id, 'cancel')
         # message to client about it
+        await message.bot.send_message(message.from_user.id, t("Order is cancel"))
         pass
     elif 'orderWaitingClient' in message.data:
         #  What we doing here?
+        Array = message.data.split('_')
+        order_id = Array[1]
+        BotDB.update_order_status(order_id, 'waiting')
+        await clientRegistered(message)
         pass
     elif message.data == 'switch-online':
         modelDriver = BotDB.get_driver(message.from_user.id)
@@ -414,7 +422,15 @@ async def inlineClick(message, state: FSMContext):
         pass
     elif message.data == 'destinationLocationSaved':
         await setLength(message)
-        await clientRegistered(message)
+        order['status'] = 'create'
+        order['dt_order'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        BotDB.create_order(order)
+        # order['departure_latitude'] = 0
+        # order['departure_longitude'] = 0
+        # order['destination_latitude'] = 0
+        # order['destination_longitude'] = 0
+        modelOrder = BotDB.get_last_order()
+        await getOrderCardClient(message, modelOrder)
         pass
     elif message.data == 'driverLocationSaved':
         await switchDriverOnline(message)
@@ -564,12 +580,12 @@ async def getOrderCard(message, order):
 async def getOrderCardClient(message, order):
     markup = InlineKeyboardMarkup(row_width=3)
     item1 = InlineKeyboardButton(text=t('Cancel trip') + ' ❌', callback_data='orderCancelClient_' + str(order['order_id']))
-    item2 = InlineKeyboardButton(text=t('Waiting driver') + ' ⏳', callback_data='orderWaitingClient_' + str(order['order_id']))
+    item2 = InlineKeyboardButton(text=t('Confirm') + ' ✅', callback_data='orderWaitingClient_' + str(order['order_id']))
     markup.add(item1, item2)
     caption = '\n'.join((
         '<b>Заказ №' + str(order['order_id']) + '</b>',
         'Имя <b>' + str(order['name']) + '</b>',
-        'Расстояние <b>' + str(order['route_length'] / 1000) + ' км' + '</b>',
+        'Длина маршрута, км.  <b>' + str(order['route_length'] / 1000) + ' км' + '</b>',
         'Сумма <b>' + str(order['amount_client']) + ' t.l.</b>',
     ))
     await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML', reply_markup = markup)
@@ -921,17 +937,6 @@ class Timer:
 async def clientRegistered(message):
     try:
         BotDB.update_client(message.from_user.id, client)
-        order['status'] = 'waiting'
-        order['dt_order'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        BotDB.create_order(order)
-        order['departure_latitude'] = 0
-        order['departure_longitude'] = 0
-        order['destination_latitude'] = 0
-        order['destination_longitude'] = 0
-
-        modelOrder = BotDB.get_last_order()
-        await getOrderCardClient(message, modelOrder)
-
         await message.bot.send_message(message.from_user.id, t("Thank you for an order"))
         time.sleep(2)
         await message.bot.send_message(message.from_user.id, t("We are already looking for drivers for you.."))
