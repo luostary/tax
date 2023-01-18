@@ -585,10 +585,10 @@ async def switchDriverOffline(message):
     else:
         if modelDriver['status'] != 'offline':
             BotDB.update_driver_status(message.from_user.id, 'offline')
-            await message.bot.send_message(message.from_user.id, t("You switch offline. Orders unavailable"), reply_markup = await markupRemove())
             if var['orderTimer'] != False:
                 var['orderTimer'].cancel()
                 var['orderTimer'] = False
+        await message.bot.send_message(message.from_user.id, t("You switch offline. Orders unavailable"), reply_markup = await markupRemove())
     pass
 
 
