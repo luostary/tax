@@ -1,8 +1,8 @@
-BOT_TOKEN="5724870575:AAHL9vSkV9bmZdhVja3hSHgAN5vBnVyrhTs"
+BOT_TOKEN=""
 
 LANGUAGE = "RU"
 
-WALLET = "TCdxp8ScdjRDRNDf7Xc37vFLvLCgPXyQWL"
+WALLET = ""
 
 PERCENT = 5
 
@@ -19,3 +19,7 @@ MIN_AMOUNT = 80
 HAS_CONFIRM_STEPS_DRIVER = False
 
 HAS_CONFIRM_STEPS_CLIENT = False
+
+from os.path import exists
+if exists('params.py'):
+    from params import *
