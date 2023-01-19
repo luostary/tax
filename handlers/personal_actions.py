@@ -103,12 +103,13 @@ async def setLength(message):
 
 async def startMenu(message):
     markup = InlineKeyboardMarkup(row_width=3)
-    item1 = InlineKeyboardButton(text=t('I looking for a clients'), callback_data='driver')
-    item2 = InlineKeyboardButton(t('I looking for a taxi'), callback_data='client')
-    markup.add(item1).add(item2)
+    item10 = InlineKeyboardButton(text=t('I looking for a clients'), callback_data='driver')
+    item20 = InlineKeyboardButton(t('I looking for a taxi'), callback_data='client')
+    item25 = InlineKeyboardButton(t('Rules'), callback_data='rules')
+    markup.add(item10).add(item20).add(item25)
     if message.from_user.id == 419839605:
-        item3 = InlineKeyboardButton(("Top up balance"), callback_data='drivers')
-        markup.add(item3)
+        item30 = InlineKeyboardButton(("Top up balance"), callback_data='drivers')
+        markup.add(item30)
     await message.bot.send_message(message.from_user.id, t("Welcome!"), reply_markup = await markupRemove())
     await message.bot.send_message(message.from_user.id, t("Use the menu to get started"), reply_markup = markup)
 
@@ -232,6 +233,8 @@ async def inlineClick(message, state: FSMContext):
         if(not BotDB.client_exists(message.from_user.id)):
             BotDB.add_client(message.from_user.id, message.from_user.first_name)
         await menuClient(message)
+    elif message.data == 'rules':
+        await rules(message)
     elif message.data == 'client-profile':
         await clientProfile(message, message.from_user.id)
     elif message.data == 'make-order':
@@ -1043,6 +1046,21 @@ async def deleteMessage(aio, dMessage):
     await dMessage.bot.delete_message(dMessage.chat.id, dMessage.message_id)
     pass
 
+
+
+
+async def rules(message):
+    await message.bot.send_message(message.from_user.id, ('''Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus fringilla, neque ut consequat euismod, eros erat elementum est, at gravida mi felis quis mi. Nullam consequat vitae arcu in sollicitudin. Ut ullamcorper arcu eros, ac accumsan purus varius a. Pellentesque ultrices ipsum non urna sagittis vehicula. Integer quis est felis. Aliquam nibh libero, consectetur eget nibh eu, tincidunt lobortis eros. Donec consectetur in massa non lacinia.
+
+Mauris non aliquet arcu, id auctor nisl. Nullam tempus, dolor ut varius euismod, nibh sem eleifend libero, nec suscipit sem ligula ac arcu. Vestibulum porta, urna at consectetur vehicula, sem metus mollis tortor, sit amet blandit ipsum turpis id nisi. Proin accumsan tincidunt nulla, non dictum massa facilisis ut. Sed vestibulum turpis eleifend lorem aliquam pharetra ut eget justo. Morbi ac rhoncus tellus. Aliquam tempus blandit mauris, et consectetur libero vehicula ac. Nulla facilisi. In sit amet eros vitae sem ullamcorper mollis. Vivamus pretium pretium tempor. Morbi quam ante, rhoncus at sagittis eget, ultricies vel metus. Vivamus eget rutrum leo. Morbi posuere lacus nec lobortis vestibulum. Pellentesque eu erat et felis ultrices egestas. Sed eget scelerisque urna, ut tempus lectus. Suspendisse potenti.
+
+Fusce mollis eleifend purus, et posuere eros. In mollis viverra sapien, nec scelerisque ipsum dictum ac. Aenean cursus urna nec rutrum elementum. Nunc ac purus nisi. Proin eleifend justo eu sem fringilla tristique. Proin egestas tortor quis tincidunt rhoncus. Nam luctus dolor vitae nisi lobortis semper. Aliquam eleifend, tortor eget tristique convallis, sem ligula tincidunt nisl, et interdum arcu dolor id felis.
+
+Duis facilisis venenatis libero sed rhoncus. Vivamus non quam eu felis tristique aliquam. Donec sapien turpis, elementum hendrerit imperdiet dapibus, pharetra ut nibh. Nunc id metus ornare metus fermentum auctor. Maecenas non pretium orci, et maximus nisl. Vestibulum maximus suscipit nisl, et fermentum massa consequat sit amet. Sed molestie lectus felis, eget posuere ipsum tincidunt sit amet. Integer a molestie magna. Curabitur id sapien vestibulum, facilisis ligula eu, pretium leo. Quisque pharetra quam iaculis, tempus risus nec, eleifend odio. Phasellus vitae est malesuada augue ultrices ullamcorper ac a diam.
+
+Maecenas dignissim nunc at elit sagittis, quis ullamcorper tellus lacinia. Aenean molestie eros eu mauris facilisis, ut sagittis ipsum ultrices. Donec egestas nunc sit amet orci hendrerit laoreet. Curabitur et diam eu libero molestie varius. Aenean sed turpis vel urna rhoncus ultricies ac vel ante. Nam mi sapien, rutrum sed lectus quis, consectetur eleifend nisi. Pellentesque gravida libero ut turpis gravida congue. Suspendisse ultricies arcu at pellentesque faucibus. Suspendisse laoreet gravida lacus ut mollis. Curabitur a lectus turpis. In hac habitasse platea dictumst.
+
+'''))
 
 
 async def gotoStart(message):
