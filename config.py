@@ -20,6 +20,8 @@ HAS_CONFIRM_STEPS_DRIVER = False
 
 HAS_CONFIRM_STEPS_CLIENT = False
 
+ALLOW_MANY_ORDERS = False
+
 from os.path import exists
 if exists('params.py'):
     from params import *

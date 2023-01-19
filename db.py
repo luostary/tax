@@ -104,6 +104,11 @@ class BotDB:
     def get_order_progress_by_driver_id(self, id):
         result = self.cursor.execute("SELECT * FROM `order` WHERE `driver_id` = ? AND status = 'progress'", (id,))
         return result.fetchone()
+    def get_waiting_orders_by_client_id(self, id):
+        result = self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = ? AND status = 'waiting'", (id,))
+        return result.fetchall()
+
+
 
 
     def driver_exists(self, user_id):

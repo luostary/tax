@@ -238,6 +238,13 @@ async def inlineClick(message, state: FSMContext):
     elif message.data == 'client-profile':
         await clientProfile(message, message.from_user.id)
     elif message.data == 'make-order':
+        if not ALLOW_MANY_ORDERS:
+            modelOrders = BotDB.get_waiting_orders_by_client_id(message.from_user.id)
+            if (modelOrders):
+                modelOrder = BotDB.get_last_order()
+                await getOrderCardClient(message, modelOrder)
+                return
+
         order['client_id'] = message.from_user.id
         await setName(message)
     elif message.data == 'clientNameSaved':
@@ -383,8 +390,11 @@ async def inlineClick(message, state: FSMContext):
                         if var['orderTimer'] != False:
                             var['orderTimer'].cancel()
                             var['orderTimer'] = False
-                        # Only here we take a departure-point to the Driver
+                        # Give departure-point location
                         await message.bot.send_location(message.from_user.id, progressOrder['departure_latitude'], progressOrder['departure_longitude'])
+                        # Give destination-point location
+                        await message.bot.send_message(message.from_user.id, ("Доставить клиента сюда"))
+                        await message.bot.send_location(message.from_user.id, progressOrder['destination_latitude'], progressOrder['destination_longitude'])
                         markupDoneOrder = types.InlineKeyboardMarkup(row_width=1)
                         markupDoneOrder.add(types.InlineKeyboardButton(text=t('Done current order'), callback_data='driverDoneOrder_' + str(order_id)))
                         await message.bot.send_message(message.from_user.id, t('When you deliver the passenger, please press the button to done the order'), reply_markup = markupDoneOrder)
@@ -438,9 +448,14 @@ async def inlineClick(message, state: FSMContext):
                 if modelOrder:
                     localMessage = t("You cannot switch to online, you must complete the route")
                     await message.bot.send_message(message.from_user.id, localMessage)
+
+                    # Give destination-point location
+                    await message.bot.send_message(message.from_user.id, ("Доставить клиента сюда"))
+                    await message.bot.send_location(message.from_user.id, modelOrder['destination_latitude'], modelOrder['destination_longitude'])
+
                     markupDoneOrder = types.InlineKeyboardMarkup(row_width=1)
                     markupDoneOrder.add(types.InlineKeyboardButton(text=t('Done current order'), callback_data='driverDoneOrder_' + str(modelOrder['id'])))
-                    await message.bot.send_message(message.from_user.id, t('When you deliver the passenger, please press the button to done the order'), reply_markup = markupDoneOrder)
+                    await message.bot.send_message(message.from_user.id, t('When you deliver the passenger, please press the button to done the order'), parse_mode='HTML', reply_markup = markupDoneOrder)
 
             elif modelDriver['status'] == 'online':
                 localMessage = t("You are online, already")
@@ -570,7 +585,11 @@ async def switchDriverOnline(message):
 async def getNearWaitingOrder(message, onTimer = True):
     modelDriver = BotDB.get_driver(message.from_user.id)
     order = BotDB.get_near_order('waiting', modelDriver['latitude'], modelDriver['longitude'], message.from_user.id)
-    await getOrderCard(message, order)
+    if order:
+        if not order['order_id']:
+            order['order_id'] = 0
+        if order['order_id']:
+            await getOrderCard(message, order)
     if onTimer:
         var['orderTimer'] = Timer(ORDER_REPEAT_TIME_SEC, getNearWaitingOrder, args=message)
 
@@ -611,6 +630,7 @@ async def getOrderCard(message, order):
     markup.add(item1, item2)
     if not order['driver_cancel_cn']:
         order['driver_cancel_cn'] = 0
+        print(order['order_id'])
     caption = [
         '<b>Заказ №' + str(order['order_id']) + '</b>',
         'Имя <b>' + str(order['name']) + '</b>',
@@ -622,11 +642,12 @@ async def getOrderCard(message, order):
         caption.append('Вы отклоняли <b>' + str(order['driver_cancel_cn']) + ' раз</b>',)
     caption = '\n'.join(caption)
     await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML', reply_markup = markup)
-async def getOrderCardClient(message, order):
+async def getOrderCardClient(message, order, control = False):
     markup = InlineKeyboardMarkup(row_width=3)
-    item1 = InlineKeyboardButton(text=t('Cancel trip') + ' ❌', callback_data='orderCancelClient_' + str(order['order_id']))
-    item2 = InlineKeyboardButton(text=t('Confirm') + ' ✅', callback_data='orderWaitingClient_' + str(order['order_id']))
-    markup.add(item1, item2)
+    if control:
+        item1 = InlineKeyboardButton(text=t('Cancel trip') + ' ❌', callback_data='orderCancelClient_' + str(order['order_id']))
+        item2 = InlineKeyboardButton(text=t('Confirm') + ' ✅', callback_data='orderWaitingClient_' + str(order['order_id']))
+        markup.add(item1, item2)
     caption = '\n'.join((
         '<b>Заказ №' + str(order['order_id']) + '</b>',
         'Имя <b>' + str(order['name']) + '</b>',
@@ -995,7 +1016,7 @@ async def destinationLocationSaved(message):
     # order['destination_latitude'] = 0
     # order['destination_longitude'] = 0
     modelOrder = BotDB.get_last_order()
-    await getOrderCardClient(message, modelOrder)
+    await getOrderCardClient(message, modelOrder, control=True)
 
 
 
