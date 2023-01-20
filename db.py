@@ -107,6 +107,9 @@ class BotDB:
     def get_waiting_orders_by_client_id(self, id):
         result = self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = ? AND status = 'waiting'", (id,))
         return result.fetchall()
+    def get_done_orders_by_client_id(self, id):
+        result = self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = ? AND status = 'done'", (id,))
+        return result.fetchall()
 
 
 

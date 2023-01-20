@@ -630,13 +630,13 @@ async def getOrderCard(message, order):
     markup.add(item1, item2)
     if not order['driver_cancel_cn']:
         order['driver_cancel_cn'] = 0
-        print(order['order_id'])
     caption = [
         '<b>Заказ №' + str(order['order_id']) + '</b>',
         'Имя <b>' + str(order['name']) + '</b>',
         'Расстояние до клиента, км. <b>' + str(distanceToClient) + ' км' + '</b>',
         'Длина маршрута, км. <b>' + str(order['route_length'] / 1000) + ' км' + '</b>',
         'Сумма, tl. <b>' + str(order['amount_client']) + '</b>',
+        'Рейтинг <b>' + (await getRating(message) * '⭐') + '(' + str(await getRating(message)) + '/5)</b>',
     ]
     if order['driver_cancel_cn'] > 0:
         caption.append('Вы отклоняли <b>' + str(order['driver_cancel_cn']) + ' раз</b>',)
@@ -1066,6 +1066,17 @@ async def driverRegistered(message):
 async def deleteMessage(aio, dMessage):
     await dMessage.bot.delete_message(dMessage.chat.id, dMessage.message_id)
     pass
+
+
+
+
+
+async def getRating(message):
+    modelOrdersUserAll = len(BotDB.get_client_orders(message.from_user.id))
+    modelOrdersUserDone = len(BotDB.get_done_orders_by_client_id(message.from_user.id))
+    if modelOrdersUserAll == 0:
+        return 0
+    return round(modelOrdersUserDone / modelOrdersUserAll * 5)
 
 
 
