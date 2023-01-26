@@ -131,7 +131,7 @@ async def clientProfile(message, client_id):
 
 
 
-async def driverProfile(message, driver_id, user_id):
+async def driverProfile(message, driver_id, user_id, showPhone = False):
     modelDriver = BotDB.get_driver(driver_id)
     if (not modelDriver):
         await message.bot.send_message(user_id, "Can`t do it, begin to /start")
@@ -147,7 +147,7 @@ async def driverProfile(message, driver_id, user_id):
             '<b>Статус</b> ' + str(statusIcon),
             '<b>Номер машины</b> ' + str(modelDriver['car_number']),
         ]
-        if driver_id == user_id:
+        if showPhone:
             caption.insert(1, '<b>Телефон</b> ' + str(modelDriver['phone']))
         caption = '\n'.join(caption)
         versionMerge = 0
@@ -260,7 +260,7 @@ async def inlineClick(message, state: FSMContext):
         pass
     elif message.data == 'driver-profile':
         await menuDriver(message)
-        await driverProfile(message, message.from_user.id, message.from_user.id)
+        await driverProfile(message, message.from_user.id, message.from_user.id, True)
         pass
     elif message.data == "driver-form":
         async with state.proxy() as data:
@@ -1022,7 +1022,7 @@ async def destinationLocationSaved(message):
 
 async def sendClientNotification(message, order):
     await message.bot.send_message(order['client_id'], t("Your order is accepted. The driver drove to you"))
-    await driverProfile(message, order['driver_id'], order['client_id'])
+    await driverProfile(message, order['driver_id'], order['client_id'], True)
     pass
 
 
