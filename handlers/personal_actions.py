@@ -314,6 +314,12 @@ async def inlineClick(message, state: FSMContext):
             BotDB.update_driver_balance(modelDriver['tg_user_id'], newBalance)
             time.sleep(2)
             await message.bot.send_message(message.from_user.id, t("Balance is filled"))
+
+            caption = ''
+            if modelDriver['name']:
+                caption = modelDriver['name'] + ', '
+            caption += "Ваш баланс пополнен на " + str(localBalance) + " usdt"
+            await message.bot.send_message(modelDriver['tg_user_id'], caption)
         await state.finish()
         pass
     elif message.data == 'account':
