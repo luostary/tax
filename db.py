@@ -12,10 +12,13 @@ def dict_factory(cursor, row):
 class BotDB:
 
     statuses = {
+        # Водитель
         'online': 'Доступен 🟢',
         'offline': 'Не доступен 🔴',
         'route': 'Везет клиента 🟠',
 
+        # Заказ
+        'create': 'Создан 🟡',
         'waiting': 'Ожидает машину 🟢',
         'progress': 'В пути 🟠',
         'done': 'Выполнен 🔵',
@@ -77,6 +80,9 @@ class BotDB:
     def get_last_order(self):
         result = self.cursor.execute("SELECT *, o.id order_id FROM `order` o LEFT JOIN client c ON c.tg_user_id = o.client_id ORDER BY id DESC LIMIT 1")
         return self.cursor.fetchone()
+    def get_order_waiting_by_driver_id(self, driver_id):
+        result = self.cursor.execute("SELECT * FROM `order` WHERE driver_id = ? AND status = 'waiting'", (driver_id))
+        return result.fetchone()
     def get_orders(self, user_id, status):
         result = self.cursor.execute("SELECT * FROM `order` WHERE `status` = ? ORDER BY `dt_order`", (status,))
         return result.fetchall()
@@ -107,6 +113,12 @@ class BotDB:
     def get_waiting_orders_by_client_id(self, id):
         result = self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = ? AND status = 'waiting'", (id,))
         return result.fetchall()
+    def get_waiting_order_by_client_id(self, id):
+        result = self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = ? AND status = 'waiting'", (id,))
+        return result.fetchone()
+    def get_create_order_by_client_id(self, id):
+        result = self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = ? AND status = 'create'", (id,))
+        return result.fetchone()
     def get_done_orders_by_client_id(self, id):
         result = self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = ? AND status = 'done'", (id,))
         return result.fetchall()

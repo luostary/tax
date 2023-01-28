@@ -241,8 +241,10 @@ async def inlineClick(message, state: FSMContext):
         if not ALLOW_MANY_ORDERS:
             modelOrders = BotDB.get_waiting_orders_by_client_id(message.from_user.id)
             if (modelOrders):
-                modelOrder = BotDB.get_last_order()
-                await getOrderCardClient(message, modelOrder)
+                modelOrder = BotDB.get_waiting_order_by_client_id(message.from_user.id)
+                await menuClient(message)
+                await message.bot.send_message(message.from_user.id, 'У Вас имеется текущий заказ')
+                await getOrderCardClient(message, modelOrder, True)
                 return
 
         order['client_id'] = message.from_user.id
@@ -633,27 +635,35 @@ async def getOrderCard(message, order):
     caption = [
         '<b>Заказ №' + str(order['order_id']) + '</b>',
         'Имя <b>' + str(order['name']) + '</b>',
-        'Расстояние до клиента, км. <b>' + str(distanceToClient) + ' км' + '</b>',
-        'Длина маршрута, км. <b>' + str(order['route_length'] / 1000) + ' км' + '</b>',
-        'Сумма, tl. <b>' + str(order['amount_client']) + '</b>',
+        'Расстояние до клиента <b>' + str(distanceToClient) + ' км.' + '</b>',
+        'Длина маршрута <b>' + str(order['route_length'] / 1000) + ' км.' + '</b>',
+        'Стоимость <b>' + str(order['amount_client']) + ' тл.' + '</b>',
         'Рейтинг <b>' + (await getRating(message) * '⭐') + '(' + str(await getRating(message)) + '/5)</b>',
     ]
     if order['driver_cancel_cn'] > 0:
         caption.append('Вы отклоняли <b>' + str(order['driver_cancel_cn']) + ' раз</b>',)
     caption = '\n'.join(caption)
     await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML', reply_markup = markup)
-async def getOrderCardClient(message, order, control = False):
+async def getOrderCardClient(message, order, cancel = False, confirm = False):
+    client = BotDB.get_client(order['client_id'])
     markup = InlineKeyboardMarkup(row_width=3)
-    if control:
-        item1 = InlineKeyboardButton(text=t('Cancel trip') + ' ❌', callback_data='orderCancelClient_' + str(order['order_id']))
-        item2 = InlineKeyboardButton(text=t('Confirm') + ' ✅', callback_data='orderWaitingClient_' + str(order['order_id']))
-        markup.add(item1, item2)
-    caption = '\n'.join((
-        '<b>Заказ №' + str(order['order_id']) + '</b>',
-        'Имя <b>' + str(order['name']) + '</b>',
-        'Длина маршрута, км.  <b>' + str(order['route_length'] / 1000) + ' км' + '</b>',
-        'Сумма <b>' + str(order['amount_client']) + ' t.l.</b>',
-    ))
+    if cancel & (not order['driver_id']) & (order['status'] in ['create', 'waiting']):
+        item1 = InlineKeyboardButton(text=t('Cancel trip') + ' ❌', callback_data='orderCancelClient_' + str(order['id']))
+        markup.add(item1)
+    if confirm:
+        item2 = InlineKeyboardButton(text=t('Confirm') + ' ✅', callback_data='orderWaitingClient_' + str(order['id']))
+        markup.add(item2)
+
+    caption = [
+        '<b>Заказ №' + str(order['id']) + '</b>',
+        'Имя <b>' + str(client['name']) + '</b>',
+        'Длина маршрута <b>' + str(order['route_length'] / 1000) + ' км.' + '</b>',
+        'Стоимость <b>' + str(order['amount_client']) + ' тл.' + '</b>',
+        'Статус <b>' + str(BotDB.statuses[order['status']]) + '</b>',
+    ]
+    if (order['status'] == 'waiting') & (order['driver_id'] == str(message.from_user.id)):
+        caption.insert(1, 'Телефон <b>' + str(client['phone']) + '</b>')
+    caption = '\n'.join(caption)
     await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML', reply_markup = markup)
 
 
@@ -794,7 +804,7 @@ async def getActiveOrders(message):
             text = '\n'.join((
                 'Статус <b>' + row['status'] + '</b>',
                 'Дата <b>' + str(row['dt_order']) + '</b>',
-                'Стоимость <b>' + str(row['amount_client']) + '</b>',
+                'Стоимость, тл. <b>' + str(row['amount_client']) + '</b>',
                 'Длина маршрута, км. <b>' + str(row['route_length'] / 1000) + '</b>',
                 'Время поездки, мин. <b>' + str(row['route_time']) + '</b>'
             ));
@@ -820,7 +830,7 @@ async def getDriverDoneOrders(message):
                 '<b>Заказ № ' + str(row['id']) + '</b>',
                 'Статус <b>' + BotDB.statuses[row['status']] + '</b>',
                 'Дата <b>' + str(dateFormat) + '</b>',
-                'Стоимость, t.l. <b>' + str(row['amount_client']) + '</b>',
+                'Стоимость, тл. <b>' + str(row['amount_client']) + '</b>',
                 'Длина маршрута, км. <b>' + str(row['route_length'] / 1000) + '</b>',
                 'Время поездки, мин. <b>' + str(row['route_time']) + '</b>'
             ));
@@ -893,9 +903,9 @@ async def getClientOrders(message):
                         'Имя <b>' + str(client['name']) + '</b>',
                         'Статус <b>' + status + '</b>',
                         'Дата <b>' + str(dateFormat) + '</b>',
-                        'Стоимость <b>' + str(row['amount_client']) + '</b>',
-                        'Длина маршрута, км. <b>' + str(row['route_length'] / 1000) + '</b>',
-                        'Время поездки, мин. <b>' + str(row['route_time']) + '</b>'
+                        'Стоимость <b>' + str(row['amount_client']) + ' тл.' + '</b>',
+                        'Длина маршрута <b>' + str(row['route_length'] / 1000) + ' км.' + '</b>',
+                        'Время поездки <b>' + str(row['route_time']) + ' мин.' + '</b>'
                     ));
                     await message.bot.send_message(message.from_user.id, t('Order'))
                     await message.bot.send_message(message.from_user.id, text)
@@ -1015,14 +1025,15 @@ async def destinationLocationSaved(message):
     # order['departure_longitude'] = 0
     # order['destination_latitude'] = 0
     # order['destination_longitude'] = 0
-    modelOrder = BotDB.get_last_order()
-    await getOrderCardClient(message, modelOrder, control=True)
+    modelOrder = BotDB.get_create_order_by_client_id(message.from_user.id)
+    await getOrderCardClient(message, modelOrder, True, True)
 
 
 
 async def sendClientNotification(message, order):
     await message.bot.send_message(order['client_id'], t("Your order is accepted. The driver drove to you"))
-    await driverProfile(message, order['driver_id'], order['client_id'], True)
+    print(order)
+    # await driverProfile(message, order['driver_id'], order['client_id'], True)
     pass
 
 
