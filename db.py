@@ -245,6 +245,10 @@ class BotDB:
             print(e)
         return self.conn.commit()
 
+    def get_driver_order(self, driver_id, order_id):
+        result = self.cursor.execute("SELECT * FROM `driver_order` WHERE `driver_id` = ? AND order_id = ?", (driver_id, order_id))
+        return result.fetchone()
+
     def get_records(self, user_id, within = "all"):
         """Получаем историю о доходах/расходах"""
 
