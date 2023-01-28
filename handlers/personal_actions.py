@@ -891,12 +891,13 @@ async def process_driver_wallet(message: types.Message, state: FSMContext):
 
 
 async def menuClient(message):
+    orderCn = str(len(BotDB.get_client_orders(message.from_user.id)))
     modelClient = BotDB.get_client(message.from_user.id)
     markup = InlineKeyboardMarkup(row_width=1)
     item10 = InlineKeyboardButton(text=t('Profile'), callback_data='client-profile')
     item20 = InlineKeyboardButton(text=t('Make an order') + ' 🚕', callback_data='make-order')
     # item30 = InlineKeyboardButton(text=t('Free drivers'), callback_data='free-drivers')
-    item40 = InlineKeyboardButton(text=t('My orders'), callback_data='client-orders')
+    item40 = InlineKeyboardButton(text=t('My orders') + ' (' + orderCn + ')', callback_data='client-orders')
     item50 = InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='back')
     if modelClient['name'] and modelClient['phone']:
         markup.add(item10)
