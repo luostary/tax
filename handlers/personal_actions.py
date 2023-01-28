@@ -937,11 +937,7 @@ async def getClientOrders(message):
                         'Длина маршрута <b>' + str(row['route_length'] / 1000) + ' км.' + '</b>',
                         'Время поездки <b>' + str(row['route_time']) + ' мин.' + '</b>'
                     ));
-                    await message.bot.send_message(message.from_user.id, t('Order'))
                     await message.bot.send_message(message.from_user.id, text)
-                    if BotDB.get_driver(row['driver_id']):
-                        await message.bot.send_message(message.from_user.id, t('Driver'))
-                        await driverProfile(message, row['driver_id'], message.from_user.id)
                     pass
             pass
 
