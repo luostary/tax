@@ -59,7 +59,7 @@ class FormDriver(StatesGroup):
     wallet = State()
     balance = State()
 data = []
-minBalanceAmount = 10
+minBalanceAmount = MIN_BALANCE_AMOUNT
 
 PHONE_MASK = '^[+]{1,1}[\d]{11,12}$'
 
@@ -1121,17 +1121,74 @@ async def getRating(message):
 
 
 async def rules(message):
-    await message.bot.send_message(message.from_user.id, ('''Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus fringilla, neque ut consequat euismod, eros erat elementum est, at gravida mi felis quis mi. Nullam consequat vitae arcu in sollicitudin. Ut ullamcorper arcu eros, ac accumsan purus varius a. Pellentesque ultrices ipsum non urna sagittis vehicula. Integer quis est felis. Aliquam nibh libero, consectetur eget nibh eu, tincidunt lobortis eros. Donec consectetur in massa non lacinia.
+    caption = '''<b>Для пассажиров</b>
+Бот поможет удобно и недорого заказать такси (частного водителя).
 
-Mauris non aliquet arcu, id auctor nisl. Nullam tempus, dolor ut varius euismod, nibh sem eleifend libero, nec suscipit sem ligula ac arcu. Vestibulum porta, urna at consectetur vehicula, sem metus mollis tortor, sit amet blandit ipsum turpis id nisi. Proin accumsan tincidunt nulla, non dictum massa facilisis ut. Sed vestibulum turpis eleifend lorem aliquam pharetra ut eget justo. Morbi ac rhoncus tellus. Aliquam tempus blandit mauris, et consectetur libero vehicula ac. Nulla facilisi. In sit amet eros vitae sem ullamcorper mollis. Vivamus pretium pretium tempor. Morbi quam ante, rhoncus at sagittis eget, ultricies vel metus. Vivamus eget rutrum leo. Morbi posuere lacus nec lobortis vestibulum. Pellentesque eu erat et felis ultrices egestas. Sed eget scelerisque urna, ut tempus lectus. Suspendisse potenti.
+ • Цена поездки. Как рассчитывается
+Стоимость за 1км = {rate1KM:d} TL (Турецких лир)
+ℹ️ Стоимость поездки рассчитается автоматически и зависит от длины маршрута в километрах (км).
+К примеру стоимость поездки на расстояние {kilometers:d} км составит {amountKM:d} TL ({kilometers:d}км * {rate1KM:d} TL = {amountKM:d} TL)
 
-Fusce mollis eleifend purus, et posuere eros. In mollis viverra sapien, nec scelerisque ipsum dictum ac. Aenean cursus urna nec rutrum elementum. Nunc ac purus nisi. Proin eleifend justo eu sem fringilla tristique. Proin egestas tortor quis tincidunt rhoncus. Nam luctus dolor vitae nisi lobortis semper. Aliquam eleifend, tortor eget tristique convallis, sem ligula tincidunt nisl, et interdum arcu dolor id felis.
+ • Как оплатить поездку?
+Поездка оплачивается наличными напрямую водителю
+ℹ️ Заранее позаботьтесь о наличии разменных денег или спросите у водителя есть ли у него сдача
+ℹ️ поездка должна быть оплачена в сумме не меньшей, чем указано при оформлении заказа. Чаевые водителю приветствуются
 
-Duis facilisis venenatis libero sed rhoncus. Vivamus non quam eu felis tristique aliquam. Donec sapien turpis, elementum hendrerit imperdiet dapibus, pharetra ut nibh. Nunc id metus ornare metus fermentum auctor. Maecenas non pretium orci, et maximus nisl. Vestibulum maximus suscipit nisl, et fermentum massa consequat sit amet. Sed molestie lectus felis, eget posuere ipsum tincidunt sit amet. Integer a molestie magna. Curabitur id sapien vestibulum, facilisis ligula eu, pretium leo. Quisque pharetra quam iaculis, tempus risus nec, eleifend odio. Phasellus vitae est malesuada augue ultrices ullamcorper ac a diam.
+ • как сделать заказ?
+Внимательно следуйте инструкциям бота, когда захотите сделать заказ. Основные этапы формирования заказа описаны ниже:
+ 1. Укажите:
+    ⁃ ваше Имя
+    ⁃ ваш номер телефона ℹ️ указывайте телефон начиная со знака «+», далее только цифры, без скобок и тире
+ 2. Укажите координаты отправления и координаты назначения. Как это сделать инфо на скриншоте
+ 3. проверьте информацию о заказе и подтвердите его
+ 4. Ожидайте когда на ваш заказ будет назначен водитель
+ 5. Когда водитель будет назначен, вы можете связаться с ним для уточнения деталей поездки
+ 6. После заказа оцените поездку
 
-Maecenas dignissim nunc at elit sagittis, quis ullamcorper tellus lacinia. Aenean molestie eros eu mauris facilisis, ut sagittis ipsum ultrices. Donec egestas nunc sit amet orci hendrerit laoreet. Curabitur et diam eu libero molestie varius. Aenean sed turpis vel urna rhoncus ultricies ac vel ante. Nam mi sapien, rutrum sed lectus quis, consectetur eleifend nisi. Pellentesque gravida libero ut turpis gravida congue. Suspendisse ultricies arcu at pellentesque faucibus. Suspendisse laoreet gravida lacus ut mollis. Curabitur a lectus turpis. In hac habitasse platea dictumst.
 
-'''))
+ • кто меня повезет?
+Наш бот автоматически назначает свободного водителя, который находится ближе остальных. Бот также учитывает рейтинг водителя, и дает приоритет водителям с более высокими оценками
+
+ • есть вопросы и пожелания?
+Свяжитесь с техподдержкой бота @name
+
+👉 Ставьте оценку водителю после каждой поездки
+👉 При заказе убедитесь, что верно указали место отправления и прибытия
+👉 Приглашайте новых водителей в этот бот
+
+
+<b>Для водителей</b>
+Бот поможет удобно находить людей желающих добраться из точки А в точку Б.
+
+ℹ️ Для возможности принимать заказы должна быть заполнена АНКЕТА и пополнен БАЛАНС. Также ознакомьтесь с условиями взимания комиссии
+
+ • анкета
+ ⁃ Сделайте фото автомобиля. На фото должно быть хорошо видно ваш автомобиль, чтобы клиент мог найти его среди других автомобилей на улице
+ ⁃ Укажите номер автомобиля, достаточно цифр
+ ⁃ Укажите номер телефона по которому клиенты смогут связываться с вами
+
+ • Баланс
+    ℹ️ До 1 марта 2023 года водителям будут начислен бонусный баланс в размере 20USDT для возможности принимать заказы. Бонусный баланс не доступен для вывода.
+    👉 Водители могут выходить на линию (показывать готовность принимать заказ) и выполнять заказы при балансе не менее {minBalanceAmount:d} USDT
+    👉 Пополнить баланс можно переводом на наш криптокошелек USDT в сети TRC20
+    👉 Баланс служит для списания комиссий,  согласно установленных тарифов, с водителей за выполненные заказы. Списание баланса происходит в момент принятия заказа
+    👉 Если вам потребуется вернуть деньги, находящиеся на вашем балансе напишите @name
+
+ • Комиссия
+Комиссия составляет {percent:d}% от суммы заказа. Комиссия списывается с вашего личного баланса
+'''
+    kilometers = 14
+    amountKM = RATE_1_KM * 14
+    caption = caption.format(
+        rate1KM = RATE_1_KM,
+        amountKM = amountKM,
+        kilometers = kilometers,
+        minBalanceAmount = MIN_BALANCE_AMOUNT,
+        percent = PERCENT,
+    )
+    await message.bot.send_message(message.from_user.id, caption)
+    pass
+
 
 
 async def gotoStart(message):
