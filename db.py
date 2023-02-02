@@ -2,6 +2,7 @@ import sqlite3
 from sqlite3 import Error
 import config
 import os.path
+import mysql.connector
 
 def dict_factory(cursor, row):
     d = {}
@@ -27,12 +28,22 @@ class BotDB:
         'unknown': 'Неизвестен ⚪'
     }
 
+    dbType = 'sqlite'
+
+    replacer = '?';
+
     def __init__(self, db_file):
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
         db_path = os.path.join(BASE_DIR, db_file)
-        self.conn = sqlite3.connect(db_path, check_same_thread=False)
+
+        if self.dbType == 'sqlite':
+            self.conn = sqlite3.connect(db_path, check_same_thread=False)
+            self.cursor = self.conn.cursor()
+        else:
+            self.conn = mysql.connector.connect(user='root', password='rootPass', host='127.0.0.1', database='taxi')
+            self.replacer = '%s';
+            self.cursor = self.conn.cursor(buffered=True)
         self.conn.row_factory = dict_factory
-        self.cursor = self.conn.cursor()
 
 
 
@@ -143,8 +154,8 @@ class BotDB:
 
     def get_driver(self, user_id):
         """Достаем driver по его user_id"""
-        result = self.cursor.execute("SELECT * FROM `driver` WHERE `tg_user_id` = ?", (user_id,))
-        return result.fetchone()
+        result = self.cursor.execute("SELECT * FROM `driver` WHERE tg_user_id = " + self.replacer, (user_id,))
+        return self.fetchOne(result)
 
     def add_driver(self, user_id, first_name):
         """Добавляем driver в базу"""
@@ -270,3 +281,12 @@ class BotDB:
     def close(self):
         """Закрываем соединение с БД"""
         self.conn.close()
+
+    def fetchOne(self, result):
+        if result is None:
+            return False
+        else:
+            if self.dbType == 'sqlite':
+                return result.fetchone()
+            elif self.dbType == 'mysql':
+                return result.fetch_one()
