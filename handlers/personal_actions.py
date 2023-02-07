@@ -853,7 +853,7 @@ async def getDriverDoneOrders(message):
             if not row['dt_order']:
                 dateFormat = 'Не указана'
             else:
-                dateFormat = datetime.strptime(row['dt_order'], "%Y-%m-%d %H:%M:%S").strftime("%H:%M %d-%m-%Y")
+                dateFormat = datetime.strptime(str(row['dt_order']), "%Y-%m-%d %H:%M:%S").strftime("%H:%M %d-%m-%Y")
             text = '\n'.join((
                 '<b>Заказ № ' + str(row['id']) + '</b>',
                 'Статус <b>' + BotDB.statuses[row['status']] + '</b>',
@@ -1047,13 +1047,13 @@ async def destinationLocationSaved(message):
     await setLength(message)
     order['status'] = 'create'
     order['dt_order'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    BotDB.create_order(order)
+    orderId = BotDB.create_order(order)
     BotDB.update_client(message.from_user.id, client)
     # order['departure_latitude'] = 0
     # order['departure_longitude'] = 0
     # order['destination_latitude'] = 0
     # order['destination_longitude'] = 0
-    modelOrder = BotDB.get_create_order_by_client_id(message.from_user.id)
+    modelOrder = BotDB.get_order(orderId)
     await getOrderCardClient(message, modelOrder, True, True)
 
 

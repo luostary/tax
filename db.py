@@ -86,9 +86,11 @@ class BotDB:
             (client_id, status, dt_order, amount_client, departure_latitude, departure_longitude, destination_latitude, destination_longitude, route_length, route_time)
             VALUES (''' + self.replacer + ''', ''' + self.replacer + ''', ''' + self.replacer + ''', ''' + self.replacer + ''', ''' + self.replacer + ''', ''' + self.replacer + ''', ''' + self.replacer + ''', ''' + self.replacer + ''', ''' + self.replacer + ''', ''' + self.replacer + ''')'''
             self.cursor.execute(sql, list(data.values()))
+            id = self.cursor.lastrowid
+            self.conn.commit()
         except Error as e:
             print(e)
-        return self.conn.commit()
+        return id
     def get_last_order(self):
         result = self.cursor.execute("SELECT *, o.id order_id FROM `order` o LEFT JOIN client c ON c.tg_user_id = o.client_id ORDER BY id DESC LIMIT 1")
         return self.cursor.fetchone()
@@ -97,7 +99,7 @@ class BotDB:
         return self.cursor.fetchone()
     def get_orders(self, user_id, status):
         result = self.cursor.execute("SELECT * FROM `order` WHERE `status` = " + self.replacer + " ORDER BY `dt_order`", (status,))
-        return result.fetchall()
+        return self.cursor.fetchall()
     def get_client_orders(self, client_id):
         result = self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = " + self.replacer + " ORDER BY `dt_order` DESC", (client_id,))
         return self.cursor.fetchall()
@@ -124,7 +126,7 @@ class BotDB:
         return self.cursor.fetchone()
     def get_waiting_orders_by_client_id(self, id):
         result = self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = " + self.replacer + " AND status = 'waiting'", (id,))
-        return result.fetchall()
+        return self.cursor.fetchall()
     def get_waiting_order_by_client_id(self, id):
         result = self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = " + self.replacer + " AND status = 'waiting'", (id,))
         return self.cursor.fetchone()
@@ -133,7 +135,8 @@ class BotDB:
         return self.cursor.fetchone()
     def get_done_orders_by_client_id(self, id):
         result = self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = " + self.replacer + " AND status = 'done'", (id,))
-        return result.fetchall()
+        return self.cursor.fetchall()
+
 
 
 
@@ -144,10 +147,10 @@ class BotDB:
         return bool(len(self.cursor.fetchall()))
     def get_drivers(self):
         result = self.cursor.execute("SELECT * FROM `driver`")
-        return result.fetchall()
+        return self.cursor.fetchall()
     def get_drivers_with_wallets(self):
-        result = self.cursor.execute("SELECT * FROM `driver` WHERE wallet not NULL")
-        return result.fetchall()
+        result = self.cursor.execute("SELECT * FROM `driver` WHERE wallet IS NOT NULL")
+        return self.cursor.fetchall()
     def get_driver_id(self, user_id):
         """Достаем id driver в базе по его user_id"""
         result = self.cursor.execute("SELECT `id` FROM `driver` WHERE `tg_user_id` = " + self.replacer, (user_id,))
@@ -174,7 +177,7 @@ class BotDB:
         return self.cursor.fetchone()
     def get_drivers_by_wallet(self, wallet):
         result = self.cursor.execute("SELECT * FROM `driver` WHERE `wallet` = " + self.replacer, (wallet,))
-        return result.fetchall()
+        return self.cursor.fetchall()
     def update_driver_balance(self, user_id, data):
         """update driver balance"""
         try:
@@ -277,7 +280,7 @@ class BotDB:
             result = self.cursor.execute("SELECT * FROM `records` WHERE `users_id` = " + self.replacer + " ORDER BY `date`",
                 (self.get_user_id(user_id),))
 
-        return result.fetchall()
+        return self.cursor.fetchall()
 
     def close(self):
         """Закрываем соединение с БД"""
