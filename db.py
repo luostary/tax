@@ -28,7 +28,7 @@ class BotDB:
         'unknown': 'Неизвестен ⚪'
     }
 
-    dbType = 'sqlite'
+    dbType = config.DB_TYPE
 
     replacer = '?';
 
@@ -41,7 +41,7 @@ class BotDB:
             self.conn.row_factory = dict_factory
             self.cursor = self.conn.cursor()
         else:
-            self.conn = mysql.connector.connect(user='root', password='rootPass', host='127.0.0.1', database='taxi')
+            self.conn = mysql.connector.connect(user = config.DB_USER, password = config.DB_PASSWORD, host = config.DB_HOST, database = config.DB_NAME)
             self.replacer = '%s';
             self.cursor = self.conn.cursor(buffered=True, dictionary=True)
 

@@ -26,6 +26,13 @@ ALLOW_MANY_ORDERS = False
 
 ADMIN_TG = "@taxi_kipr_bot_admin"
 
+DB_TYPE = "sqlite"
+DB_HOST = "127.0.0.1"
+DB_USER = "database_user"
+DB_PASSWORD = "database_password"
+DB_NAME = "database_name"
+
+
 from os.path import exists
 if exists('params.py'):
     from params import *
