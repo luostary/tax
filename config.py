@@ -24,6 +24,8 @@ HAS_CONFIRM_STEPS_CLIENT = False
 
 ALLOW_MANY_ORDERS = False
 
+ADMIN_TG = "@taxi_kipr_bot_admin"
+
 from os.path import exists
 if exists('params.py'):
     from params import *
