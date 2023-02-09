@@ -928,7 +928,7 @@ async def getClientOrders(message):
                     if not row['dt_order']:
                         dateFormat = 'Не указана'
                     else:
-                        dateFormat = datetime.strptime(row['dt_order'], "%Y-%m-%d %H:%M:%S").strftime("%H:%M %d-%m-%Y")
+                        dateFormat = datetime.strptime(str(row['dt_order']), "%Y-%m-%d %H:%M:%S").strftime("%H:%M %d-%m-%Y")
                     text = '\n'.join((
                         '<b>Заказ №' + str(row['id']) + '</b>',
                         'Имя <b>' + str(client['name']) + '</b>',
