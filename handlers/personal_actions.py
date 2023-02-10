@@ -141,6 +141,12 @@ async def driverProfile(message, driver_id, user_id, showPhone = False):
         driverFileName = 'drivers/' + str(driver_id) + '.jpg';
         fileCarExist = exists(car)
         fileDriverExist = exists(driverFileName)
+
+        # Фото водителя не обязательный параметр
+        if not fileDriverExist:
+            driverFileName = 'images/anonim-user.jpg';
+            fileDriverExist = True
+
         statusIcon = str(BotDB.statuses[modelDriver['status']])
         caption = [
             '<b>Имя</b> ' + str(modelDriver['name']),
@@ -213,12 +219,13 @@ async def driverProfile(message, driver_id, user_id, showPhone = False):
                 merged_image.paste(image2,(y,0))
 
         if versionMerge > 0:
+
             bio = BytesIO()
             bio.name = 'merged/' + str(driver_id) + '.jpg'
             merged_image.save(bio, 'JPEG')
             bio.seek(0)
             await message.bot.send_photo(user_id, bio, caption=caption, parse_mode='HTML')
-            # await message.bot.send_message(user_id, 'versionMerge: ' + str(versionMerge))
+            print('versionMerge: ' + str(versionMerge))
         else:
             await message.bot.send_message(user_id, caption, parse_mode='HTML')
     pass
