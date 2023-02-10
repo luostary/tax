@@ -296,7 +296,7 @@ async def inlineClick(message, state: FSMContext):
         except:
             await message.bot.send_message(message.from_user.id, t("We can`t create your form"), reply_markup = await markupRemove())
         pass
-    elif message.data == 'driverPhotoSaved':
+    elif message.data in ['driverPhotoSaved', 'driverPhotoMissed']:
         await setDriverName(message)
     elif message.data == 'driverDoneOrder':
         await driverDoneOrder(message)
@@ -706,7 +706,9 @@ async def getOrderCardClient(message, order, cancel = False, confirm = False):
 async def setCarPhoto(message):
     await message.bot.send_message(message.from_user.id, t("Attach a photo of your car"), reply_markup = await markupRemove())
 async def setDriverPhoto(message):
-    await message.bot.send_message(message.from_user.id, t("You can attach your photo if you wish"), reply_markup = await markupRemove())
+    markup = InlineKeyboardMarkup(row_width=1)
+    markup.add(InlineKeyboardButton(text = 'Пропустить шаг', callback_data='driverPhotoMissed'))
+    await message.bot.send_message(message.from_user.id, t("You can attach your photo if you wish"), reply_markup = markup)
 @dp.message_handler(content_types='photo')
 async def process_car_photo(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
