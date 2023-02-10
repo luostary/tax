@@ -642,7 +642,7 @@ async def switchDriverOffline(message):
 async def getOrderCard(message, modelOrder, buttons = True):
     modelDriver = BotDB.get_driver(message.from_user.id)
     modelDriverOrder = BotDB.get_driver_order(message.from_user.id, modelOrder['id'])
-    modelClient = BotDB.get_client(order['client_id'])
+    modelClient = BotDB.get_client(modelOrder['client_id'])
     distanceToClient = await getLengthV2(
         modelDriver['latitude'],
         modelDriver['longitude'],
@@ -651,19 +651,19 @@ async def getOrderCard(message, modelOrder, buttons = True):
     )
     markup = InlineKeyboardMarkup(row_width=3)
     if buttons:
-        item1 = InlineKeyboardButton(text=t('Cancel') + ' ❌', callback_data='orderCancel_' + str(order['id']))
-        item2 = InlineKeyboardButton(text=t('Confirm') + ' ✅', callback_data='orderConfirm_' + str(order['id']))
+        item1 = InlineKeyboardButton(text=t('Cancel') + ' ❌', callback_data='orderCancel_' + str(modelOrder['id']))
+        item2 = InlineKeyboardButton(text=t('Confirm') + ' ✅', callback_data='orderConfirm_' + str(modelOrder['id']))
         markup.add(item1, item2)
     if not modelDriverOrder:
         driver_cancel_cn = 0
     else:
         driver_cancel_cn = modelDriverOrder['driver_cancel_cn']
     caption = [
-        '<b>Заказ №' + str(order['id']) + '</b>',
+        '<b>Заказ №' + str(modelOrder['id']) + '</b>',
         'Имя <b>' + str(modelClient['name']) + '</b>',
         'Расстояние до клиента <b>' + str(distanceToClient) + ' км.' + '</b>',
-        'Длина маршрута <b>' + str(order['route_length'] / 1000) + ' км.' + '</b>',
-        'Стоимость <b>' + str(order['amount_client']) + ' тл.' + '</b>',
+        'Длина маршрута <b>' + str(modelOrder['route_length'] / 1000) + ' км.' + '</b>',
+        'Стоимость <b>' + str(modelOrder['amount_client']) + ' тл.' + '</b>',
         'Рейтинг <b>' + (await getRating(message) * '⭐') + '(' + str(await getRating(message)) + '/5)</b>',
     ]
     if modelOrder['status'] == 'progress':
