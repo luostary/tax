@@ -416,8 +416,7 @@ async def inlineClick(message, state: FSMContext):
 
                         modelOrder = BotDB.get_order(order_id)
                         await sendClientNotification(message, modelOrder)
-                    except Error as e:
-                        print(e)
+                    except:
                         await message.bot.send_message(message.from_user.id, t("Order can not be taken"))
         else:
             await message.bot.send_message(message.from_user.id, t("This order cannot be taken, it is already taken"))
@@ -425,6 +424,8 @@ async def inlineClick(message, state: FSMContext):
         Array = message.data.split('_')
         order_id = Array[1]
         if BotDB.order_waiting_exists(order_id, 'waiting'):
+            if (not BotDB.driver_order_exists(message.from_user.id, order_id)):
+                BotDB.driver_order_create(message.from_user.id, order_id)
             BotDB.driver_order_increment_cancel_cn(message.from_user.id, order_id)
             await getNearWaitingOrder(message, False)
         else:
@@ -453,6 +454,7 @@ async def inlineClick(message, state: FSMContext):
     elif message.data == 'switch-online':
         await menuDriver(message)
         modelDriver = BotDB.get_driver(message.from_user.id)
+        modelOrder = BotDB.get_order_waiting_by_driver_id(message.from_user.id)
         if (not modelDriver):
             print('can`t get driver from db')
         else:
@@ -464,6 +466,10 @@ async def inlineClick(message, state: FSMContext):
                 await message.bot.send_message(message.from_user.id, localMessage)
             elif modelDriver['phone'] == None:
                 await message.bot.send_message(message.from_user.id, t('Phone is required, set it in client form'))
+            elif modelOrder:
+                # Не даем переключаться в онлайн, если у водителя уже есть waiting-заказ
+                await message.bot.send_message(message.from_user.id, t('You have active order'))
+                await getOrderCard(message, modelOrder, True)
             elif modelDriver['status'] == 'route':
                 modelOrder = BotDB.get_order_progress_by_driver_id(message.from_user.id)
                 if modelOrder:

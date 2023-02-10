@@ -104,6 +104,7 @@ language = {
         "You can`t see orders, your balance is less than {minAmount:d} usdt":"Вы не можете видеть заказы, Ваш баланс менее {minAmount:d} usdt",
         "You can`t switch to online, your balance is less than {minAmount:d} usdt":"Вы не можете выйти на линию, ваш баланс меньше {minAmount:d} usdt",
         "You cannot switch to online, you must complete the route":"Вы не можете переключиться в онлайн, необходимо завершить заказ",
+        "You have active order":"У Вас имеется текущий заказ",
         "You have taken the order": "Вы приняли заказ",
         "You have taken the order go to the passenger":"Вы приняли заказ, направляйтесь к пассажиру",
         "You have unknown status":"Неизвестный статус",
