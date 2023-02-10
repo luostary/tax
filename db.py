@@ -62,7 +62,7 @@ class BotDB:
             self.conn.row_factory = dict_factory
             self.cursor = self.conn.cursor()
         else:
-            self.conn = mysql.connector.connect(user = config.DB_USER, password = config.DB_PASSWORD, host = config.DB_HOST, database = config.DB_NAME, connection_timeout = 3)
+            self.conn = mysql.connector.connect(user = config.DB_USER, password = config.DB_PASSWORD, host = config.DB_HOST, database = config.DB_NAME)
             self.replacer = '%s';
             self.cursor = self.conn.cursor(buffered=True, dictionary=True)
 
