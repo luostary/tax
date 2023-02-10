@@ -277,7 +277,7 @@ async def inlineClick(message, state: FSMContext):
         async with state.proxy() as data:
             dMessage = data['dMessage']
             pass
-        await deleteMessage(message, dMessage)
+        # await deleteMessage(message, dMessage)
         async with state.proxy() as data:
             data['dir'] = 'drivers/'
             data['savedKey'] = 'driverPhotoSaved'
