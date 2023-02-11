@@ -385,12 +385,12 @@ async def inlineClick(message, state: FSMContext):
             else:
                 if modelOrder['amount_client'] == None:
                     modelOrder['amount_client'] = 0
-            driver = BotDB.get_driver(message.from_user.id)
+            driverModel = BotDB.get_driver(message.from_user.id)
             if (not driver):
                 await message.bot.send_message(message.from_user.id, "Can`t do it, begin to /start")
             else:
-                if driver['balance'] == None:
-                    driver['balance'] = 0
+                if driverModel['balance'] == None:
+                    driverModel['balance'] = 0
                 if not modelOrder['amount_client']:
                     modelOrder['amount_client'] = 0
                 income = int(math.ceil((modelOrder['amount_client'] / 100 * PERCENT) / RATE_1_USDT))
@@ -402,7 +402,7 @@ async def inlineClick(message, state: FSMContext):
                         BotDB.update_driver_status(message.from_user.id, 'route')
                         BotDB.update_order_status(order_id, 'progress')
                         progressOrder = BotDB.get_order(order_id)
-                        BotDB.update_order_driver_id(order_id, driver['tg_user_id'])
+                        BotDB.update_order_driver_id(order_id, driverModel['tg_user_id'])
                         BotDB.update_driver_balance(message.from_user.id, int(driver['balance'] - income))
                         if var['orderTimer'] != False:
                             var['orderTimer'].cancel()
