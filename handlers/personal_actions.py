@@ -722,7 +722,7 @@ async def process_car_photo(message: types.Message, state: FSMContext):
         dir = data['dir']
         savedKey = data['savedKey']
     await message.photo[-1].download(destination_file=dir + str(message.from_user.id) + '.jpg')
-    dMessage = await message.bot.send_message(message.chat.id, t("Do you confirm?"), reply_markup = await inlineConfirm(savedKey))
+    dMessage = await message.bot.send_message(message.from_user.id, t("Do you confirm?"), reply_markup = await inlineConfirm(savedKey))
     async with state.proxy() as data:
         data['dMessage'] = dMessage
 
@@ -776,7 +776,7 @@ async def process_driver_deposit_balance(message: types.Message, state: FSMConte
             await message.bot.send_message(message.from_user.id, t('Do you confirm?'), reply_markup = await inlineConfirm('driverTopupBalanceConfirm'))
         else:
             await message.bot.send_message(message.from_user.id, t("Only digits can be entered"))
-            await message.bot.send_message(message.chat.id, t("You can input from 1 to 10 digits"))
+            await message.bot.send_message(message.from_user.id, t("You can input from 1 to 10 digits"))
 
 
 
@@ -803,7 +803,7 @@ async def process_driver_phone(message: types.Message, state: FSMContext):
             await message.bot.send_message(message.from_user.id, t('Do you confirm?'), reply_markup = await inlineConfirm('driverPhoneSaved'))
         pass
     else:
-        await message.bot.send_message(message.chat.id, t("Number of digits is incorrect"))
+        await message.bot.send_message(message.from_user.id, t("Number of digits is incorrect"))
 
 
 
@@ -1008,7 +1008,7 @@ async def process_phone(message: types.Message, state: FSMContext):
             await setDeparture(message)
         pass
     else:
-        await message.bot.send_message(message.chat.id, t("Number of digits is incorrect"))
+        await message.bot.send_message(message.from_user.id, t("Number of digits is incorrect"))
 
 
 
@@ -1033,7 +1033,7 @@ async def process_location(message):
         order['departure_longitude'] = message.location.longitude
         if HAS_CONFIRM_STEPS_CLIENT:
             markup.add(types.InlineKeyboardButton(text=t('Confirm'), callback_data='departureLocationSaved'))
-            await message.bot.send_message(message.chat.id, t("Confirm entry or correct value"), reply_markup = markup)
+            await message.bot.send_message(message.from_user.id, t("Confirm entry or correct value"), reply_markup = markup)
         else:
             await setDestination(message)
     elif var['locationType'] == 'clientDstLoc':
@@ -1041,18 +1041,18 @@ async def process_location(message):
         order['destination_longitude'] = message.location.longitude
         if HAS_CONFIRM_STEPS_CLIENT:
             markup.add(types.InlineKeyboardButton(text=t('Confirm'), callback_data='destinationLocationSaved'))
-            await message.bot.send_message(message.chat.id, t("Confirm entry or correct value"), reply_markup = markup)
+            await message.bot.send_message(message.from_user.id, t("Confirm entry or correct value"), reply_markup = markup)
         else:
             await destinationLocationSaved(message)
     elif var['locationType'] == 'driverCurLoc':
         BotDB.update_driver_location(message.from_user.id, message.location.latitude, message.location.longitude)
         if HAS_CONFIRM_STEPS_DRIVER:
             markup.add(types.InlineKeyboardButton(text=t('Confirm'), callback_data='driverLocationSaved'))
-            await message.bot.send_message(message.chat.id, t("Confirm entry or correct value"), reply_markup = markup)
+            await message.bot.send_message(message.from_user.id, t("Confirm entry or correct value"), reply_markup = markup)
         else:
             await switchDriverOnline(message)
     else:
-        await message.bot.send_message(message.chat.id, t("Sorry can`t saved data"))
+        await message.bot.send_message(message.from_user.id, t("Sorry can`t saved data"))
     pass
 
 
@@ -1118,7 +1118,7 @@ async def driverRegistered(message):
 
 
 async def deleteMessage(aio, dMessage):
-    await dMessage.bot.delete_message(dMessage.chat.id, dMessage.message_id)
+    await dMessage.bot.delete_message(dMessage.from_user.id, dMessage.message_id)
     pass
 
 
