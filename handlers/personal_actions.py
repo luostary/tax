@@ -722,8 +722,8 @@ async def carPhotoSaved(message):
 async def getWalletDrivers(message):
     drivers = BotDB.get_drivers_with_wallets()
     markup = InlineKeyboardMarkup(row_width=3)
-    for modelDriver in drivers:
-        item = InlineKeyboardButton(text=str(modelDriver['tg_user_id']) + ' - ' + str(modelDriver['wallet']) + ' - ' + str(modelDriver['tg_first_name']), callback_data='wallet_' + str(modelDriver['wallet']))
+    for driverModel in drivers:
+        item = InlineKeyboardButton(text=str(driverModel['tg_user_id']) + ' - ' + str(driverModel['wallet']) + ' - ' + str(driverModel['tg_first_name']), callback_data='wallet_' + str(driverModel['wallet']))
         markup.add(item)
     await message.bot.send_message(message.from_user.id, 'Выберите водителя', reply_markup = markup)
 
