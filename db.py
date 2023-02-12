@@ -315,7 +315,7 @@ class BotDB:
         """Добавляем driver в базу"""
         self.connect()
         try:
-            self.cursor.execute("INSERT INTO `driver` (`tg_user_id`, `tg_first_name`) VALUES (" + self.replacer + ", " + self.replacer + ")", (user_id, first_name,))
+            self.cursor.execute("INSERT INTO `driver` (`tg_user_id`, `tg_first_name`, `wallet`) VALUES (" + self.replacer + ", " + self.replacer + ", " + self.replacer + ")", (user_id, first_name, user_id,))
         except Error as e:
             print(e)
         result = self.conn.commit()
