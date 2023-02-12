@@ -263,7 +263,7 @@ async def inlineClick(message, state: FSMContext):
         await setPhone(message)
     elif message.data == 'clientPhoneSaved':
         await state.finish()
-        await setDeparture(message)
+        await setDeparture(message, state)
     elif message.data == "driver":
         if(not BotDB.driver_exists(message.from_user.id)):
             BotDB.add_driver(message.from_user.id, message.from_user.first_name)
@@ -503,7 +503,7 @@ async def inlineClick(message, state: FSMContext):
         await switchDriverOffline(message)
         pass
     elif message.data == 'departureLocationSaved':
-        await setDestination(message)
+        await setDestination(message, state)
         pass
     elif message.data == 'destinationLocationSaved':
         await destinationLocationSaved(message)
@@ -1005,7 +1005,7 @@ async def process_phone(message: types.Message, state: FSMContext):
             await message.bot.send_message(message.from_user.id, t('Do you confirm your phone?'), reply_markup = await inlineConfirm('clientPhoneSaved'))
         else:
             await state.finish()
-            await setDeparture(message)
+            await setDeparture(message, state)
         pass
     else:
         await message.bot.send_message(message.from_user.id, t("Number of digits is incorrect"))
@@ -1014,29 +1014,34 @@ async def process_phone(message: types.Message, state: FSMContext):
 
 
 async def setDriverLocation(message):
-    var['locationType'] = 'driverCurLoc'
+    async with state.proxy() as data:
+        data['locationType'] = 'driverCurLoc'
     await message.bot.send_message(message.from_user.id, t('Set current location'))
     pass
-async def setDeparture(message):
-    var['locationType'] = 'clientDptLoc'
+async def setDeparture(message, state: FSMContext):
+    async with state.proxy() as data:
+        data['locationType'] = 'clientDptLoc'
     await message.bot.send_message(message.from_user.id, t("Set departure location"), reply_markup = await markupRemove())
     pass
-async def setDestination(message):
-    var['locationType'] = 'clientDstLoc'
+async def setDestination(message, state: FSMContext):
+    async with state.proxy() as data:
+        data['locationType'] = 'clientDstLoc'
     await message.bot.send_message(message.from_user.id, t("Set destination location"), reply_markup = await markupRemove())
     pass
 @dp.message_handler(content_types=['location'])
-async def process_location(message):
+async def process_location(message, state: FSMContext):
     markup = types.InlineKeyboardMarkup(row_width=2)
-    if var['locationType'] == 'clientDptLoc':
+    async with state.proxy() as data:
+        locationType = data['locationType']
+    if locationType == 'clientDptLoc':
         order['departure_latitude'] = message.location.latitude
         order['departure_longitude'] = message.location.longitude
         if HAS_CONFIRM_STEPS_CLIENT:
             markup.add(types.InlineKeyboardButton(text=t('Confirm'), callback_data='departureLocationSaved'))
             await message.bot.send_message(message.from_user.id, t("Confirm entry or correct value"), reply_markup = markup)
         else:
-            await setDestination(message)
-    elif var['locationType'] == 'clientDstLoc':
+            await setDestination(message, state)
+    elif locationType == 'clientDstLoc':
         order['destination_latitude'] = message.location.latitude
         order['destination_longitude'] = message.location.longitude
         if HAS_CONFIRM_STEPS_CLIENT:
@@ -1044,7 +1049,7 @@ async def process_location(message):
             await message.bot.send_message(message.from_user.id, t("Confirm entry or correct value"), reply_markup = markup)
         else:
             await destinationLocationSaved(message)
-    elif var['locationType'] == 'driverCurLoc':
+    elif locationType == 'driverCurLoc':
         BotDB.update_driver_location(message.from_user.id, message.location.latitude, message.location.longitude)
         if HAS_CONFIRM_STEPS_DRIVER:
             markup.add(types.InlineKeyboardButton(text=t('Confirm'), callback_data='driverLocationSaved'))
