@@ -19,20 +19,20 @@ from geopy.distance import geodesic
 # sudo apt-get install xclip
 import pyperclip
 
-client = {
-    'name': '',
-    'phone': '',
-}
-order = {
-    'client_id': '',
-    'status': '',
-    'dt_order': '',
-    'amount_client': '',
-    'departure_latitude': 0,
-    'departure_longitude': 0,
-    'destination_latitude': 0,
-    'destination_longitude': 0,
-}
+#client = {
+#    'name': '',
+#    'phone': '',
+#}
+#order = {
+#    'client_id': '',
+#    'status': '',
+#    'dt_order': '',
+#    'amount_client': '',
+#    'departure_latitude': 0,
+#    'departure_longitude': 0,
+#    'destination_latitude': 0,
+#    'destination_longitude': 0,
+#}
 driver = {
     'name': '',
     'phone': '',
@@ -58,7 +58,6 @@ class FormDriver(StatesGroup):
     car_number = State()
     wallet = State()
     balance = State()
-data = []
 minBalanceAmount = MIN_BALANCE_AMOUNT
 
 PHONE_MASK = '^[+]{1,1}[\d]{11,12}$'
@@ -90,12 +89,14 @@ async def getLength(dept_lt, dept_ln, dest_lt, dest_ln):
 
 
 
-async def setLength(message):
-    order['route_length'] = await getLength(order['departure_latitude'], order['departure_longitude'], order['destination_latitude'], order['destination_longitude'])
-    order['route_time'] = round(order['route_length'] / (40 * 1000) * 60)
-    order['amount_client'] = math.ceil((order['route_length'] / 1000) * RATE_1_KM)
-    if order['amount_client'] < MIN_AMOUNT:
-        order['amount_client'] = MIN_AMOUNT
+async def setLength(message, dataOrder):
+    localOrder = {}
+    localOrder['route_length'] = await getLength(dataOrder['departure_latitude'], dataOrder['departure_longitude'], dataOrder['destination_latitude'], dataOrder['destination_longitude'])
+    localOrder['route_time'] = round(localOrder['route_length'] / (40 * 1000) * 60)
+    localOrder['amount_client'] = math.ceil((localOrder['route_length'] / 1000) * RATE_1_KM)
+    if localOrder['amount_client'] < MIN_AMOUNT:
+        localOrder['amount_client'] = MIN_AMOUNT
+    return localOrder
     pass
 
 
@@ -256,7 +257,6 @@ async def inlineClick(message, state: FSMContext):
                 await getOrderCardClient(message, modelOrder, True)
                 return
         print(message.from_user.id)
-        order['client_id'] = message.from_user.id
         await setName(message)
     elif message.data == 'clientNameSaved':
         await state.finish()
@@ -506,7 +506,7 @@ async def inlineClick(message, state: FSMContext):
         await setDestination(message, state)
         pass
     elif message.data == 'destinationLocationSaved':
-        await destinationLocationSaved(message)
+        await destinationLocationSaved(message, state)
         pass
     elif message.data == 'driverLocationSaved':
         await switchDriverOnline(message)
@@ -966,11 +966,10 @@ async def setName(message):
 @dp.message_handler(state=FormClient.name)
 async def process_name(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        client['name'] = message.text
+        data['name'] = message.text
     if HAS_CONFIRM_STEPS_CLIENT:
-        await message.bot.send_message(message.from_user.id, client['name'] + t(', do you confirm your name?'), reply_markup = await inlineConfirm('clientNameSaved'))
+        await message.bot.send_message(message.from_user.id, data['name'] + t(', do you confirm your name?'), reply_markup = await inlineConfirm('clientNameSaved'))
     else:
-        await state.finish()
         await setPhone(message)
 
 
@@ -1000,11 +999,10 @@ async def process_phone(message: types.Message, state: FSMContext):
     match = re.match(PHONE_MASK, message.text)
     if match:
         async with state.proxy() as data:
-            client['phone'] = message.text
+            data['phone'] = message.text
         if HAS_CONFIRM_STEPS_CLIENT:
             await message.bot.send_message(message.from_user.id, t('Do you confirm your phone?'), reply_markup = await inlineConfirm('clientPhoneSaved'))
         else:
-            await state.finish()
             await setDeparture(message, state)
         pass
     else:
@@ -1013,7 +1011,7 @@ async def process_phone(message: types.Message, state: FSMContext):
 
 
 
-async def setDriverLocation(message):
+async def setDriverLocation(message, state: FSMContext):
     async with state.proxy() as data:
         data['locationType'] = 'driverCurLoc'
     await message.bot.send_message(message.from_user.id, t('Set current location'))
@@ -1028,27 +1026,31 @@ async def setDestination(message, state: FSMContext):
         data['locationType'] = 'clientDstLoc'
     await message.bot.send_message(message.from_user.id, t("Set destination location"), reply_markup = await markupRemove())
     pass
-@dp.message_handler(content_types=['location'])
+@dp.message_handler(content_types=['location'], state='*')
 async def process_location(message, state: FSMContext):
     markup = types.InlineKeyboardMarkup(row_width=2)
     async with state.proxy() as data:
         locationType = data['locationType']
     if locationType == 'clientDptLoc':
-        order['departure_latitude'] = message.location.latitude
-        order['departure_longitude'] = message.location.longitude
+        async with state.proxy() as data:
+            data['departure_latitude'] = message.location.latitude
+            data['departure_longitude'] = message.location.longitude
+            pass
         if HAS_CONFIRM_STEPS_CLIENT:
             markup.add(types.InlineKeyboardButton(text=t('Confirm'), callback_data='departureLocationSaved'))
             await message.bot.send_message(message.from_user.id, t("Confirm entry or correct value"), reply_markup = markup)
         else:
             await setDestination(message, state)
     elif locationType == 'clientDstLoc':
-        order['destination_latitude'] = message.location.latitude
-        order['destination_longitude'] = message.location.longitude
+        async with state.proxy() as data:
+            data['destination_latitude'] = message.location.latitude
+            data['destination_longitude'] = message.location.longitude
+            pass
         if HAS_CONFIRM_STEPS_CLIENT:
             markup.add(types.InlineKeyboardButton(text=t('Confirm'), callback_data='destinationLocationSaved'))
             await message.bot.send_message(message.from_user.id, t("Confirm entry or correct value"), reply_markup = markup)
         else:
-            await destinationLocationSaved(message)
+            await destinationLocationSaved(message, state)
     elif locationType == 'driverCurLoc':
         BotDB.update_driver_location(message.from_user.id, message.location.latitude, message.location.longitude)
         if HAS_CONFIRM_STEPS_DRIVER:
@@ -1063,16 +1065,33 @@ async def process_location(message, state: FSMContext):
 
 
 
-async def destinationLocationSaved(message):
-    await setLength(message)
-    order['status'] = 'create'
-    order['dt_order'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    orderId = BotDB.create_order(order)
-    BotDB.update_client(message.from_user.id, client)
-    # order['departure_latitude'] = 0
-    # order['departure_longitude'] = 0
-    # order['destination_latitude'] = 0
-    # order['destination_longitude'] = 0
+async def destinationLocationSaved(message, state: FSMContext):
+    dataClient = {}
+    dataOrder = {}
+
+    async with state.proxy() as data:
+        dataClient['name'] = data['name']
+        dataClient['phone'] = data['phone']
+        dataOrder['departure_latitude'] = data['departure_latitude']
+        dataOrder['departure_longitude'] = data['departure_longitude']
+        dataOrder['destination_latitude'] = data['destination_latitude']
+        dataOrder['destination_longitude'] = data['destination_longitude']
+        pass
+
+
+    lenParams = await setLength(message, dataOrder)
+    dataOrder['client_id'] = message.from_user.id
+    dataOrder['status'] = 'create'
+    dataOrder['dt_order'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    dataOrder['amount_client'] = lenParams['amount_client']
+    dataOrder['route_length'] = lenParams['route_length']
+    dataOrder['route_time'] = lenParams['route_time']
+
+    await state.finish()
+
+    print(dataOrder)
+    orderId = BotDB.create_order(dataOrder)
+    BotDB.update_client(message.from_user.id, dataClient)
     modelOrder = BotDB.get_order(orderId)
     await getOrderCardClient(message, modelOrder, True, True)
 

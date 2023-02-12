@@ -132,7 +132,18 @@ class BotDB:
             sql = '''INSERT INTO `order`
             (client_id, status, dt_order, amount_client, departure_latitude, departure_longitude, destination_latitude, destination_longitude, route_length, route_time)
             VALUES (''' + self.replacer + ''', ''' + self.replacer + ''', ''' + self.replacer + ''', ''' + self.replacer + ''', ''' + self.replacer + ''', ''' + self.replacer + ''', ''' + self.replacer + ''', ''' + self.replacer + ''', ''' + self.replacer + ''', ''' + self.replacer + ''')'''
-            self.cursor.execute(sql, list(data.values()))
+            self.cursor.execute(sql, (
+                data['client_id'],
+                data['status'],
+                data['dt_order'],
+                data['amount_client'],
+                data['departure_latitude'],
+                data['departure_longitude'],
+                data['destination_latitude'],
+                data['destination_longitude'],
+                data['route_length'],
+                data['route_time'],
+            ))
             id = self.cursor.lastrowid
             self.conn.commit()
         except Error as e:
