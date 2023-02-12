@@ -397,7 +397,7 @@ async def inlineClick(message, state: FSMContext):
                         BotDB.update_order_status(order_id, 'progress')
                         progressOrder = BotDB.get_order(order_id)
                         BotDB.update_order_driver_id(order_id, driverModel['tg_user_id'])
-                        BotDB.update_driver_balance(message.from_user.id, int(driver['balance'] - income))
+                        BotDB.update_driver_balance(message.from_user.id, int(driverModel['balance'] - income))
                         if var['orderTimer'] != False:
                             var['orderTimer'].cancel()
                             var['orderTimer'] = False
