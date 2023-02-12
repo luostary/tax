@@ -33,14 +33,14 @@ import pyperclip
 #    'destination_latitude': 0,
 #    'destination_longitude': 0,
 #}
-driver = {
-    'name': '',
-    'phone': '',
-    'car_number': '',
-    'status': '',
-    'balance': '',
-    'wallet': '',
-}
+#driver = {
+#    'name': '',
+#    'phone': '',
+#    'car_number': '',
+#    'status': '',
+#    'balance': '',
+#    'wallet': '',
+#}
 
 var = {
     'locationType': '',
@@ -287,13 +287,11 @@ async def inlineClick(message, state: FSMContext):
         await state.finish()
         await setDriverPhone(message)
     elif message.data == 'driverNameSaved':
-        await state.finish()
         await setDriverCarNumber(message)
     elif message.data == 'driverPhoneSaved':
+        await menuDriver(message)
         try:
-            await state.finish()
-            await menuDriver(message)
-            await driverRegistered(message)
+            await driverRegistered(message, state)
         except:
             await message.bot.send_message(message.from_user.id, t("We can`t create your form"), reply_markup = await markupRemove())
         pass
@@ -368,7 +366,7 @@ async def inlineClick(message, state: FSMContext):
         pass
     elif 'wallet' in message.data:
         Array = message.data.split('_')
-        await setDriverTopupBalance(message, Array[1])
+        await setDriverTopupBalance(message, Array[1], state)
     elif "orderConfirm" in message.data:
         bookOrderArray = message.data.split('_')
         order_id = bookOrderArray[1]
@@ -737,8 +735,7 @@ async def getWalletDrivers(message):
 
 
 
-async def setDriverTopupBalance(message, wallet):
-    driver['wallet'] = wallet
+async def setDriverTopupBalance(message, wallet, state):
     drivers = len(BotDB.get_drivers_by_wallet(wallet))
     if (drivers > 1):
         localMessage = "Нельзя пополнить кошелек поскольку найдено {drivers:d} водителей с таким кошельком"
@@ -746,6 +743,8 @@ async def setDriverTopupBalance(message, wallet):
         await message.bot.send_message(message.from_user.id, localMessage, reply_markup = await markupRemove())
     else:
         await FormDriver.balance.set()
+        async with state.proxy() as data:
+            data['wallet'] = wallet
         await message.bot.send_message(message.from_user.id, t("Top up driver balance"), reply_markup = await markupRemove())
 @dp.message_handler(state=FormDriver.balance)
 async def process_driver_deposit_balance(message: types.Message, state: FSMContext):
@@ -757,7 +756,6 @@ async def process_driver_deposit_balance(message: types.Message, state: FSMConte
         if match:
             async with state.proxy() as data:
                 data['changeBalance'] = message.text
-                data['wallet'] = driver['wallet']
             await message.bot.send_message(message.from_user.id, t('Do you confirm?'), reply_markup = await inlineConfirm('driverTopupBalanceConfirm'))
         else:
             await message.bot.send_message(message.from_user.id, t("Only digits can be entered"))
@@ -774,14 +772,14 @@ async def setDriverPhone(message):
 async def process_driver_phone(message: types.Message, state: FSMContext):
     match = re.match(PHONE_MASK, message.text)
     if match:
-        driver['phone'] = message.text
+        async with state.proxy() as data:
+            data['phone'] = message.text
         if (not HAS_CONFIRM_STEPS_DRIVER):
             try:
-                await state.finish()
-                await driverRegistered(message)
-                time.sleep(1)
+                await driverRegistered(message, state)
                 await menuDriver(message)
             except:
+                await menuDriver(message)
                 await message.bot.send_message(message.from_user.id, t("We can`t create your form"), reply_markup = await markupRemove())
             pass
         else:
@@ -798,9 +796,9 @@ async def setDriverName(message):
     await message.bot.send_message(message.from_user.id, t("What's your name?"), reply_markup = types.ReplyKeyboardRemove())
 @dp.message_handler(state=FormDriver.name)
 async def process_driver_name(message: types.Message, state: FSMContext):
-    driver['name'] = message.text
+    async with state.proxy() as data:
+        data['name'] = message.text
     if (not HAS_CONFIRM_STEPS_DRIVER):
-        await state.finish()
         await setDriverCarNumber(message)
     else:
         await message.bot.send_message(message.from_user.id, t('Do you confirm?'), reply_markup = await inlineConfirm('driverNameSaved'))
@@ -813,9 +811,9 @@ async def setDriverCarNumber(message):
     await message.bot.send_message(message.from_user.id, t("What's your car number?"), reply_markup = await markupRemove())
 @dp.message_handler(state=FormDriver.car_number)
 async def process_driver_car_number(message: types.Message, state: FSMContext):
-    driver['car_number'] = message.text
+    async with state.proxy() as data:
+        data['car_number'] = message.text
     if (not HAS_CONFIRM_STEPS_DRIVER):
-        await state.finish()
         await setDriverPhone(message)
     else:
         await message.bot.send_message(message.from_user.id, t('Do you confirm?'), reply_markup = await inlineConfirm('driverCarNumberSaved'))
@@ -878,11 +876,14 @@ async def setDriverWallet(message):
 @dp.message_handler(state=FormDriver.wallet)
 async def process_driver_wallet(message: types.Message, state: FSMContext):
     if (message.text == t('Confirm')):
+        async with state.proxy() as data:
+            wallet = data['wallet']
         await state.finish()
-        BotDB.update_driver_wallet(message.from_user.id, driver['wallet'])
+        BotDB.update_driver_wallet(message.from_user.id, wallet)
         await message.bot.send_message(message.from_user.id, t('Thank you, we will check the crediting of funds'), reply_markup = await markupRemove())
     else:
-        driver['wallet'] = message.text
+        async with state.proxy() as data:
+            data['wallet'] = message.text
         markup = types.ReplyKeyboardMarkup(resize_keyboard = True)
         markup.add(types.KeyboardButton(t('Confirm')))
         await message.bot.send_message(message.from_user.id, t('Confirm entry or correct value'), reply_markup = markup)
@@ -1118,9 +1119,16 @@ async def clientRegistered(message):
     except:
         print('error method clientRegistered(message)')
         await gotoStart(message)
-async def driverRegistered(message):
-    driver['status'] = 'offline'
-    BotDB.update_driver(message.from_user.id, driver)
+async def driverRegistered(message, state: FSMContext):
+    driverData = {}
+    async with state.proxy() as data:
+        driverData['name'] = data['name']
+        driverData['phone'] = data['phone']
+        driverData['car_number'] = data['car_number']
+        driverData['status'] = 'offline'
+
+    await state.finish()
+    BotDB.update_driver(message.from_user.id, driverData)
     # time.sleep(2)
     await message.bot.send_message(message.from_user.id, t("Your profile is saved"))
 
