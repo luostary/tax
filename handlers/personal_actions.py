@@ -663,24 +663,24 @@ async def getOrderCard(message, modelOrder, buttons = True):
         caption.append('Вы отклоняли <b>' + str(driver_cancel_cn) + ' раз</b>',)
     caption = '\n'.join(caption)
     await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML', reply_markup = markup)
-async def getOrderCardClient(message, order, cancel = False, confirm = False):
-    clientModel = BotDB.get_client(order['client_id'])
+async def getOrderCardClient(message, orderModel, cancel = False, confirm = False):
+    clientModel = BotDB.get_client(orderModel['client_id'])
     markup = InlineKeyboardMarkup(row_width=3)
-    if cancel & (not order['driver_id']) & (order['status'] in ['create', 'waiting']):
-        item1 = InlineKeyboardButton(text=t('Cancel trip') + ' ❌', callback_data='orderCancelClient_' + str(order['id']))
+    if cancel & (not orderModel['driver_id']) & (orderModel['status'] in ['create', 'waiting']):
+        item1 = InlineKeyboardButton(text=t('Cancel trip') + ' ❌', callback_data='orderCancelClient_' + str(orderModel['id']))
         markup.add(item1)
     if confirm:
-        item2 = InlineKeyboardButton(text=t('Confirm') + ' ✅', callback_data='orderWaitingClient_' + str(order['id']))
+        item2 = InlineKeyboardButton(text=t('Confirm') + ' ✅', callback_data='orderWaitingClient_' + str(orderModel['id']))
         markup.add(item2)
 
     caption = [
-        '<b>Заказ №' + str(order['id']) + '</b>',
+        '<b>Заказ №' + str(orderModel['id']) + '</b>',
         'Имя <b>' + str(clientModel['name']) + '</b>',
-        'Длина маршрута <b>' + str(order['route_length'] / 1000) + ' км.' + '</b>',
-        'Стоимость <b>' + str(order['amount_client']) + ' тл.' + '</b>',
-        'Статус <b>' + str(BotDB.statuses[order['status']]) + '</b>',
+        'Длина маршрута <b>' + str(orderModel['route_length'] / 1000) + ' км.' + '</b>',
+        'Стоимость <b>' + str(orderModel['amount_client']) + ' тл.' + '</b>',
+        'Статус <b>' + str(BotDB.statuses[orderModel['status']]) + '</b>',
     ]
-    if (order['status'] == 'waiting') & (order['driver_id'] == str(message.from_user.id)):
+    if (orderModel['status'] == 'waiting') & (orderModel['driver_id'] == str(message.from_user.id)):
         caption.insert(1, 'Телефон <b>' + str(clientModel['phone']) + '</b>')
     caption = '\n'.join(caption)
     await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML', reply_markup = markup)
