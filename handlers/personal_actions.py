@@ -700,9 +700,14 @@ async def process_car_photo(message: types.Message, state: FSMContext):
         dir = data['dir']
         savedKey = data['savedKey']
     await message.photo[-1].download(destination_file=dir + str(message.from_user.id) + '.jpg')
-    dMessage = await message.bot.send_message(message.from_user.id, t("Do you confirm?"), reply_markup = await inlineConfirm(savedKey))
-    async with state.proxy() as data:
-        data['dMessage'] = dMessage
+
+    if (HAS_CONFIRM_STEPS_DRIVER):
+        dMessage = await message.bot.send_message(message.from_user.id, t("Do you confirm?"), reply_markup = await inlineConfirm(savedKey))
+        async with state.proxy() as data:
+            data['dMessage'] = dMessage
+    else:
+        await setDriverPhoto(message)
+
 
 
 
