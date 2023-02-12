@@ -274,10 +274,7 @@ async def inlineClick(message, state: FSMContext):
         await driverProfile(message, message.from_user.id, message.from_user.id, True)
         pass
     elif message.data == "driver-form":
-        async with state.proxy() as data:
-            data['dir'] = 'cars/'
-            data['savedKey'] = 'carPhotoSaved'
-        await setCarPhoto(message)
+        await setCarPhoto(message, state)
     elif message.data == 'drivers':
         await getWalletDrivers(message)
     elif message.data == 'carPhotoSaved':
@@ -285,10 +282,7 @@ async def inlineClick(message, state: FSMContext):
             dMessage = data['dMessage']
             pass
         # await deleteMessage(message, dMessage)
-        async with state.proxy() as data:
-            data['dir'] = 'drivers/'
-            data['savedKey'] = 'driverPhotoSaved'
-        await setDriverPhoto(message)
+        await setDriverPhoto(message, state)
     elif message.data == 'driverCarNumberSaved':
         await state.finish()
         await setDriverPhone(message)
@@ -688,9 +682,15 @@ async def getOrderCardClient(message, orderModel, cancel = False, confirm = Fals
 
 
 
-async def setCarPhoto(message):
+async def setCarPhoto(message, state):
+    async with state.proxy() as data:
+        data['dir'] = 'cars/'
+        data['savedKey'] = 'carPhotoSaved'
     await message.bot.send_message(message.from_user.id, t("Attach a photo of your car"), reply_markup = await markupRemove())
-async def setDriverPhoto(message):
+async def setDriverPhoto(message, state):
+    async with state.proxy() as data:
+        data['dir'] = 'drivers/'
+        data['savedKey'] = 'driverPhotoSaved'
     markup = InlineKeyboardMarkup(row_width=1)
     markup.add(InlineKeyboardButton(text = 'Пропустить шаг', callback_data='driverPhotoMissed'))
     await message.bot.send_message(message.from_user.id, t("You can attach your photo if you wish"), reply_markup = markup)
@@ -706,8 +706,10 @@ async def process_car_photo(message: types.Message, state: FSMContext):
         async with state.proxy() as data:
             data['dMessage'] = dMessage
     else:
-        await setDriverPhoto(message)
-
+        if (savedKey == 'carPhotoSaved'):
+            await setDriverPhoto(message, state)
+        elif (savedKey == 'driverPhotoSaved'):
+            await setDriverName(message)
 
 
 
