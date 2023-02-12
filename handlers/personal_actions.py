@@ -1097,12 +1097,14 @@ async def clientRules(message):
         kilometers = kilometers,
         adminTg = ADMIN_TG,
     )
+    backClientMenu = InlineKeyboardMarkup(row_width=1)
+    backClientMenu.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='client'))
     await message.bot.send_message(message.from_user.id, caption)
     bio = BytesIO()
     image = Image.open('rules_1.jpeg')
     image.save(bio, 'JPEG')
     bio.seek(0)
-    await message.bot.send_photo(message.from_user.id, bio)
+    await message.bot.send_photo(message.from_user.id, bio, reply_markup = backClientMenu)
     pass
 
 
@@ -1134,7 +1136,9 @@ async def driverRules(message):
         percent = PERCENT,
         adminTg = ADMIN_TG,
     )
-    await message.bot.send_message(message.from_user.id, caption)
+    backDriverMenu = InlineKeyboardMarkup(row_width=1)
+    backDriverMenu.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='driver'))
+    await message.bot.send_message(message.from_user.id, caption, reply_markup = backDriverMenu)
     pass
 
 
