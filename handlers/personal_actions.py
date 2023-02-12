@@ -631,12 +631,12 @@ async def switchDriverOffline(message):
 
 
 async def getOrderCard(message, modelOrder, buttons = True):
-    modelDriver = BotDB.get_driver(message.from_user.id)
+    driverModel = BotDB.get_driver(message.from_user.id)
     modelDriverOrder = BotDB.get_driver_order(message.from_user.id, modelOrder['id'])
     modelClient = BotDB.get_client(modelOrder['client_id'])
     distanceToClient = await getLengthV2(
-        modelDriver['latitude'],
-        modelDriver['longitude'],
+        driverModel['latitude'],
+        driverModel['longitude'],
         modelOrder['departure_latitude'],
         modelOrder['departure_longitude']
     )
