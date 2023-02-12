@@ -132,107 +132,6 @@ async def clientProfile(message, client_id):
 
 
 
-async def driverProfile(message, driver_id, user_id, showPhone = False):
-    driverModel = BotDB.get_driver(driver_id)
-    if (not driverModel):
-        await message.bot.send_message(user_id, "Can`t do it, begin to /start")
-    else:
-        Path("merged").mkdir(parents=True, exist_ok=True)
-        car = 'cars/' + str(driver_id) + '.jpg';
-        driverFileName = 'drivers/' + str(driver_id) + '.jpg';
-        fileCarExist = exists(car)
-        fileDriverExist = exists(driverFileName)
-
-        # Фото водителя не обязательный параметр
-        if not fileDriverExist:
-            driverFileName = 'images/anonim-user.jpg';
-            fileDriverExist = True
-
-        statusIcon = str(BotDB.statuses[driverModel['status']])
-        caption = [
-            '<b>Имя</b> ' + str(driverModel['name']),
-            '<b>Статус</b> ' + str(statusIcon),
-            '<b>Номер машины</b> ' + str(driverModel['car_number']),
-        ]
-        if showPhone:
-            caption.insert(1, '<b>Телефон</b> ' + str(driverModel['phone']))
-        caption = '\n'.join(caption)
-        versionMerge = 0
-
-        if fileCarExist & fileDriverExist:
-            x = 240
-            y = 320
-            image1 = Image.open(car)
-            image2 = Image.open(driverFileName)
-
-            if image1.size[0] < image1.size[1]:
-                if image2.size[0] < image2.size[1]:
-                    versionMerge=1
-                    image1 = image1.resize((x, y))
-                    image2 = image2.resize((x, y))
-                    merged_image = Image.new(mode='RGB', size=(x*2, y), color=(250,250,250))
-                    merged_image.paste(image1,(0,0))
-                    merged_image.paste(image2,(x,0))
-                elif image2.size[0] > image2.size[1]:
-                    versionMerge=4
-                    yy = int(y / 0.75)
-                    image1 = image1.resize((y, yy))
-                    image2 = image2.resize((y, x))
-                    merged_image = Image.new(mode='RGB', size=(y, x+yy), color=(250,250,250))
-                    merged_image.paste(image1,(0,0))
-                    merged_image.paste(image2,(0,yy))
-                elif image2.size[0] == image2.size[1]:
-                    versionMerge=6
-                    image1 = image1.resize((x, y))
-                    image2 = image2.resize((y, y))
-                    merged_image = Image.new(mode='RGB', size=(x+y, y), color=(250,250,250))
-                    merged_image.paste(image1,(0,0))
-                    merged_image.paste(image2,(x,0))
-            elif image1.size[0] > image1.size[1]:
-                if image2.size[0] > image2.size[1]:
-                    versionMerge=2
-                    image1 = image1.resize((y, x))
-                    image2 = image2.resize((y, x))
-                    merged_image = Image.new(mode='RGB', size=(y, x*2), color=(250,250,250))
-                    merged_image.paste(image1,(0,0))
-                    merged_image.paste(image2,(0,x))
-                elif image2.size[0] < image2.size[1]:
-                    versionMerge=3
-                    yy = int(y / 0.75)
-                    image1 = image1.resize((y, x))
-                    image2 = image2.resize((y, yy))
-                    merged_image = Image.new(mode='RGB', size=(y, yy+x), color=(250,250,250))
-                    merged_image.paste(image1,(0,0))
-                    merged_image.paste(image2,(0,x))
-                elif image2.size[0] == image2.size[1]:
-                    versionMerge=7
-                    image1 = image1.resize((y, x))
-                    image2 = image2.resize((y, y))
-                    merged_image = Image.new(mode='RGB', size=(y, y+x), color=(250,250,250))
-                    merged_image.paste(image1,(0,0))
-                    merged_image.paste(image2,(0,x))
-            elif image1.size[0] == image1.size[1] & image2.size[0] == image2.size[1]:
-                versionMerge=5
-                image1 = image1.resize((y, y))
-                image2 = image2.resize((y, y))
-                merged_image = Image.new(mode='RGB', size=(y+y, y), color=(250,250,250))
-                merged_image.paste(image1,(0,0))
-                merged_image.paste(image2,(y,0))
-
-        if versionMerge > 0:
-
-            bio = BytesIO()
-            bio.name = 'merged/' + str(driver_id) + '.jpg'
-            merged_image.save(bio, 'JPEG')
-            bio.seek(0)
-            await message.bot.send_photo(user_id, bio, caption=caption, parse_mode='HTML')
-            print('versionMerge: ' + str(versionMerge))
-        else:
-            await message.bot.send_message(user_id, caption, parse_mode='HTML')
-    pass
-
-
-
 
 # Перехватчик кликов по инлайновой клавиатуре
 @dp.callback_query_handler(lambda message:True, state='*')
@@ -1227,6 +1126,110 @@ async def rules(message):
     bio.seek(0)
     await message.bot.send_photo(message.from_user.id, bio)
     pass
+
+
+
+
+
+async def driverProfile(message, driver_id, user_id, showPhone = False):
+    driverModel = BotDB.get_driver(driver_id)
+    if (not driverModel):
+        await message.bot.send_message(user_id, "Can`t do it, begin to /start")
+    else:
+        Path("merged").mkdir(parents=True, exist_ok=True)
+        car = 'cars/' + str(driver_id) + '.jpg';
+        driverFileName = 'drivers/' + str(driver_id) + '.jpg';
+        fileCarExist = exists(car)
+        fileDriverExist = exists(driverFileName)
+
+        # Фото водителя не обязательный параметр
+        if not fileDriverExist:
+            driverFileName = 'images/anonim-user.jpg';
+            fileDriverExist = True
+
+        statusIcon = str(BotDB.statuses[driverModel['status']])
+        caption = [
+            '<b>Имя</b> ' + str(driverModel['name']),
+            '<b>Статус</b> ' + str(statusIcon),
+            '<b>Номер машины</b> ' + str(driverModel['car_number']),
+        ]
+        if showPhone:
+            caption.insert(1, '<b>Телефон</b> ' + str(driverModel['phone']))
+        caption = '\n'.join(caption)
+        versionMerge = 0
+
+        if fileCarExist & fileDriverExist:
+            x = 240
+            y = 320
+            image1 = Image.open(car)
+            image2 = Image.open(driverFileName)
+
+            if image1.size[0] < image1.size[1]:
+                if image2.size[0] < image2.size[1]:
+                    versionMerge=1
+                    image1 = image1.resize((x, y))
+                    image2 = image2.resize((x, y))
+                    merged_image = Image.new(mode='RGB', size=(x*2, y), color=(250,250,250))
+                    merged_image.paste(image1,(0,0))
+                    merged_image.paste(image2,(x,0))
+                elif image2.size[0] > image2.size[1]:
+                    versionMerge=4
+                    yy = int(y / 0.75)
+                    image1 = image1.resize((y, yy))
+                    image2 = image2.resize((y, x))
+                    merged_image = Image.new(mode='RGB', size=(y, x+yy), color=(250,250,250))
+                    merged_image.paste(image1,(0,0))
+                    merged_image.paste(image2,(0,yy))
+                elif image2.size[0] == image2.size[1]:
+                    versionMerge=6
+                    image1 = image1.resize((x, y))
+                    image2 = image2.resize((y, y))
+                    merged_image = Image.new(mode='RGB', size=(x+y, y), color=(250,250,250))
+                    merged_image.paste(image1,(0,0))
+                    merged_image.paste(image2,(x,0))
+            elif image1.size[0] > image1.size[1]:
+                if image2.size[0] > image2.size[1]:
+                    versionMerge=2
+                    image1 = image1.resize((y, x))
+                    image2 = image2.resize((y, x))
+                    merged_image = Image.new(mode='RGB', size=(y, x*2), color=(250,250,250))
+                    merged_image.paste(image1,(0,0))
+                    merged_image.paste(image2,(0,x))
+                elif image2.size[0] < image2.size[1]:
+                    versionMerge=3
+                    yy = int(y / 0.75)
+                    image1 = image1.resize((y, x))
+                    image2 = image2.resize((y, yy))
+                    merged_image = Image.new(mode='RGB', size=(y, yy+x), color=(250,250,250))
+                    merged_image.paste(image1,(0,0))
+                    merged_image.paste(image2,(0,x))
+                elif image2.size[0] == image2.size[1]:
+                    versionMerge=7
+                    image1 = image1.resize((y, x))
+                    image2 = image2.resize((y, y))
+                    merged_image = Image.new(mode='RGB', size=(y, y+x), color=(250,250,250))
+                    merged_image.paste(image1,(0,0))
+                    merged_image.paste(image2,(0,x))
+            elif image1.size[0] == image1.size[1] & image2.size[0] == image2.size[1]:
+                versionMerge=5
+                image1 = image1.resize((y, y))
+                image2 = image2.resize((y, y))
+                merged_image = Image.new(mode='RGB', size=(y+y, y), color=(250,250,250))
+                merged_image.paste(image1,(0,0))
+                merged_image.paste(image2,(y,0))
+
+        if versionMerge > 0:
+
+            bio = BytesIO()
+            bio.name = 'merged/' + str(driver_id) + '.jpg'
+            merged_image.save(bio, 'JPEG')
+            bio.seek(0)
+            await message.bot.send_photo(user_id, bio, caption=caption, parse_mode='HTML')
+            print('versionMerge: ' + str(versionMerge))
+        else:
+            await message.bot.send_message(user_id, caption, parse_mode='HTML')
+    pass
+
 
 
 
