@@ -89,14 +89,14 @@ async def getLength(dept_lt, dept_ln, dest_lt, dest_ln):
 
 
 
-async def setLength(message, dataOrder):
-    localOrder = {}
-    localOrder['route_length'] = await getLength(dataOrder['departure_latitude'], dataOrder['departure_longitude'], dataOrder['destination_latitude'], dataOrder['destination_longitude'])
-    localOrder['route_time'] = round(localOrder['route_length'] / (40 * 1000) * 60)
-    localOrder['amount_client'] = math.ceil((localOrder['route_length'] / 1000) * RATE_1_KM)
-    if localOrder['amount_client'] < MIN_AMOUNT:
-        localOrder['amount_client'] = MIN_AMOUNT
-    return localOrder
+async def setLength(message, orderData):
+    orderLocal = {}
+    orderLocal['route_length'] = await getLength(orderData['departure_latitude'], orderData['departure_longitude'], orderData['destination_latitude'], orderData['destination_longitude'])
+    orderLocal['route_time'] = round(orderLocal['route_length'] / (40 * 1000) * 60)
+    orderLocal['amount_client'] = math.ceil((orderLocal['route_length'] / 1000) * RATE_1_KM)
+    if orderLocal['amount_client'] < MIN_AMOUNT:
+        orderLocal['amount_client'] = MIN_AMOUNT
+    return orderLocal
     pass
 
 
