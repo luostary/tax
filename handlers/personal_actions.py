@@ -495,7 +495,7 @@ async def inlineClick(message, state: FSMContext):
                 localMessage = t("You are online, already")
                 await message.bot.send_message(message.from_user.id, localMessage)
             elif modelDriver['status'] == 'offline':
-                await setDriverLocation(message)
+                await setDriverLocation(message, state)
             else:
                 await message.bot.send_message(message.from_user.id, t('You have unknown status'))
         pass
