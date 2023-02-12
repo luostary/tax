@@ -1075,10 +1075,10 @@ async def destinationLocationSaved(message, state: FSMContext):
 
 
 
-async def sendClientNotification(message, modelOrder):
+async def sendClientNotification(message, orderModel):
     # Ваш заказ принят. Водитель выехал к Вам
-    await message.bot.send_message(order['client_id'], t("Your order is accepted. The driver drove to you"))
-    await driverProfile(message, modelOrder['driver_id'], modelOrder['client_id'], True)
+    await message.bot.send_message(orderModel['client_id'], t("Your order is accepted. The driver drove to you"))
+    await driverProfile(message, orderModel['driver_id'], orderModel['client_id'], True)
     pass
 
 
