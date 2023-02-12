@@ -510,28 +510,6 @@ async def inlineClick(message, state: FSMContext):
         pass
     elif message.data == 'driverLocationSaved':
         await switchDriverOnline(message)
-    elif "date" in message.data:
-        if message.data == 'dateRightNow':
-            date = datetime.now()
-            pass
-        elif message.data == 'dateAfter10min':
-            date = datetime.now() + timedelta(minutes=10)
-            pass
-        elif message.data == 'dateAfter15min':
-            date = datetime.now() + timedelta(minutes=15)
-            pass
-        elif message.data == 'dateIn30min':
-            date = datetime.now() + timedelta(minutes=30)
-            pass
-        elif message.data == 'dateIn1hour':
-            date = datetime.now() + timedelta(hours=1)
-            pass
-        elif message.data == 'dateIn2hours':
-            date = datetime.now() + timedelta(hours=2)
-            pass
-        order['dt_order'] = date.strftime("%Y-%m-%d %H:%M")
-        await setPhone(message)
-        pass
     elif 'driverDoneOrder_' in message.data:
         Array = message.data.split('_')
         order_id = Array[1]
