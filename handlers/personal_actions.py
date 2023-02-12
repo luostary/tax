@@ -686,7 +686,7 @@ async def getOrderCard(message, modelOrder, buttons = True):
     caption = '\n'.join(caption)
     await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML', reply_markup = markup)
 async def getOrderCardClient(message, order, cancel = False, confirm = False):
-    client = BotDB.get_client(order['client_id'])
+    clientModel = BotDB.get_client(order['client_id'])
     markup = InlineKeyboardMarkup(row_width=3)
     if cancel & (not order['driver_id']) & (order['status'] in ['create', 'waiting']):
         item1 = InlineKeyboardButton(text=t('Cancel trip') + ' ❌', callback_data='orderCancelClient_' + str(order['id']))
@@ -697,13 +697,13 @@ async def getOrderCardClient(message, order, cancel = False, confirm = False):
 
     caption = [
         '<b>Заказ №' + str(order['id']) + '</b>',
-        'Имя <b>' + str(client['name']) + '</b>',
+        'Имя <b>' + str(clientModel['name']) + '</b>',
         'Длина маршрута <b>' + str(order['route_length'] / 1000) + ' км.' + '</b>',
         'Стоимость <b>' + str(order['amount_client']) + ' тл.' + '</b>',
         'Статус <b>' + str(BotDB.statuses[order['status']]) + '</b>',
     ]
     if (order['status'] == 'waiting') & (order['driver_id'] == str(message.from_user.id)):
-        caption.insert(1, 'Телефон <b>' + str(client['phone']) + '</b>')
+        caption.insert(1, 'Телефон <b>' + str(clientModel['phone']) + '</b>')
     caption = '\n'.join(caption)
     await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML', reply_markup = markup)
 
@@ -926,8 +926,8 @@ async def getClientOrders(message):
     if (not BotDB.client_exists(message.from_user.id)):
         await message.bot.send_message(message.from_user.id, t('Client not found'))
     else:
-        client = BotDB.get_client(message.from_user.id)
-        if (not client):
+        clientModel = BotDB.get_client(message.from_user.id)
+        if (not clientModel):
             await message.bot.send_message(message.from_user.id, t("Unable to find customer"))
             pass
         else:
@@ -946,7 +946,7 @@ async def getClientOrders(message):
                         dateFormat = datetime.strptime(str(row['dt_order']), "%Y-%m-%d %H:%M:%S").strftime("%H:%M %d-%m-%Y")
                     text = '\n'.join((
                         '<b>Заказ №' + str(row['id']) + '</b>',
-                        'Имя <b>' + str(client['name']) + '</b>',
+                        'Имя <b>' + str(clientModel['name']) + '</b>',
                         'Статус <b>' + status + '</b>',
                         'Дата <b>' + str(dateFormat) + '</b>',
                         'Стоимость <b>' + str(row['amount_client']) + ' тл.' + '</b>',
