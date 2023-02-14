@@ -405,6 +405,29 @@ class BotDB:
         return result
 
 
+    def get_near_driver(self, lt, ln, order_id):
+        self.connect()
+        sql = '''SELECT
+               ABS(d.latitude - {latitude:f}) dif_lat, ABS(d.longitude - {longitude:f}) dif_lon
+               , d.*
+            FROM driver d
+            LEFT JOIN driver_order dror ON dror.driver_id = d.tg_user_id AND dror.order_id = {order_id:d}
+            where `status` = 'online'
+            AND IFNULL(dror.driver_cancel_cn, 0) < 2
+            having dif_lat IS NOT NULL AND dif_lon IS NOT NULL
+            order by dif_lat, dif_lon ASC
+            LIMIT 1;'''
+        sql = sql.format(
+            latitude = lt,
+            longitude = ln,
+            order_id = order_id
+        )
+        self.cursor.execute(sql)
+        result = self.cursor.fetchone()
+
+        return result
+
+
 
 
 
