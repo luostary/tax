@@ -112,7 +112,7 @@ async def startMenu(message):
     if message.from_user.id == 419839605:
         item30 = InlineKeyboardButton(("Top up balance"), callback_data='drivers')
         markup.add(item30)
-        markup.add(InlineKeyboardButton(text=('Coding') + ' 💻', callback=testFunction(message)))
+        markup.add(InlineKeyboardButton(text=('Coding') + ' 💻', callback_data='test'))
     await message.bot.send_message(message.from_user.id, t("Welcome!"), reply_markup = await markupRemove())
     await message.bot.send_message(message.from_user.id, t("Use the menu to get started"), reply_markup = markup)
 
@@ -144,6 +144,8 @@ async def inlineClick(message, state: FSMContext):
         await menuClient(message)
     elif message.data == 'back':
         await startMenu(message)
+    elif message.data == 'test':
+        await testFunction(message)
     elif message.data == 'client-rules':
         await clientRules(message)
     elif message.data == 'driver-rules':
@@ -1301,5 +1303,4 @@ def dump(v):
 
 async def testFunction(message):
 
-
-    dump(message)
+   pass
