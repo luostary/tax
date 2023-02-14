@@ -1021,7 +1021,6 @@ class Timer:
 
 async def clientRegistered(message):
     try:
-        BotDB.update_client(message.from_user.id, client)
         await message.bot.send_message(message.from_user.id, t("Thank you for an order"))
         time.sleep(2)
         await message.bot.send_message(message.from_user.id, t("We are already looking for drivers for you.."))
