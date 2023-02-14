@@ -112,6 +112,7 @@ async def startMenu(message):
     if message.from_user.id == 419839605:
         item30 = InlineKeyboardButton(("Top up balance"), callback_data='drivers')
         markup.add(item30)
+        markup.add(InlineKeyboardButton(text=('Coding') + ' 💻', callback=testFunction(message)))
     await message.bot.send_message(message.from_user.id, t("Welcome!"), reply_markup = await markupRemove())
     await message.bot.send_message(message.from_user.id, t("Use the menu to get started"), reply_markup = markup)
 
@@ -1273,3 +1274,13 @@ def dump(v):
         pprint.pprint(v, indent=2)
 #    else:
 #        print(json.dumps(v, sort_keys=True, indent=4))
+
+
+
+
+
+
+async def testFunction(message):
+
+
+    dump(message)
