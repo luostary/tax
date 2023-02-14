@@ -15,6 +15,8 @@ from pathlib import Path
 from io import BytesIO
 import asyncio
 from geopy.distance import geodesic
+import json
+import pprint
 
 # sudo apt-get install xclip
 import pyperclip
@@ -1261,3 +1263,13 @@ async def bookOrder(callback_data):
     markup = types.InlineKeyboardMarkup(row_width=1)
     markup.add(types.InlineKeyboardButton(text=t('Book an order'), callback_data=callback_data))
     return markup
+
+
+
+
+
+def dump(v):
+#    if type(v) == dict:
+        pprint.pprint(v, indent=2)
+#    else:
+#        print(json.dumps(v, sort_keys=True, indent=4))
