@@ -1023,6 +1023,8 @@ async def clientRegistered(message):
         await message.bot.send_message(message.from_user.id, t("Thank you for an order"))
         time.sleep(2)
         await message.bot.send_message(message.from_user.id, t("We are already looking for drivers for you.."))
+        time.sleep(2)
+        await getWikiBotInfo(message)
     except:
         print('error method clientRegistered(message)')
         await gotoStart(message)
@@ -1068,7 +1070,10 @@ async def getWikiBotInfo(message):
     image = Image.open('images/wikibot.jpg')
     image.save(bio, 'JPEG')
     bio.seek(0)
-    await message.bot.send_photo(message.from_user.id, bio, caption=caption, parse_mode='HTML')
+
+    wiki = InlineKeyboardMarkup(row_width=1)
+    wiki.add(InlineKeyboardButton(text='Перейти в Wikibot', url = 'https://cazi.me/7R6XM'))
+    await message.bot.send_photo(message.from_user.id, bio, caption=caption, parse_mode='HTML', reply_markup = wiki)
 
 
 
