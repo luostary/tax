@@ -1059,6 +1059,20 @@ async def getRating(message):
 
 
 
+async def getWikiBotInfo(message):
+    caption = '''
+Навигатор по Северному Кипру Wikibot 🏝🇹🇷
+Все услуги и места в одном месте 🤖
+Каждый из вас может разместить в нем свою услугу или объявление - бесплатно😉'''
+    bio = BytesIO()
+    image = Image.open('images/wikibot.jpg')
+    image.save(bio, 'JPEG')
+    bio.seek(0)
+    await message.bot.send_photo(message.from_user.id, bio, caption=caption, parse_mode='HTML')
+
+
+
+
 async def clientRules(message):
     caption = '''<b>Для пассажиров</b>
 Бот поможет удобно и недорого заказать такси (частного водителя).
