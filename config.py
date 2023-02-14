@@ -31,6 +31,7 @@ DB_HOST = "127.0.0.1"
 DB_USER = "database_user"
 DB_PASSWORD = "database_password"
 DB_NAME = "database_name"
+DB_CONNECTION_TIMEOUT = 610
 
 
 from os.path import exists

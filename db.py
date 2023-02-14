@@ -38,37 +38,24 @@ class BotDB:
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
         db_path = os.path.join(BASE_DIR, db_file)
 
-#        if self.dbType == 'sqlite':
-#            self.conn = sqlite3.connect(db_path, check_same_thread=False)
-#            self.conn.row_factory = dict_factory
-#            self.cursor = self.conn.cursor()
-#        else:
-#            self.conn = mysql.connector.connect(
-#                user = config.DB_USER,
-#                password = config.DB_PASSWORD,
-#                host = config.DB_HOST,
-#                database = config.DB_NAME,
-#                connection_timeout = 4
-#            )
-#            self.replacer = '%s';
-#            # print('is init')
-#            self.cursor = self.conn.cursor(buffered=True, dictionary=True)
-
-    def connect(self):
         if self.dbType == 'sqlite':
-            BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-            db_path = os.path.join(BASE_DIR, self.dbFile)
             self.conn = sqlite3.connect(db_path, check_same_thread=False)
             self.conn.row_factory = dict_factory
             self.cursor = self.conn.cursor()
         else:
-            self.conn = mysql.connector.connect(user = config.DB_USER, password = config.DB_PASSWORD, host = config.DB_HOST, database = config.DB_NAME)
+            self.conn = mysql.connector.connect(
+                user = config.DB_USER,
+                password = config.DB_PASSWORD,
+                host = config.DB_HOST,
+                database = config.DB_NAME,
+                connection_timeout = config.DB_CONNECTION_TIMEOUT
+            )
             self.replacer = '%s';
             self.cursor = self.conn.cursor(buffered=True, dictionary=True)
 
-
-
-
+    def connect(self):
+        if not self.conn.is_connected():
+            self.conn.reconnect()
 
 
     # ЗАПРОСЫ ДЛЯ КЛИЕНТА
@@ -78,7 +65,7 @@ class BotDB:
         sql = ""
         self.cursor.execute("SELECT `tg_user_id` FROM `client` WHERE `tg_user_id` = " + self.replacer, (user_id,))
         result = bool(self.cursor.fetchall())
-        self.close()
+
         return result
 
     def get_client_id(self, user_id):
@@ -86,7 +73,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT `id` FROM `client` WHERE `tg_user_id` = " + self.replacer, (user_id,))
         result = self.cursor.fetchone()['id']
-        self.close()
+
         return result
 
     def get_client(self, user_id):
@@ -94,7 +81,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT * FROM `client` WHERE `tg_user_id` = " + self.replacer, (user_id,))
         result = self.cursor.fetchone()
-        self.close()
+
         return result
 
     def add_client(self, user_id, first_name):
@@ -105,7 +92,7 @@ class BotDB:
         except Error as e:
             print(e)
         result = self.conn.commit()
-        self.close()
+
         return result
 
 
@@ -117,7 +104,7 @@ class BotDB:
         except Error as e:
             print(e)
         result = self.conn.commit()
-        self.close()
+
         return result
 
 
@@ -149,7 +136,7 @@ class BotDB:
         except Error as e:
             print(e)
         result = id
-        self.close()
+
         return result
 
 
@@ -157,7 +144,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT *, o.id order_id FROM `order` o LEFT JOIN client c ON c.tg_user_id = o.client_id ORDER BY id DESC LIMIT 1")
         result = self.cursor.fetchone()
-        self.close()
+
         return result
 
 
@@ -165,7 +152,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT * FROM `order` WHERE driver_id = " + self.replacer + " AND status = 'waiting'", (driver_id,))
         result = self.cursor.fetchone()
-        self.close()
+
         return result
 
 
@@ -173,7 +160,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT * FROM `order` WHERE `status` = " + self.replacer + " ORDER BY `dt_order`", (status,))
         result = self.cursor.fetchall()
-        self.close()
+
         return result
 
 
@@ -181,7 +168,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = " + self.replacer + " ORDER BY `dt_order` DESC", (client_id,))
         result = self.cursor.fetchall()
-        self.close()
+
         return result
 
 
@@ -189,7 +176,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT `id` FROM `order` WHERE id = " + self.replacer + " AND status = " + self.replacer, (id, status))
         result = bool(len(self.cursor.fetchall()))
-        self.close()
+
         return result
 
 
@@ -200,7 +187,7 @@ class BotDB:
         except Error as e:
             print(e)
         result = self.conn.commit()
-        self.close()
+
         return result
 
 
@@ -211,7 +198,7 @@ class BotDB:
         except Error as e:
             print(e)
         result = self.conn.commit()
-        self.close()
+
         return result
 
 
@@ -219,7 +206,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT * FROM `order` WHERE `id` = " + self.replacer, (id,))
         result = self.cursor.fetchone()
-        self.close()
+
         return result
 
 
@@ -227,7 +214,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT * FROM `order` WHERE `driver_id` = " + self.replacer + " AND status = 'progress'", (id,))
         result = self.cursor.fetchone()
-        self.close()
+
         return result
 
 
@@ -235,7 +222,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = " + self.replacer + " AND status = 'waiting'", (id,))
         result =  self.cursor.fetchall()
-        self.close()
+
         return result
 
 
@@ -243,7 +230,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = " + self.replacer + " AND status = 'waiting'", (id,))
         result = self.cursor.fetchone()
-        self.close()
+
         return result
 
 
@@ -251,7 +238,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = " + self.replacer + " AND status = 'create'", (id,))
         result = self.cursor.fetchone()
-        self.close()
+
         return result
 
 
@@ -259,7 +246,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = " + self.replacer + " AND status = 'done'", (id,))
         result = self.cursor.fetchall()
-        self.close()
+
         return result
 
 
@@ -273,7 +260,7 @@ class BotDB:
         """Проверяем, есть ли driver в базе"""
         self.cursor.execute("SELECT `id` FROM `driver` WHERE `tg_user_id` = " + self.replacer, (user_id,))
         result = bool(len(self.cursor.fetchall()))
-        self.close()
+
         return result
 
 
@@ -281,7 +268,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT * FROM `driver`")
         result = self.cursor.fetchall()
-        self.close()
+
         return result
 
 
@@ -289,7 +276,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT * FROM `driver` WHERE wallet IS NOT NULL")
         result = self.cursor.fetchall()
-        self.close()
+
         return result
 
 
@@ -298,7 +285,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT `id` FROM `driver` WHERE `tg_user_id` = " + self.replacer, (user_id,))
         result = self.cursor.fetchone()['id']
-        self.close()
+
         return result
 
 
@@ -307,7 +294,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT * FROM `driver` WHERE tg_user_id = " + self.replacer, (user_id,))
         result = self.cursor.fetchone()
-        self.close()
+
         return result
 
 
@@ -319,7 +306,7 @@ class BotDB:
         except Error as e:
             print(e)
         result = self.conn.commit()
-        self.close()
+
         return result
 
 
@@ -327,7 +314,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT `balance` FROM `driver` WHERE `tg_user_id` = " + self.replacer, (user_id,))
         result = self.cursor.fetchone()['balance']
-        self.close()
+
         return result
 
 
@@ -335,7 +322,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT * FROM `driver` WHERE `wallet` = " + self.replacer, (wallet,))
         result = self.cursor.fetchone()
-        self.close()
+
         return result
 
 
@@ -343,7 +330,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT * FROM `driver` WHERE `wallet` = " + self.replacer, (wallet,))
         result = self.cursor.fetchall()
-        self.close()
+
         return result
 
 
@@ -355,7 +342,7 @@ class BotDB:
         except Error as e:
             print(e)
         result = self.conn.commit()
-        self.close()
+
         return result
 
 
@@ -367,7 +354,7 @@ class BotDB:
         except Error as e:
             print(e)
         result = self.conn.commit()
-        self.close()
+
         return result
 
 
@@ -379,7 +366,7 @@ class BotDB:
         except Error as e:
             print(e)
         result = self.conn.commit()
-        self.close()
+
         return result
 
 
@@ -391,7 +378,7 @@ class BotDB:
         except Error as e:
             print(e)
         result = self.conn.commit()
-        self.close()
+
         return result
 
 
@@ -402,7 +389,7 @@ class BotDB:
         except Error as e:
             print(e)
         result = self.conn.commit()
-        self.close()
+
         return result
 
 
@@ -414,7 +401,7 @@ class BotDB:
         except Error as e:
             print(e)
         result = self.conn.commit()
-        self.close()
+
         return result
 
 
@@ -442,7 +429,7 @@ class BotDB:
         '''
         self.cursor.execute(sql, (latitude, longitude, status, driver_id))
         result = self.cursor.fetchone()
-        self.close()
+
         return result
 
 
@@ -453,7 +440,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT `driver_id` FROM `driver_order` WHERE `driver_id` = " + self.replacer + " AND order_id = " + self.replacer, (driver_id, order_id))
         result = bool(self.cursor.fetchall())
-        self.close()
+
         return result
 
 
@@ -464,7 +451,7 @@ class BotDB:
         except Error as e:
             print(e)
         result = self.conn.commit()
-        self.close()
+
         return result
 
 
@@ -476,7 +463,7 @@ class BotDB:
             result = self.conn.commit()
         except Error as e:
             print(e)
-        self.close()
+
         return result
 
 
@@ -484,7 +471,7 @@ class BotDB:
         self.connect()
         self.cursor.execute("SELECT * FROM `driver_order` WHERE `driver_id` = " + self.replacer + " AND order_id = " + self.replacer, (driver_id, order_id))
         result = self.cursor.fetchone()
-        self.close()
+
         return result
 
 
