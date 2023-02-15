@@ -306,7 +306,7 @@ async def inlineClick(message, state: FSMContext):
                             var['orderTimer'] = False
 
                         await message.bot.send_message(message.from_user.id, t("You have taken the order"))
-                        await getOrderCard(message, progressOrder, False)
+                        await getOrderCard(message, message.from_user.id, progressOrder, False)
 
                         await message.bot.send_message(message.from_user.id, t("Departure here"))
                         # Give departure-point location
@@ -331,7 +331,6 @@ async def inlineClick(message, state: FSMContext):
             if (not BotDB.driver_order_exists(message.from_user.id, order_id)):
                 BotDB.driver_order_create(message.from_user.id, order_id)
             BotDB.driver_order_increment_cancel_cn(message.from_user.id, order_id)
-            await getNearWaitingOrder(message, False)
         else:
             await message.bot.send_message(message.from_user.id, t("This order cannot be canceled, it is already taken"))
         pass
@@ -350,6 +349,11 @@ async def inlineClick(message, state: FSMContext):
         order_id = Array[1]
         BotDB.update_order_status(order_id, 'waiting')
         await clientRegistered(message)
+
+        # Запускаем таймер для клиента
+        message.data = order_id
+        await timerForClient(message)
+
 
         await message.bot.send_message(message.from_user.id, ("Если не готовы ждать - вы можете отменить поездку"))
         modelOrder = BotDB.get_order(order_id)
@@ -373,7 +377,7 @@ async def inlineClick(message, state: FSMContext):
             elif modelOrder:
                 # Не даем переключаться в онлайн, если у водителя уже есть waiting-заказ
                 await message.bot.send_message(message.from_user.id, t('You have active order'))
-                await getOrderCard(message, modelOrder, True)
+                await getOrderCard(message, message.from_user.id, modelOrder, True)
             elif driverModel['status'] == 'route':
                 modelOrder = BotDB.get_order_progress_by_driver_id(message.from_user.id)
                 if modelOrder:
@@ -424,6 +428,29 @@ async def inlineClick(message, state: FSMContext):
             except:
                 print("can`t switch order to done")
             await message.bot.send_message(message.from_user.id, t("Order is done"))
+
+
+
+
+async def timerForClient(message, onTimer = True):
+    order_id = message.data
+    orderModel = BotDB.get_order(order_id)
+    # По задумке цикл должен работать раз в минуту
+    driverModel = BotDB.get_near_driver(orderModel['departure_latitude'], orderModel['departure_longitude'], orderModel['id'])
+    dump(var)
+    if not driverModel:
+        await message.bot.send_message(message.from_user.id, 'На линии пока нет водителей')
+        return
+    await getOrderCard(message, driverModel['tg_user_id'], orderModel, True)
+    if onTimer:
+        if (not BotDB.driver_order_exists(driverModel['tg_user_id'], order_id)):
+            BotDB.driver_order_create(driverModel['tg_user_id'], order_id)
+        BotDB.driver_order_increment_cancel_cn(driverModel['tg_user_id'], order_id)
+        var[message.from_user.id] = Timer(ORDER_REPEAT_TIME_SEC, timerForClient, args=message)
+        # надо переделать на state
+
+
+
 
 # Помоему метод вообще не работает
 async def driverDoneOrder(message):
@@ -482,17 +509,14 @@ async def switchDriverOnline(message):
     localMessage = 'Вы онлайн. В течении {onlineTime:d} минут Вам будут приходить заказы'.format(onlineTime = round(ONLINE_TIME_SEC/60))
     await message.bot.send_message(message.from_user.id, localMessage)
 
-    # Запуск заявок
-    time.sleep(3)
-    await getNearWaitingOrder(message)
-
+    # Запуск таймера Онлайн-статуса
     # выполнить функцию switchDriverOffline() через onlineTime секунд
     Timer(ONLINE_TIME_SEC, switchDriverOffline, args=message)
     pass
 
 
 
-
+# Пока отключена
 async def getNearWaitingOrder(message, onTimer = True):
     driverModel = BotDB.get_driver(message.from_user.id)
     modelOrder = BotDB.get_near_order('waiting', driverModel['latitude'], driverModel['longitude'], message.from_user.id)
@@ -502,7 +526,7 @@ async def getNearWaitingOrder(message, onTimer = True):
         if modelOrder['order_id']:
             modelOrder = BotDB.get_order(modelOrder['order_id'])
             # Сюда можем отправлять только стандартную модель order
-            await getOrderCard(message, modelOrder)
+            await getOrderCard(message, message.from_user.id, modelOrder)
     if onTimer:
         var['orderTimer'] = Timer(ORDER_REPEAT_TIME_SEC, getNearWaitingOrder, args=message)
 
@@ -529,9 +553,9 @@ async def switchDriverOffline(message):
 
 
 
-async def getOrderCard(message, modelOrder, buttons = True):
-    driverModel = BotDB.get_driver(message.from_user.id)
-    modelDriverOrder = BotDB.get_driver_order(message.from_user.id, modelOrder['id'])
+async def getOrderCard(message, driver_id, modelOrder, buttons = True):
+    driverModel = BotDB.get_driver(driver_id)
+    modelDriverOrder = BotDB.get_driver_order(driver_id, modelOrder['id'])
     modelClient = BotDB.get_client(modelOrder['client_id'])
     distanceToClient = await getLengthV2(
         driverModel['latitude'],
@@ -561,7 +585,7 @@ async def getOrderCard(message, modelOrder, buttons = True):
     if driver_cancel_cn > 0:
         caption.append('Вы отклоняли <b>' + str(driver_cancel_cn) + ' раз</b>',)
     caption = '\n'.join(caption)
-    await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML', reply_markup = markup)
+    await message.bot.send_message(driver_id, caption, parse_mode='HTML', reply_markup = markup)
 async def getOrderCardClient(message, orderModel, cancel = False, confirm = False):
     clientModel = BotDB.get_client(orderModel['client_id'])
     markup = InlineKeyboardMarkup(row_width=3)
@@ -1021,9 +1045,7 @@ class Timer:
 
 async def clientRegistered(message):
     try:
-        await message.bot.send_message(message.from_user.id, t("Thank you for an order"))
-        time.sleep(2)
-        await message.bot.send_message(message.from_user.id, t("We are already looking for drivers for you.."))
+        await message.bot.send_message(message.from_user.id, '🤔 Секундочку... ' + t("We are already looking for drivers for you.."))
         time.sleep(2)
         await getWikiBotInfo(message)
     except:
@@ -1056,7 +1078,7 @@ async def getRating(message):
     modelOrdersUserAll = len(BotDB.get_client_orders(message.from_user.id))
     modelOrdersUserDone = len(BotDB.get_done_orders_by_client_id(message.from_user.id))
     if modelOrdersUserAll == 0:
-        return 0
+        return 5
     return round(modelOrdersUserDone / modelOrdersUserAll * 5)
 
 
