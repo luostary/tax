@@ -48,6 +48,7 @@ var = {
     'locationType': '',
     'orderTimer': False,
     'currentOrder': None,
+    'clientTimer': False,
 }
 
 # Данные вводимые с клавиатуры
@@ -283,7 +284,7 @@ async def inlineClick(message, state: FSMContext):
                 if modelOrder['amount_client'] == None:
                     modelOrder['amount_client'] = 0
             driverModel = BotDB.get_driver(message.from_user.id)
-            if (not driver):
+            if (not driverModel):
                 await message.bot.send_message(message.from_user.id, "Can`t do it, begin to /start")
             else:
                 if driverModel['balance'] == None:
@@ -301,9 +302,9 @@ async def inlineClick(message, state: FSMContext):
                         progressOrder = BotDB.get_order(order_id)
                         BotDB.update_order_driver_id(order_id, driverModel['tg_user_id'])
                         BotDB.update_driver_balance(message.from_user.id, int(driverModel['balance'] - income))
-                        if var['orderTimer'] != False:
-                            var['orderTimer'].cancel()
-                            var['orderTimer'] = False
+                        if var['clientTimer'] != False:
+                            var['clientTimer'].cancel()
+                            var['clientTimer'] = False
 
                         await message.bot.send_message(message.from_user.id, t("You have taken the order"))
                         await getOrderCard(message, message.from_user.id, progressOrder, False)
@@ -446,7 +447,7 @@ async def timerForClient(message, onTimer = True):
         if (not BotDB.driver_order_exists(driverModel['tg_user_id'], order_id)):
             BotDB.driver_order_create(driverModel['tg_user_id'], order_id)
         BotDB.driver_order_increment_cancel_cn(driverModel['tg_user_id'], order_id)
-        var[message.from_user.id] = Timer(ORDER_REPEAT_TIME_SEC, timerForClient, args=message)
+        var['clientTimer'] = Timer(ORDER_REPEAT_TIME_SEC, timerForClient, args=message)
         # надо переделать на state
 
 
