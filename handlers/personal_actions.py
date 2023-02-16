@@ -21,33 +21,6 @@ import pprint
 # sudo apt-get install xclip
 import pyperclip
 
-#client = {
-#    'name': '',
-#    'phone': '',
-#}
-#order = {
-#    'client_id': '',
-#    'status': '',
-#    'dt_order': '',
-#    'amount_client': '',
-#    'departure_latitude': 0,
-#    'departure_longitude': 0,
-#    'destination_latitude': 0,
-#    'destination_longitude': 0,
-#}
-#driver = {
-#    'name': '',
-#    'phone': '',
-#    'car_number': '',
-#    'status': '',
-#    'balance': '',
-#    'wallet': '',
-#}
-
-var = {
-    'locationType': '',
-}
-
 # Данные вводимые с клавиатуры
 class FormClient(StatesGroup):
     name = State()
