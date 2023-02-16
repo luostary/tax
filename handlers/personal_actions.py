@@ -46,9 +46,6 @@ import pyperclip
 
 var = {
     'locationType': '',
-    'orderTimer': False,
-    'currentOrder': None,
-    'clientTimer': False,
 }
 
 # Данные вводимые с клавиатуры
@@ -144,6 +141,7 @@ async def inlineClick(message, state: FSMContext):
             BotDB.add_client(message.from_user.id, message.from_user.first_name)
         await menuClient(message)
     elif message.data == 'back':
+        await state.finish()
         await startMenu(message)
     elif message.data == 'test':
         await testFunction(message)
@@ -302,9 +300,6 @@ async def inlineClick(message, state: FSMContext):
                         progressOrder = BotDB.get_order(order_id)
                         BotDB.update_order_driver_id(order_id, driverModel['tg_user_id'])
                         BotDB.update_driver_balance(message.from_user.id, int(driverModel['balance'] - income))
-                        if var['clientTimer'] != False:
-                            var['clientTimer'].cancel()
-                            var['clientTimer'] = False
 
                         await message.bot.send_message(message.from_user.id, t("You have taken the order"))
                         await getOrderCard(message, message.from_user.id, progressOrder, False)
@@ -436,9 +431,10 @@ async def inlineClick(message, state: FSMContext):
 async def timerForClient(message, onTimer = True):
     order_id = message.data
     orderModel = BotDB.get_order(order_id)
+    if orderModel['status'] != 'waiting':
+        onTimer = False
     # По задумке цикл должен работать раз в минуту
     driverModel = BotDB.get_near_driver(orderModel['departure_latitude'], orderModel['departure_longitude'], orderModel['id'])
-    dump(var)
     if not driverModel:
         await message.bot.send_message(message.from_user.id, 'На линии пока нет водителей')
         return
@@ -447,8 +443,9 @@ async def timerForClient(message, onTimer = True):
         if (not BotDB.driver_order_exists(driverModel['tg_user_id'], order_id)):
             BotDB.driver_order_create(driverModel['tg_user_id'], order_id)
         BotDB.driver_order_increment_cancel_cn(driverModel['tg_user_id'], order_id)
-        var['clientTimer'] = Timer(ORDER_REPEAT_TIME_SEC, timerForClient, args=message)
-        # надо переделать на state
+        Timer(ORDER_REPEAT_TIME_SEC, timerForClient, args=message)
+        clientModel = BotDB.get_client(orderModel['client_id'])
+        print('Клиент: ' + clientModel['tg_first_name'] + " Заказ №: " + order_id + " Предложен водителю: " + driverModel['tg_first_name'])
 
 
 
@@ -520,6 +517,8 @@ async def switchDriverOnline(message):
 # Пока отключена
 async def getNearWaitingOrder(message, onTimer = True):
     driverModel = BotDB.get_driver(message.from_user.id)
+    if driverModel['status'] != 'online':
+        onTimer = False
     modelOrder = BotDB.get_near_order('waiting', driverModel['latitude'], driverModel['longitude'], message.from_user.id)
     if modelOrder:
         if not modelOrder['order_id']:
@@ -529,7 +528,7 @@ async def getNearWaitingOrder(message, onTimer = True):
             # Сюда можем отправлять только стандартную модель order
             await getOrderCard(message, message.from_user.id, modelOrder)
     if onTimer:
-        var['orderTimer'] = Timer(ORDER_REPEAT_TIME_SEC, getNearWaitingOrder, args=message)
+        Timer(ORDER_REPEAT_TIME_SEC, getNearWaitingOrder, args=message)
 
 
 
@@ -545,9 +544,6 @@ async def switchDriverOffline(message):
     else:
         if driverModel['status'] != 'offline':
             BotDB.update_driver_status(message.from_user.id, 'offline')
-            if var['orderTimer'] != False:
-                var['orderTimer'].cancel()
-                var['orderTimer'] = False
         await message.bot.send_message(message.from_user.id, t("You switch offline. Orders unavailable"), reply_markup = await markupRemove())
     pass
 
