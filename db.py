@@ -470,7 +470,7 @@ class BotDB:
     def driver_order_create(self, driver_id, order_id):
         self.connect()
         try:
-            self.cursor.execute("INSERT INTO `driver_order` (`driver_id`, `order_id`) VALUES (" + self.replacer + ", " + self.replacer + ")", (driver_id, order_id,))
+            self.cursor.execute("INSERT INTO `driver_order` (`driver_id`, `order_id`, `driver_cancel_cn`) VALUES (" + self.replacer + ", " + self.replacer + ", 0)", (driver_id, order_id,))
         except Error as e:
             print(e)
         result = self.conn.commit()
