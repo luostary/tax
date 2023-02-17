@@ -172,6 +172,21 @@ class BotDB:
         return result
 
 
+    def get_clients(self):
+        self.connect()
+        self.cursor.execute("SELECT * FROM `client`")
+        result = self.cursor.fetchall()
+
+        return result
+
+    def get_client_orders_by_one(self, client_id, offset):
+        self.connect()
+        self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = " + self.replacer + " ORDER BY `dt_order` DESC LIMIT " + self.replacer + ", 1", (client_id, offset))
+        result = self.cursor.fetchone()
+
+        return result
+
+
     def order_waiting_exists(self, id, status):
         self.connect()
         self.cursor.execute("SELECT `id` FROM `order` WHERE id = " + self.replacer + " AND status = " + self.replacer, (id, status))
@@ -329,6 +344,14 @@ class BotDB:
     def get_drivers_by_wallet(self, wallet):
         self.connect()
         self.cursor.execute("SELECT * FROM `driver` WHERE `wallet` = " + self.replacer, (wallet,))
+        result = self.cursor.fetchall()
+
+        return result
+
+
+    def get_drivers_by_status(self, status):
+        self.connect()
+        self.cursor.execute("SELECT * FROM `driver` WHERE `status` = " + self.replacer, (status,))
         result = self.cursor.fetchall()
 
         return result

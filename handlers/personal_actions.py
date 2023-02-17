@@ -80,9 +80,10 @@ async def startMenu(message):
     item10 = InlineKeyboardButton(text=t('I looking for a clients'), callback_data='driver')
     item20 = InlineKeyboardButton(t('I looking for a taxi'), callback_data='client')
     markup.add(item10).add(item20)
+    if message.from_user.id in [5615867597, 419839605]:
+        markup.add(InlineKeyboardButton(("Показать статистику"), callback_data='admin-short-statistic'))
+        markup.add(InlineKeyboardButton(("Пополнить баланс"), callback_data='drivers'))
     if message.from_user.id == 419839605:
-        item30 = InlineKeyboardButton(("Top up balance"), callback_data='drivers')
-        markup.add(item30)
         markup.add(InlineKeyboardButton(text=('Coding') + ' 💻', callback_data='test'))
     await message.bot.send_message(message.from_user.id, t("Welcome!"), reply_markup = await markupRemove())
     await message.bot.send_message(message.from_user.id, t("Use the menu to get started"), reply_markup = markup)
@@ -124,6 +125,8 @@ async def inlineClick(message, state: FSMContext):
         await driverRules(message)
     elif message.data == 'client-profile':
         await clientProfile(message, message.from_user.id)
+    elif message.data == 'admin-short-statistic':
+        await shortStatistic(message)
     elif message.data == 'make-order':
         if not ALLOW_MANY_ORDERS:
             modelOrders = BotDB.get_waiting_orders_by_client_id(message.from_user.id)
@@ -1257,6 +1260,23 @@ async def driverProfile(message, driver_id, user_id, showPhone = False):
             await message.bot.send_message(user_id, caption, parse_mode='HTML')
     pass
 
+
+
+
+async def shortStatistic(message):
+    driverAllModels = BotDB.get_drivers()
+    driversOnlineModels = BotDB.get_drivers_by_status('online')
+    clientAllModels = BotDB.get_clients()
+    orderWaitingModels = BotDB.get_orders(message.from_user.id, 'waiting')
+    caption = [
+        '<b>Короткая статистика</b>',
+        'Всего водителей <b>' + str(len(driverAllModels)) + '</b>',
+        'Онлайн водителей <b>' + str(len(driversOnlineModels)) + '</b>',
+        'Всего клиентов <b>' + str(len(clientAllModels)) + '</b>',
+        'Заказов в ожидании <b>' + str(len(orderWaitingModels)) + '</b>',
+    ]
+    caption = '\n'.join(caption)
+    await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML')
 
 
 
