@@ -1265,12 +1265,14 @@ async def driverProfile(message, driver_id, user_id, showPhone = False):
 
 async def shortStatistic(message):
     driverAllModels = BotDB.get_drivers()
+    driverRegisteredModels = BotDB.get_drivers_registered()
     driversOnlineModels = BotDB.get_drivers_by_status('online')
     clientAllModels = BotDB.get_clients()
     orderWaitingModels = BotDB.get_orders(message.from_user.id, 'waiting')
     caption = [
         '<b>Короткая статистика</b>',
         'Всего водителей <b>' + str(len(driverAllModels)) + '</b>',
+        'Водителей с анкетой <b>' + str(len(driverRegisteredModels)) + '</b>',
         'Онлайн водителей <b>' + str(len(driversOnlineModels)) + '</b>',
         'Всего клиентов <b>' + str(len(clientAllModels)) + '</b>',
         'Заказов в ожидании <b>' + str(len(orderWaitingModels)) + '</b>',
