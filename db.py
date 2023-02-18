@@ -365,6 +365,14 @@ class BotDB:
         return result
 
 
+    def get_drivers_unregistered(self):
+        self.connect()
+        self.cursor.execute("SELECT * FROM `driver` WHERE `phone` IS NULL")
+        result = self.cursor.fetchall()
+
+        return result
+
+
     def update_driver_balance(self, user_id, data):
         """update driver balance"""
         self.connect()

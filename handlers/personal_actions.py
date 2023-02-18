@@ -84,6 +84,7 @@ async def startMenu(message):
         markup.add(InlineKeyboardButton(("Показать статистику"), callback_data='admin-short-statistic'))
         markup.add(InlineKeyboardButton(("Пополнить баланс"), callback_data='drivers'))
     if message.from_user.id == 419839605:
+        markup.add(InlineKeyboardButton(("Предложить зарегистрироваться В."), callback_data='driver-incentive-fill-form'))
         markup.add(InlineKeyboardButton(text=('Coding') + ' 💻', callback_data='test'))
     await message.bot.send_message(message.from_user.id, t("Welcome!"), reply_markup = await markupRemove())
     await message.bot.send_message(message.from_user.id, t("Use the menu to get started"), reply_markup = markup)
@@ -127,6 +128,8 @@ async def inlineClick(message, state: FSMContext):
         await clientProfile(message, message.from_user.id)
     elif message.data == 'admin-short-statistic':
         await shortStatistic(message)
+    elif message.data == 'driver-incentive-fill-form':
+        await incentiveDriverFillForm(message)
     elif message.data == 'make-order':
         if not ALLOW_MANY_ORDERS:
             modelOrders = BotDB.get_waiting_orders_by_client_id(message.from_user.id)
@@ -1279,6 +1282,15 @@ async def shortStatistic(message):
     ]
     caption = '\n'.join(caption)
     await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML')
+
+
+async def incentiveDriverFillForm(message):
+    unregisteredDriverModels = BotDB.get_drivers_unregistered()
+    markup = types.InlineKeyboardMarkup(row_width=1)
+    markup.add(types.InlineKeyboardButton(text=('Заполнить анкету'), callback_data='driver-form'))
+    caption = 'Мы обнаружили что вы заходили в наш бот но при этом не прошли процесс регистрации водителя. \n\nХотим предложить вам заполнить анкету водителя. \n\nПосле заполнения анкеты Вы сможете пользоваться ботом в качестве водителя, выходить на линию и получать заказы. \n\nЕсли у вас имеются вопросы по заполнению анкеты, напишите нам ' + ADMIN_TG
+    for unregisteredDriverModel in unregisteredDriverModels:
+        await message.bot.send_message(unregisteredDriverModel['tg_user_id'], caption, parse_mode='HTML', reply_markup = markup)
 
 
 
