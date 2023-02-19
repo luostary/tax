@@ -991,12 +991,17 @@ async def process_location(message, state: FSMContext):
 async def destinationLocationSaved(message, state: FSMContext):
     dataClient = {}
     dataOrder = {}
+    clientModel = BotDB.get_client(message.from_user.id)
 
     async with state.proxy() as data:
         if 'name' in data:
             dataClient['name'] = data['name']
+        else:
+            dataClient['name'] = clientModel['name']
         if 'phone' in data:
             dataClient['phone'] = data['phone']
+        else:
+            dataClient['phone'] = clientModel['phone']
         dataOrder['departure_latitude'] = data['departure_latitude']
         dataOrder['departure_longitude'] = data['departure_longitude']
         dataOrder['destination_latitude'] = data['destination_latitude']
@@ -1017,8 +1022,7 @@ async def destinationLocationSaved(message, state: FSMContext):
     dump(dataOrder)
     orderId = BotDB.create_order(dataOrder)
 
-    if 'name' in dataClient and 'phone' in dataClient:
-        BotDB.update_client(message.from_user.id, dataClient)
+    BotDB.update_client(message.from_user.id, dataClient)
 
     modelOrder = BotDB.get_order(orderId)
     await getOrderCardClient(message, modelOrder, True, True)
