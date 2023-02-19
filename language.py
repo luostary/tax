@@ -47,7 +47,7 @@ language = {
         "My current location": "Мое текущее местоположение",
         "My destination location": "Мой пункт назначения",
         "My orders": "Мои заказы",
-        "Number of digits is incorrect": "Кол-во цифр от 11 до 12",
+        "Number of digits is incorrect": "Знак '+' и далее от 11 до 12 цифр",
         "You can input from 1 to 10 digits": "Можно ввести от 1 до 10 цифр",
         "Only digits can be entered": "Могут быть указаны только цифры",
         "Only digits can be entered as a phone number": "В качестве номера телефона могут быть указаны только цифры",
