@@ -1291,6 +1291,7 @@ async def incentiveDriverFillForm(message):
     caption = 'Мы обнаружили что вы заходили в наш бот но при этом не прошли процесс регистрации водителя. \n\nХотим предложить вам заполнить анкету водителя. \n\nПосле заполнения анкеты Вы сможете пользоваться ботом в качестве водителя, выходить на линию и получать заказы. \n\nЕсли у вас имеются вопросы по заполнению анкеты, напишите нам ' + ADMIN_TG
     for unregisteredDriverModel in unregisteredDriverModels:
         await message.bot.send_message(unregisteredDriverModel['tg_user_id'], caption, parse_mode='HTML', reply_markup = markup)
+    await message.bot.send_message(message.from_user.id, 'Сообщение доставлено ' + str(len(unregisteredDriverModels)) + ' пользователям')
 
 
 
