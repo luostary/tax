@@ -917,6 +917,8 @@ async def setPhone(message):
     await message.bot.send_message(message.from_user.id, t("Examples of phone number: +905331234567, +79031234567"), reply_markup = markup)
 @dp.message_handler(state=FormClient.phone)
 async def process_phone(message: types.Message, state: FSMContext):
+    print(re.compile('[^0-9+]').sub('', message.text))
+    message.text = re.compile('[^0-9+]').sub('', message.text)
     match = re.match(PHONE_MASK, message.text)
     if match:
         async with state.proxy() as data:
