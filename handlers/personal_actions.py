@@ -871,7 +871,13 @@ async def getClientOrders(message):
 
 async def setName(message):
     await FormClient.name.set()
-    await message.bot.send_message(message.from_user.id, t("What's your name?"))
+
+    clientModel = BotDB.get_client(message.from_user.id)
+    markup = InlineKeyboardMarkup(row_width=6)
+    if clientModel['name']:
+        markup.add(InlineKeyboardButton(text = 'Пропустить шаг (' + clientModel['name'] + ')', callback_data='clientNameSaved'))
+
+    await message.bot.send_message(message.from_user.id, t("What's your name?"), reply_markup = markup)
 @dp.message_handler(state=FormClient.name)
 async def process_name(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
@@ -901,8 +907,14 @@ async def process_name(message: types.Message, state: FSMContext):
 #  Need check via internet
 async def setPhone(message):
     await FormClient.phone.set()
+
+    clientModel = BotDB.get_client(message.from_user.id)
+    markup = InlineKeyboardMarkup(row_width=6)
+    if clientModel['phone']:
+        markup.add(InlineKeyboardButton(text = 'Пропустить шаг (' + clientModel['phone'] + ')', callback_data='clientPhoneSaved'))
+
     await message.bot.send_message(message.from_user.id, t("Enter phone number?"))
-    await message.bot.send_message(message.from_user.id, t("Examples of phone number: +905331234567, +79031234567"), reply_markup = await markupRemove())
+    await message.bot.send_message(message.from_user.id, t("Examples of phone number: +905331234567, +79031234567"), reply_markup = markup)
 @dp.message_handler(state=FormClient.phone)
 async def process_phone(message: types.Message, state: FSMContext):
     match = re.match(PHONE_MASK, message.text)
@@ -979,8 +991,10 @@ async def destinationLocationSaved(message, state: FSMContext):
     dataOrder = {}
 
     async with state.proxy() as data:
-        dataClient['name'] = data['name']
-        dataClient['phone'] = data['phone']
+        if 'name' in data:
+            dataClient['name'] = data['name']
+        if 'phone' in data:
+            dataClient['phone'] = data['phone']
         dataOrder['departure_latitude'] = data['departure_latitude']
         dataOrder['departure_longitude'] = data['departure_longitude']
         dataOrder['destination_latitude'] = data['destination_latitude']
@@ -998,9 +1012,12 @@ async def destinationLocationSaved(message, state: FSMContext):
 
     await state.finish()
 
-    print(dataOrder)
+    dump(dataOrder)
     orderId = BotDB.create_order(dataOrder)
-    BotDB.update_client(message.from_user.id, dataClient)
+
+    if 'name' in dataClient and 'phone' in dataClient:
+        BotDB.update_client(message.from_user.id, dataClient)
+
     modelOrder = BotDB.get_order(orderId)
     await getOrderCardClient(message, modelOrder, True, True)
 
