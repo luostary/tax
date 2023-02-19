@@ -386,23 +386,36 @@ async def inlineClick(message, state: FSMContext):
         pass
     elif message.data == 'driverLocationSaved':
         await switchDriverOnline(message)
-    elif 'driverDoneOrder_' in message.data:
+    elif 'driverDoneOrder_' in message.data or 'clientDoneOrder_' in message.data:
         Array = message.data.split('_')
         order_id = Array[1]
         modelOrder = BotDB.get_order(order_id)
         if (not modelOrder):
             await message.bot.send_message(message.from_user.id, t("Order not found"))
+        elif modelOrder['status'] == 'done':
+            await message.bot.send_message(message.from_user.id, t("Order is close already"))
+            return;
         else:
             try:
                 BotDB.update_order_status(order_id, 'done')
-                modelOrder = BotDB.get_order_progress_by_driver_id(modelOrder['driver_id'])
-                if modelOrder:
+                await message.bot.send_message(message.from_user.id, t("Order is done"))
+                if 'driverDoneOrder_' in message.data:
+                    await message.bot.send_message(modelOrder['client_id'], ("Заказ завершен водителем"))
+                elif 'clientDoneOrder_' in message.data:
+                    await message.bot.send_message(modelOrder['driver_id'], ("Заказ завершен клиентом"))
+
+                orderProgressModel = BotDB.get_order_progress_by_driver_id(modelOrder['driver_id'])
+                if orderProgressModel:
                     BotDB.update_driver_status(message.from_user.id, 'route')
                 else:
                     BotDB.update_driver_status(message.from_user.id, 'offline')
             except:
                 print("can`t switch order to done")
-            await message.bot.send_message(message.from_user.id, t("Order is done"))
+
+            # Если инициатор завершения заявки клиент, то ему выводим рекламный блок
+            time.sleep(2)
+            await getWikiBotInfo(message, modelOrder['client_id'])
+            pass
 
 
 
@@ -412,17 +425,18 @@ async def timerForClient(message, onTimer = True):
     orderModel = BotDB.get_order(order_id)
     if orderModel['status'] != 'waiting':
         onTimer = False
-    # По задумке цикл должен работать раз в минуту
-    driverModel = BotDB.get_near_driver(orderModel['departure_latitude'], orderModel['departure_longitude'], orderModel['id'])
-    if not driverModel:
-        await message.bot.send_message(message.from_user.id, 'На линии пока нет водителей')
-        return
-    await getOrderCard(message, driverModel['tg_user_id'], orderModel, True)
     if onTimer:
+        # По задумке цикл должен работать раз в минуту
+        driverModel = BotDB.get_near_driver(orderModel['departure_latitude'], orderModel['departure_longitude'], orderModel['id'])
+        if not driverModel:
+            await message.bot.send_message(message.from_user.id, 'На линии пока нет водителей')
+            return
+        await getOrderCard(message, driverModel['tg_user_id'], orderModel, True)
+
+        Timer(ORDER_REPEAT_TIME_SEC, timerForClient, args=message)
         if (not BotDB.driver_order_exists(driverModel['tg_user_id'], order_id)):
             BotDB.driver_order_create(driverModel['tg_user_id'], order_id)
         BotDB.driver_order_increment_cancel_cn(driverModel['tg_user_id'], order_id)
-        Timer(ORDER_REPEAT_TIME_SEC, timerForClient, args=message)
         clientModel = BotDB.get_client(orderModel['client_id'])
         print('Клиент: ' + clientModel['tg_first_name'] + " Заказ №: " + order_id + " Предложен водителю: " + driverModel['tg_first_name'])
 
@@ -996,6 +1010,10 @@ async def sendClientNotification(message, orderModel):
     # Ваш заказ принят. Водитель выехал к Вам
     await message.bot.send_message(orderModel['client_id'], t("Your order is accepted. The driver drove to you"))
     await driverProfile(message, orderModel['driver_id'], orderModel['client_id'], True)
+
+    markupDoneOrder = types.InlineKeyboardMarkup(row_width=1)
+    markupDoneOrder.add(types.InlineKeyboardButton(text=t('Done current order'), callback_data='clientDoneOrder_' + str(orderModel['id'])))
+    await message.bot.send_message(orderModel['client_id'], t('When you reach your destination, please click on the button to complete the current order'), reply_markup = markupDoneOrder)
     pass
 
 
@@ -1022,8 +1040,6 @@ class Timer:
 async def clientRegistered(message):
     try:
         await message.bot.send_message(message.from_user.id, '🤔 Секундочку... ' + t("We are already looking for drivers for you.."))
-        time.sleep(2)
-        await getWikiBotInfo(message)
     except:
         print('error method clientRegistered(message)')
         await gotoStart(message)
@@ -1060,7 +1076,7 @@ async def getRating(message):
 
 
 
-async def getWikiBotInfo(message):
+async def getWikiBotInfo(message, receiver_id):
     caption = '''
 Навигатор по Северному Кипру Wikibot 🏝🇹🇷
 Все услуги и места в одном месте 🤖
@@ -1072,7 +1088,7 @@ async def getWikiBotInfo(message):
 
     wiki = InlineKeyboardMarkup(row_width=1)
     wiki.add(InlineKeyboardButton(text='Перейти в Wikibot', url = 'https://cazi.me/7R6XM'))
-    await message.bot.send_photo(message.from_user.id, bio, caption=caption, parse_mode='HTML', reply_markup = wiki)
+    await message.bot.send_photo(receiver_id, bio, caption=caption, parse_mode='HTML', reply_markup = wiki)
 
 
 
