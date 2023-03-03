@@ -79,7 +79,8 @@ async def startMenu(message):
     markup = InlineKeyboardMarkup(row_width=3)
     item10 = InlineKeyboardButton(text=t('I looking for a clients'), callback_data='driver')
     item20 = InlineKeyboardButton(t('I looking for a taxi'), callback_data='client')
-    markup.add(item10).add(item20)
+    item30 = InlineKeyboardButton(('Рассказать о нас другу 👍'), switch_inline_query='Привет. Хочу поделиться новым сервисом по поиску Такси')
+    markup.add(item10).add(item20).add(item30)
     if message.from_user.id in [5615867597, 419839605]:
         markup.add(InlineKeyboardButton(("Показать статистику"), callback_data='admin-short-statistic'))
         markup.add(InlineKeyboardButton(("Пополнить баланс"), callback_data='drivers'))
