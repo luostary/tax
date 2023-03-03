@@ -51,8 +51,8 @@ async def getLengthV2(dept_lt, dept_ln, dest_lt, dest_ln):
 
 
 async def getLength(dept_lt, dept_ln, dest_lt, dest_ln):
-    x1, y1 = (dept_ln), (dept_lt)
-    x2, y2 = (dest_ln), (dest_lt)
+    x1, y1 = (dept_lt), (dept_ln)
+    x2, y2 = (dest_lt), (dest_ln)
     y = math.radians(float(y1 + y2) / 2)
     x = math.cos(y)
     n = abs(x1 - x2) * 111000 * x
