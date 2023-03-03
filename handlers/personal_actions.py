@@ -143,10 +143,8 @@ async def inlineClick(message, state: FSMContext):
         print(message.from_user.id)
         await setName(message)
     elif message.data == 'clientNameSaved':
-        await state.finish()
         await setPhone(message)
     elif message.data == 'clientPhoneSaved':
-        await state.finish()
         await setDeparture(message, state)
     elif message.data == "driver":
         if(not BotDB.driver_exists(message.from_user.id)):
