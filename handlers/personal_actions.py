@@ -946,7 +946,7 @@ async def setDestination(message, state: FSMContext):
         data['locationType'] = 'clientDstLoc'
     await message.bot.send_message(message.from_user.id, t("Set destination location"), parse_mode='html', reply_markup = await markupRemove())
     pass
-@dp.message_handler(content_types=['location'], state='*')
+@dp.message_handler(content_types=['location', 'venue'], state='*')
 async def process_location(message, state: FSMContext):
     markup = types.InlineKeyboardMarkup(row_width=2)
     async with state.proxy() as data:
