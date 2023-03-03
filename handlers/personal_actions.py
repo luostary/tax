@@ -687,8 +687,7 @@ async def process_driver_deposit_balance(message: types.Message, state: FSMConte
 
 async def setDriverPhone(message):
     await FormDriver.phone.set()
-    await message.bot.send_message(message.from_user.id, t("Enter phone number?"))
-    await message.bot.send_message(message.from_user.id, t("Examples of phone number: +905331234567, +79031234567"), reply_markup = await markupRemove())
+    await message.bot.send_message(message.from_user.id, t("Enter phone number") + '\nℹ<i>' + t("Examples of phone number: +905331234567, +79031234567") + '</i>', parse_mode='HTML', reply_markup = await markupRemove())
 @dp.message_handler(state=FormDriver.phone)
 async def process_driver_phone(message: types.Message, state: FSMContext):
     match = re.match(PHONE_MASK, message.text)
@@ -875,7 +874,7 @@ async def setName(message):
     clientModel = BotDB.get_client(message.from_user.id)
     markup = InlineKeyboardMarkup(row_width=6)
     if clientModel['name']:
-        markup.add(InlineKeyboardButton(text = 'Пропустить шаг (' + clientModel['name'] + ')', callback_data='clientNameSaved'))
+        markup.add(InlineKeyboardButton(text = 'Меня зовут ' + clientModel['name'], callback_data='clientNameSaved'))
 
     await message.bot.send_message(message.from_user.id, t("What's your name?"), reply_markup = markup)
 @dp.message_handler(state=FormClient.name)
@@ -911,10 +910,9 @@ async def setPhone(message):
     clientModel = BotDB.get_client(message.from_user.id)
     markup = InlineKeyboardMarkup(row_width=6)
     if clientModel['phone']:
-        markup.add(InlineKeyboardButton(text = 'Пропустить шаг (' + clientModel['phone'] + ')', callback_data='clientPhoneSaved'))
+        markup.add(InlineKeyboardButton(text = 'Мой номер ' + clientModel['phone'], callback_data='clientPhoneSaved'))
 
-    await message.bot.send_message(message.from_user.id, t("Enter phone number?"))
-    await message.bot.send_message(message.from_user.id, t("Examples of phone number: +905331234567, +79031234567"), reply_markup = markup)
+    await message.bot.send_message(message.from_user.id, t("Enter phone number") + '\nℹ<i>' + t("Examples of phone number: +905331234567, +79031234567") + '</i>', parse_mode='HTML', reply_markup = markup)
 @dp.message_handler(state=FormClient.phone)
 async def process_phone(message: types.Message, state: FSMContext):
     print(re.compile('[^0-9+]').sub('', message.text))
@@ -942,12 +940,12 @@ async def setDriverLocation(message, state: FSMContext):
 async def setDeparture(message, state: FSMContext):
     async with state.proxy() as data:
         data['locationType'] = 'clientDptLoc'
-    await message.bot.send_message(message.from_user.id, t("Set departure location"), reply_markup = await markupRemove())
+    await message.bot.send_message(message.from_user.id, t("Set departure location"), parse_mode='html', reply_markup = await markupRemove())
     pass
 async def setDestination(message, state: FSMContext):
     async with state.proxy() as data:
         data['locationType'] = 'clientDstLoc'
-    await message.bot.send_message(message.from_user.id, t("Set destination location"), reply_markup = await markupRemove())
+    await message.bot.send_message(message.from_user.id, t("Set destination location"), parse_mode='html', reply_markup = await markupRemove())
     pass
 @dp.message_handler(content_types=['location'], state='*')
 async def process_location(message, state: FSMContext):
