@@ -378,14 +378,55 @@ async def inlineClick(message, state: FSMContext):
     elif message.data == 'switch-offline':
         await switchDriverOffline(message)
         pass
+
+
+    #Подтверждение локации отправления клиентом
     elif message.data == 'departureLocationSaved':
         await setDestination(message, state)
         pass
+    elif 'departureLocationSavedByLocId_' in message.data:
+        Array = message.data.split('_')
+        location_id = int(Array[1])
+        #Сохранение координатов
+        locationModel = BotDB.get_location_by_id(location_id)
+        async with state.proxy() as data:
+            data['departure_latitude'] = float(locationModel['lat'])
+            data['departure_longitude'] = float(locationModel['long'])
+            pass
+        await setDestination(message, state)
+        pass
+
+
+    #Подтверждение локации назначения клиентом
     elif message.data == 'destinationLocationSaved':
         await destinationLocationSaved(message, state)
         pass
+    elif 'destinationLocationSavedByLocId_' in message.data:
+        Array = message.data.split('_')
+        location_id = int(Array[1])
+        #Сохранение координатов
+        locationModel = BotDB.get_location_by_id(location_id)
+        async with state.proxy() as data:
+            data['destination_latitude'] = float(locationModel['lat'])
+            data['destination_longitude'] = float(locationModel['long'])
+            pass
+        await destinationLocationSaved(message, state)
+        pass
+
+
+    #Подтверждение локации водителем
     elif message.data == 'driverLocationSaved':
         await switchDriverOnline(message)
+    elif 'driverLocationSavedByLocId_' in message.data:
+        Array = message.data.split('_')
+        location_id = int(Array[1])
+        #Сохранение координатов
+        locationModel = BotDB.get_location_by_id(location_id)
+        BotDB.update_driver_location(message.from_user.id, locationModel['lat'], locationModel['long'])
+        await switchDriverOnline(message, state)
+        pass
+
+
     elif 'driverDoneOrder_' in message.data or 'clientDoneOrder_' in message.data:
         Array = message.data.split('_')
         order_id = Array[1]
@@ -984,6 +1025,35 @@ async def process_location(message, state: FSMContext):
     else:
         await message.bot.send_message(message.from_user.id, t("Sorry can`t saved data"))
     pass
+#Если пользователь хочет указать локацию "текстом"
+@dp.message_handler(content_types='text', state='*')
+async def process_location(message: types.Message, state: FSMContext):
+    locationModels = BotDB.get_location_by_name(message.text)
+    async with state.proxy() as data:
+        locationType = data['locationType']
+
+    markup = InlineKeyboardMarkup(row_width=3)
+
+    if locationType == 'clientDptLoc':
+        for locationModel in locationModels:
+            item = InlineKeyboardButton(text=str(locationModel['name_rus']), callback_data='departureLocationSavedByLocId_' + str(locationModel['id']))
+            markup.add(item)
+    elif locationType == 'clientDstLoc':
+        for locationModel in locationModels:
+            item = InlineKeyboardButton(text=str(locationModel['name_rus']), callback_data='destinationLocationSavedByLocId_' + str(locationModel['id']))
+            markup.add(item)
+    elif locationType == 'driverCurLoc':
+        for locationModel in locationModels:
+            item = InlineKeyboardButton(text=str(locationModel['name_rus']), callback_data='driverLocationSavedByLocId_' + str(locationModel['id']))
+            markup.add(item)
+    else:
+        await message.bot.send_message(message.from_user.id, ("We can`t get type of location"))
+
+    if len(locationModels):
+        await message.bot.send_message(message.from_user.id, t("Found the following options"), reply_markup = markup)
+    else:
+        await message.bot.send_message(message.from_user.id, t("Could not find options"))
+    pass
 
 
 
@@ -1367,5 +1437,6 @@ def dump(v):
 
 
 async def testFunction(message):
-
-   pass
+    x = await getLengthV2((33.234567), Decimal(35.234567), (33.123445), (35.123442))
+    print(x)
+    pass
