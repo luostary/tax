@@ -26,6 +26,8 @@ ALLOW_MANY_ORDERS = False
 
 ADMIN_TG = "@taxi_kipr_bot_admin"
 
+GOOGLE_API_KEY = "YOUR_API_KEY_FROM_GOOGLE"
+
 DB_TYPE = "sqlite"
 DB_HOST = "127.0.0.1"
 DB_USER = "database_user"

@@ -17,6 +17,7 @@ import asyncio
 from geopy.distance import geodesic
 import json
 import pprint
+import googlemaps
 
 # sudo apt-get install xclip
 import pyperclip
@@ -44,12 +45,14 @@ async def start(message: types.Message, state: FSMContext):
     await startMenu(message)
     # await setDriverPhone(message)
 
-
+#return in kilometers
+# deprecated
 async def getLengthV2(dept_lt, dept_ln, dest_lt, dest_ln):
     distance = geodesic((dept_lt, dept_ln), (dest_lt, dest_ln)).kilometers
     return f'{distance:.2f}'
 
-
+#return in meters
+# deprecated
 async def getLength(dept_lt, dept_ln, dest_lt, dest_ln):
     x1, y1 = (dept_lt), (dept_ln)
     x2, y2 = (dest_lt), (dest_ln)
@@ -64,8 +67,9 @@ async def getLength(dept_lt, dept_ln, dest_lt, dest_ln):
 
 async def setLength(message, orderData):
     orderLocal = {}
-    orderLocal['route_length'] = await getLength(orderData['departure_latitude'], orderData['departure_longitude'], orderData['destination_latitude'], orderData['destination_longitude'])
-    orderLocal['route_time'] = round(orderLocal['route_length'] / (40 * 1000) * 60)
+    gdata = await getGoogleData(orderData)
+    orderLocal['route_length'] = gdata['distance']['value']
+    orderLocal['route_time'] = float(gdata['duration']['value'] / 60)
     orderLocal['amount_client'] = math.ceil((orderLocal['route_length'] / 1000) * RATE_1_KM)
     if orderLocal['amount_client'] < MIN_AMOUNT:
         orderLocal['amount_client'] = MIN_AMOUNT
@@ -589,12 +593,14 @@ async def getOrderCard(message, driver_id, modelOrder, buttons = True):
     driverModel = BotDB.get_driver(driver_id)
     modelDriverOrder = BotDB.get_driver_order(driver_id, modelOrder['id'])
     modelClient = BotDB.get_client(modelOrder['client_id'])
-    distanceToClient = await getLengthV2(
-        driverModel['latitude'],
-        driverModel['longitude'],
-        modelOrder['departure_latitude'],
-        modelOrder['departure_longitude']
-    )
+    data = {
+        'departure_latitude': driverModel['latitude'],
+        'departure_longitude': driverModel['longitude'],
+        'destination_latitude': modelOrder['departure_latitude'],
+        'destination_longitude': modelOrder['departure_longitude']
+    }
+    gdata = await getGoogleData(data)
+    distanceToClient = gdata['distance']['text']
     markup = InlineKeyboardMarkup(row_width=3)
     if buttons:
         item1 = InlineKeyboardButton(text=t('Cancel') + ' ❌', callback_data='orderCancel_' + str(modelOrder['id']))
@@ -607,7 +613,7 @@ async def getOrderCard(message, driver_id, modelOrder, buttons = True):
     caption = [
         '<b>Заказ №' + str(modelOrder['id']) + '</b>',
         'Имя <b>' + str(modelClient['name']) + '</b>',
-        'Расстояние до клиента <b>' + str(distanceToClient) + ' км.' + '</b>',
+        'Расстояние до клиента <b>' + str(distanceToClient) + '</b>',
         'Длина маршрута <b>' + str(modelOrder['route_length'] / 1000) + ' км.' + '</b>',
         'Стоимость <b>' + str(modelOrder['amount_client']) + ' тл.' + '</b>',
         'Рейтинг <b>' + (await getRating(message) * '⭐') + '(' + str(await getRating(message)) + '/5)</b>',
@@ -627,11 +633,12 @@ async def getOrderCardClient(message, orderModel, cancel = False, confirm = Fals
     if confirm:
         item2 = InlineKeyboardButton(text=t('Confirm') + ' ✅', callback_data='orderWaitingClient_' + str(orderModel['id']))
         markup.add(item2)
-
+    gdata = await getGoogleData(orderModel)
     caption = [
         '<b>Заказ №' + str(orderModel['id']) + '</b>',
         'Имя <b>' + str(clientModel['name']) + '</b>',
         'Длина маршрута <b>' + str(orderModel['route_length'] / 1000) + ' км.' + '</b>',
+        'Время в пути <b>' + str(gdata['duration']['text']) + '</b>',
         'Стоимость <b>' + str(orderModel['amount_client']) + ' тл.' + '</b>',
         'Статус <b>' + str(BotDB.statuses[orderModel['status']]) + '</b>',
     ]
@@ -1433,10 +1440,25 @@ def dump(v):
 
 
 
+async def getGoogleData(locationsData):
+    gmaps = googlemaps.Client(key=GOOGLE_API_KEY)
+    result = gmaps.directions(
+        (locationsData['departure_latitude'], locationsData['departure_longitude']),
+        (locationsData['destination_latitude'], locationsData['destination_longitude']),
+        language=LANGUAGE
+    )
+    resultFormat = {}
+    resultFormat['distance'] = result[0]['legs'][0]['distance']
+    resultFormat['duration'] = result[0]['legs'][0]['duration']
+    resultFormat['start_address'] = result[0]['legs'][0]['start_address']
+    resultFormat['end_address'] = result[0]['legs'][0]['end_address']
+    resultFormat['summary'] = result[0]['summary']
+    return resultFormat
+
 
 
 
 async def testFunction(message):
-    x = await getLengthV2((33.234567), Decimal(35.234567), (33.123445), (35.123442))
+    x = {}
     print(x)
     pass
