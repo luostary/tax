@@ -143,8 +143,10 @@ async def inlineClick(message, state: FSMContext):
         print(message.from_user.id)
         await setName(message)
     elif message.data == 'clientNameSaved':
+        await state.finish()
         await setPhone(message)
     elif message.data == 'clientPhoneSaved':
+        await state.finish()
         await setDeparture(message, state)
     elif message.data == "driver":
         if(not BotDB.driver_exists(message.from_user.id)):
@@ -964,6 +966,7 @@ async def process_phone(message: types.Message, state: FSMContext):
         if HAS_CONFIRM_STEPS_CLIENT:
             await message.bot.send_message(message.from_user.id, t('Do you confirm your phone?'), reply_markup = await inlineConfirm('clientPhoneSaved'))
         else:
+            await state.finish()
             await setDeparture(message, state)
         pass
     else:
