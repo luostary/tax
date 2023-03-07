@@ -1409,7 +1409,7 @@ async def incentiveDriverFillForm(message):
     for unregisteredDriverModel in unregisteredDriverModels:
         await message.bot.send_message(unregisteredDriverModel['tg_user_id'], caption, parse_mode='HTML', reply_markup = markup)
         sendedCn = sendedCn + 1
-    await message.bot.send_message(message.from_user.id, 'Сообщение доставлено ' + str(sendedCn) + ' пользователям')
+    await message.bot.send_message(5615867597, 'Сообщение доставлено ' + str(sendedCn) + ' пользователям')
 
 
 
