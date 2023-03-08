@@ -560,4 +560,4 @@ class BotDB:
 
     def close(self):
         """Закрываем соединение с БД"""
-        self.conn.close()
+        self.conn.reconnect()
