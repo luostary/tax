@@ -97,7 +97,7 @@ class BotDB:
 
 
     def update_client(self, user_id, data):
-        """update client"""
+        """Обновление клиента"""
         self.connect()
         try:
             self.cursor.execute("UPDATE `client` SET name = " + self.replacer + ", phone = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (data['name'], data['phone'], user_id))
@@ -374,7 +374,7 @@ class BotDB:
 
 
     def update_driver_balance(self, user_id, data):
-        """update driver balance"""
+        """Обновление баланса водителя"""
         self.connect()
         try:
             self.cursor.execute("UPDATE `driver` SET balance = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (data, user_id))
@@ -386,7 +386,7 @@ class BotDB:
 
 
     def update_driver_wallet(self, user_id, data):
-        """update driver wallet"""
+        """Обновление значения кошелька водителя"""
         self.connect()
         try:
             self.cursor.execute("UPDATE `driver` SET wallet = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (data, user_id))
@@ -398,7 +398,7 @@ class BotDB:
 
 
     def update_driver(self, user_id, data):
-        """update driver"""
+        """Обновление записи водителя"""
         self.connect()
         try:
             self.cursor.execute("UPDATE `driver` SET name = " + self.replacer + ", phone = " + self.replacer + ", car_number = " + self.replacer + ", status = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (data['name'], data['phone'], data['car_number'], data['status'], user_id))
@@ -410,7 +410,7 @@ class BotDB:
 
 
     def update_driver_status(self, user_id, status):
-        """update driver status"""
+        """Обновление статуса водителя"""
         self.connect()
         try:
             self.cursor.execute("UPDATE `driver` SET status = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (status, user_id))
