@@ -79,7 +79,7 @@ language = {
         "This order cannot be taken, it is already taken":"Этот заказ нельзя взять, он уже занят другим водителем",
         "Top up driver balance":"Пополнить баланс водителя",
         "To use the service you need to enter some data":"Чтобы пользоваться сервисом необходимо ввести некоторые данные",
-        "To work in the system, you must have at least {minAmount:d} usdt on your account. To replenish the account, you need to transfer the currency to the specified crypto wallet. After the payment has been made Confirm the transfer with the button": "Для работы в системе необходимо иметь на балансе не меньше {minAmount:d} usdt. Чтобы пополнить счёт необходимо перевести валюту на указанный криптокошелёк. После произведённой оплаты подтвердите перевод кнопкой",
+        "To work in the system, you must have at least {minAmount:d} usdt on your account. To replenish the account, you need to transfer the currency to the specified crypto wallet. After the payment has been made Confirm the transfer with the button": "Для работы в системе необходимо иметь <b>баланс не меньше {minAmount:d} USDT</b>. \n\nЧтобы пополнить счёт необходимо: \n1. <b>Перевести валюту</b> на указанный криптокошелёк. \n2. После произведённой оплаты <b>подтвердить перевод</b> кнопкой",
         "Unable to find customer":"Не удалось найти клиента",
         "Under construction..": "В разработке..",
         "Use the menu to get started": "Используйте меню чтобы начать",

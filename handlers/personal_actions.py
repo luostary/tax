@@ -18,6 +18,7 @@ from geopy.distance import geodesic
 import json
 import pprint
 import googlemaps
+import qrcode
 
 # sudo apt-get install xclip
 import pyperclip
@@ -219,10 +220,21 @@ async def inlineClick(message, state: FSMContext):
         markupCopy = InlineKeyboardMarkup(row_width=1)
         # markupCopy.add(InlineKeyboardButton(text=t('Copy wallet'), callback_data='copy-wallet'))
         markupCopy.add(InlineKeyboardButton(text=t('Confirm the transfer'), callback_data='confirm-transfer'))
+        markupCopy.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='driver'))
         localMessage = t('To work in the system, you must have at least {minAmount:d} usdt on your account. To replenish the account, you need to transfer the currency to the specified crypto wallet. After the payment has been made Confirm the transfer with the button')
         localMessage = localMessage.format(minAmount = minBalanceAmount)
-        await message.bot.send_message(message.from_user.id, localMessage)
-        await message.bot.send_message(message.from_user.id, WALLET, reply_markup = markupCopy)
+
+        data = WALLET
+        qr = qrcode.make(data)
+        qr.save('merged/wallet-qr-code.jpg')
+        image = Image.open('merged/wallet-qr-code.jpg')
+        bio = BytesIO()
+        image.save(bio, 'JPEG')
+        bio.seek(0)
+        qrMsg = 'Если вы пользуетесь услугами обменного пункта - покажите кассиру QR-код кошелька'
+        walletMsg = 'Наш криптокошелек: \n' + '<b>' + WALLET + '</b>'
+        caption = localMessage + '\n\n' + walletMsg + '\n\n' + qrMsg
+        await message.bot.send_photo(message.from_user.id, bio, caption = caption, parse_mode='HTML', reply_markup = markupCopy)
     elif message.data == 'copy-wallet':
         pyperclip.copy(WALLET)
         pass
