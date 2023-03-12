@@ -560,4 +560,5 @@ class BotDB:
 
     def close(self):
         """Закрываем соединение с БД"""
-        self.conn.reconnect()
+        if config.DB_RECONNECT_CONNECTION_AFTER_QUERY:
+            self.conn.reconnect()
