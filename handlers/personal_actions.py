@@ -158,8 +158,7 @@ async def inlineClick(message, state: FSMContext):
         await menuDriver(message)
         pass
     elif message.data == 'driver-profile':
-        await menuDriver(message)
-        await driverProfile(message, message.from_user.id, message.from_user.id, True)
+        await driverProfile(message, message.from_user.id, message.from_user.id, True, True)
         pass
     elif message.data == "driver-form":
         await setCarPhoto(message, state)
@@ -1299,7 +1298,7 @@ async def driverRules(message):
 
 
 
-async def driverProfile(message, driver_id, user_id, showPhone = False):
+async def driverProfile(message, driver_id, user_id, showPhone = False, showReturnButton = False):
     driverModel = BotDB.get_driver(driver_id)
     if (not driverModel):
         await message.bot.send_message(user_id, "Can`t do it, begin to /start")
@@ -1386,16 +1385,20 @@ async def driverProfile(message, driver_id, user_id, showPhone = False):
                 merged_image.paste(image1,(0,0))
                 merged_image.paste(image2,(y,0))
 
+        backDriverMenu = InlineKeyboardMarkup(row_width=1)
+        if showReturnButton:
+            backDriverMenu.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='driver'))
+
         if versionMerge > 0:
 
             bio = BytesIO()
             bio.name = 'merged/' + str(driver_id) + '.jpg'
             merged_image.save(bio, 'JPEG')
             bio.seek(0)
-            await message.bot.send_photo(user_id, bio, caption=caption, parse_mode='HTML')
+            await message.bot.send_photo(user_id, bio, caption=caption, parse_mode='HTML', reply_markup = backDriverMenu)
             print('versionMerge: ' + str(versionMerge))
         else:
-            await message.bot.send_message(user_id, caption, parse_mode='HTML')
+            await message.bot.send_message(user_id, caption, parse_mode='HTML', reply_markup = backDriverMenu)
     pass
 
 
