@@ -264,8 +264,9 @@ async def inlineClick(message, state: FSMContext):
                 await message.bot.send_message(message.from_user.id, localMessage)
             else:
                 await message.bot.send_message(message.from_user.id, t('You have unknown status'))
-    elif message.data == 'client-orders':
-        await getClientOrders(message)
+    elif 'client-orders' in message.data:
+        Array = message.data.split('_')
+        await getClientOrders(message, int(Array[1]), int(Array[2]), int(Array[3]))
         pass
     elif 'wallet' in message.data:
         Array = message.data.split('_')
@@ -901,7 +902,7 @@ async def menuClient(message):
     item10 = InlineKeyboardButton(text=t('Profile'), callback_data='client-profile')
     item20 = InlineKeyboardButton(text=t('Make an order') + ' 🚕', callback_data='make-order')
     # item30 = InlineKeyboardButton(text=t('Free drivers'), callback_data='free-drivers')
-    item40 = InlineKeyboardButton(text=t('My orders') + ' (' + orderCn + ')', callback_data='client-orders')
+    item40 = InlineKeyboardButton(text=t('My orders') + ' (' + orderCn + ')', callback_data='client-orders_0_0_0')
     item45 = InlineKeyboardButton(text=t('Rules'), callback_data='client-rules')
 
     item50 = InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='back')
@@ -913,7 +914,7 @@ async def menuClient(message):
 
 
 
-async def getClientOrders(message):
+async def getClientOrders(message, offset, message_id, chat_id):
     if (not BotDB.client_exists(message.from_user.id)):
         await message.bot.send_message(message.from_user.id, t('Client not found'))
     else:
@@ -922,8 +923,9 @@ async def getClientOrders(message):
             await message.bot.send_message(message.from_user.id, t("Unable to find customer"))
             pass
         else:
-            modelOrders = BotDB.get_client_orders(message.from_user.id)
-            if len(modelOrders) == 0:
+            modelOrders = BotDB.get_client_orders_by_one(message.from_user.id, offset)
+            modelOrdersCn = len(BotDB.get_client_orders(message.from_user.id))
+            if (modelOrdersCn) == 0:
                 await message.bot.send_message(message.from_user.id, t("You haven`t orders"))
             else:
                 for row in modelOrders:
@@ -944,11 +946,26 @@ async def getClientOrders(message):
                         'Длина маршрута <b>' + str(row['route_length'] / 1000) + ' км.' + '</b>',
                         'Время поездки <b>' + str(row['route_time']) + ' мин.' + '</b>'
                     ));
-                    await message.bot.send_message(message.from_user.id, text)
+                    if (message_id == 0):
+                        message = await message.bot.send_message(message.from_user.id, '.')
+                        message_id = message.message_id
+                        chat_id = message.chat.id
+                        pass
+                    markupBack = InlineKeyboardMarkup(row_width=2)
+                    callbackBackward = 'client-orders_' + str(offset - 1) + '_' + str(message_id) + '_' + str(chat_id)
+                    callbackForward = 'client-orders_' + str(offset + 1) + '_' + str(message_id) + '_' + str(chat_id)
+                    if (offset + 1) == modelOrdersCn:
+                        markupBack.add(InlineKeyboardButton(text=('◀️'), callback_data = callbackBackward))
+                    elif offset == 0:
+                        markupBack.add(InlineKeyboardButton(text=('▶️'), callback_data = callbackForward))
+                    else:
+                        markupBack.add(
+                            InlineKeyboardButton(text=('◀️'), callback_data = callbackBackward),
+                            InlineKeyboardButton(text=('▶️'), callback_data = callbackForward)
+                        )
+                    markupBack.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='client'))
+                    await message.bot.edit_message_text(chat_id = chat_id, message_id = message_id, text = text, reply_markup = markupBack)
                     pass
-                markupBack = InlineKeyboardMarkup(row_width=1)
-                markupBack.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='client'))
-                await message.bot.send_message(message.from_user.id, 'Вернуться назад в меню', reply_markup = markupBack)
             pass
 
 

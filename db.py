@@ -181,8 +181,8 @@ class BotDB:
 
     def get_client_orders_by_one(self, client_id, offset):
         self.connect()
-        self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = " + self.replacer + " ORDER BY `dt_order` DESC LIMIT " + self.replacer + ", 1", (client_id, offset))
-        result = self.cursor.fetchone()
+        self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = " + self.replacer + " ORDER BY `dt_order` DESC LIMIT " + self.replacer + ", 1", (client_id, int(offset)))
+        result = self.cursor.fetchall()
         self.close()
         return result
 
