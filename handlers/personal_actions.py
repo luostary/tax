@@ -107,7 +107,9 @@ async def clientProfile(message, client_id):
             '<b>Имя</b> ' + str(modelClient['name']),
             '<b>Телефон</b> ' + str(modelClient['phone']),
         ))
-        await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML')
+        markupBack = InlineKeyboardMarkup(row_width=1)
+        markupBack.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='client'))
+        await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML', reply_markup = markupBack)
     pass
 
 
@@ -215,7 +217,9 @@ async def inlineClick(message, state: FSMContext):
             driverBalance['balance'] = 0
         localMessage = t('Your balance is {driverBalance:d} usdt, min balance for use bot is {minBalance:d} usdt')
         localMessage = localMessage.format(driverBalance = driverBalance['balance'], minBalance = minBalanceAmount)
-        await message.bot.send_message(message.from_user.id, (localMessage))
+        markupBack = InlineKeyboardMarkup(row_width=1)
+        markupBack.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='driver'))
+        await message.bot.send_message(message.from_user.id, (localMessage), reply_markup = markupBack)
     elif message.data == 'how-topup-account':
         markupCopy = InlineKeyboardMarkup(row_width=1)
         # markupCopy.add(InlineKeyboardButton(text=t('Copy wallet'), callback_data='copy-wallet'))
@@ -942,6 +946,9 @@ async def getClientOrders(message):
                     ));
                     await message.bot.send_message(message.from_user.id, text)
                     pass
+                markupBack = InlineKeyboardMarkup(row_width=1)
+                markupBack.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='client'))
+                await message.bot.send_message(message.from_user.id, 'Вернуться назад в меню', reply_markup = markupBack)
             pass
 
 
@@ -1218,6 +1225,7 @@ async def getWikiBotInfo(message, receiver_id):
 
     wiki = InlineKeyboardMarkup(row_width=1)
     wiki.add(InlineKeyboardButton(text='Перейти в Wikibot', url = 'https://cazi.me/7R6XM'))
+    wiki.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='client'))
     await message.bot.send_photo(receiver_id, bio, caption=caption, parse_mode='HTML', reply_markup = wiki)
 
 
