@@ -327,6 +327,7 @@ async def inlineClick(message, state: FSMContext):
             if (not BotDB.driver_order_exists(message.from_user.id, order_id)):
                 BotDB.driver_order_create(message.from_user.id, order_id)
             BotDB.driver_order_increment_cancel_cn(message.from_user.id, order_id)
+            await message.bot.send_message(message.from_user.id, t("Order is cancel"))
         else:
             await message.bot.send_message(message.from_user.id, t("This order cannot be canceled, it is not active"))
         pass
