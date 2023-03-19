@@ -480,10 +480,16 @@ async def inlineClick(message, state: FSMContext):
             try:
                 BotDB.update_order_status(order_id, 'done')
                 await message.bot.send_message(message.from_user.id, t("Order is done"))
+
+                clientBack = InlineKeyboardMarkup(row_width=1)
+                clientBack.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='client'))
+                driverBack = InlineKeyboardMarkup(row_width=1)
+                driverBack.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='driver'))
+
                 if 'driverDoneOrder_' in message.data:
-                    await message.bot.send_message(modelOrder['client_id'], ("Заказ завершен водителем"))
+                    await message.bot.send_message(modelOrder['client_id'], ("Заказ завершен водителем"), reply_markup = clientBack)
                 elif 'clientDoneOrder_' in message.data:
-                    await message.bot.send_message(modelOrder['driver_id'], ("Заказ завершен клиентом"))
+                    await message.bot.send_message(modelOrder['driver_id'], ("Заказ завершен клиентом"), reply_markup = driverBack)
 
                 orderProgressModel = BotDB.get_order_progress_by_driver_id(modelOrder['driver_id'])
                 if orderProgressModel:
