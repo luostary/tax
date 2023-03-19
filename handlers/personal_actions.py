@@ -319,7 +319,7 @@ async def inlineClick(message, state: FSMContext):
                     except:
                         await message.bot.send_message(message.from_user.id, t("Order can not be taken"))
         else:
-            await message.bot.send_message(message.from_user.id, t("This order cannot be taken, it is already taken"))
+            await message.bot.send_message(message.from_user.id, t("This order cannot be taken, it is not active"))
     elif 'orderCancel_' in message.data:
         Array = message.data.split('_')
         order_id = Array[1]
@@ -328,7 +328,7 @@ async def inlineClick(message, state: FSMContext):
                 BotDB.driver_order_create(message.from_user.id, order_id)
             BotDB.driver_order_increment_cancel_cn(message.from_user.id, order_id)
         else:
-            await message.bot.send_message(message.from_user.id, t("This order cannot be canceled, it is already taken"))
+            await message.bot.send_message(message.from_user.id, t("This order cannot be canceled, it is not active"))
         pass
     elif 'orderCancelClient_' in message.data:
         # switch order to cancel
