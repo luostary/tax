@@ -264,6 +264,9 @@ async def inlineClick(message, state: FSMContext):
                 await message.bot.send_message(message.from_user.id, localMessage)
             else:
                 await message.bot.send_message(message.from_user.id, t('You have unknown status'))
+    elif 'catalog_' in message.data:
+        Array = message.data.split('_')
+        await getCategories(message, int(Array[1]), state)
     elif 'client-orders' in message.data:
         Array = message.data.split('_')
         await getClientOrders(message, int(Array[1]), int(Array[2]), int(Array[3]))
@@ -1056,7 +1059,10 @@ async def setDeparture(message, state: FSMContext):
 async def setDestination(message, state: FSMContext):
     async with state.proxy() as data:
         data['locationType'] = 'clientDstLoc'
-    await message.bot.send_message(message.from_user.id, t("Set destination location"), parse_mode='html', reply_markup = await markupRemove())
+    markup = types.InlineKeyboardMarkup(row_width=1)
+    markup.add(types.InlineKeyboardButton(text=t('Catalog'), callback_data='catalog_0'))
+    await message.bot.send_message(message.from_user.id, t("Set destination location"), parse_mode='html', reply_markup = markup)
+
     pass
 @dp.message_handler(content_types=['location', 'venue'], state='*')
 async def process_location(message, state: FSMContext):
@@ -1177,6 +1183,33 @@ async def sendClientNotification(message, orderModel):
     await message.bot.send_message(orderModel['client_id'], t('When you reach your destination, please click on the button to complete the current order'), reply_markup = markupDoneOrder)
     pass
 
+
+
+
+
+async def getCategories(message, parentId, state: FSMContext):
+    locationModels = BotDB.get_locations_by_category_id(parentId)
+    async with state.proxy() as data:
+        locationType = data['locationType']
+    markup = InlineKeyboardMarkup(row_width=2)
+    if len(locationModels) == 0:
+        categoryModels = BotDB.get_categories(parentId)
+        catMessage = t("Select category")
+        for categoryModel in categoryModels:
+            item = InlineKeyboardButton(text=str(categoryModel['name']), callback_data='catalog_' + str(categoryModel['id']))
+            markup.add(item)
+            if categoryModel['parent_id']:
+                catMessage = t('Select subcategory')
+    else:
+        catMessage = t("Found locations")
+        for locationModel in locationModels:
+            if locationType == 'clientDptLoc':
+                callbackData = 'departureLocationSavedByLocId_' + str(locationModel['id'])
+            elif locationType == 'clientDstLoc':
+                callbackData = 'destinationLocationSavedByLocId_' + str(locationModel['id'])
+            item = InlineKeyboardButton(text=str(locationModel['name_rus']), callback_data=callbackData)
+            markup.add(item)
+    await message.bot.send_message(message.from_user.id, (catMessage), reply_markup = markup)
 
 
 

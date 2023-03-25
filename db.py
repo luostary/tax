@@ -550,12 +550,42 @@ class BotDB:
         return result
 
 
+    def get_locations_by_category_id(self, category_id):
+        self.connect()
+        sql = ("SELECT * FROM `location` WHERE `category_id` = {category_id:d}")
+        sql = sql.format(
+            category_id = category_id
+        )
+        self.cursor.execute(sql)
+        result = self.cursor.fetchall()
+        self.close()
+        return result
+
+
     def get_location_by_id(self, id):
         self.connect()
         self.cursor.execute("SELECT * FROM `location` WHERE `id` = " + self.replacer, (id,))
         result = self.cursor.fetchone()
         self.close()
         return result
+
+
+
+    # Каталог локаций
+    def get_categories(self, parent_id):
+            if (parent_id > 0):
+                condition = '= ' + str(parent_id)
+            else:
+                condition = 'IS NULL';
+            self.connect()
+            sql = "SELECT * FROM `category` WHERE `parent_id` {condition:s}".format(
+                condition = condition
+            )
+            self.cursor.execute(sql)
+            result = self.cursor.fetchall()
+            self.close()
+            return result
+
 
 
     def close(self):
