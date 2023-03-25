@@ -345,16 +345,17 @@ async def inlineClick(message, state: FSMContext):
         BotDB.update_order_status(order_id, 'cancel')
 
         # Cancel fee begin
-        driverModel = BotDB.get_driver(modelOrder['driver_id'])
-        driver_id = driverModel['tg_user_id']
-        income = int(math.ceil((modelOrder['amount_client'] / 100 * PERCENT) / RATE_1_USDT))
-        try:
-            BotDB.update_driver_status(driver_id, 'online')
-#            BotDB.update_order_driver_id(order_id, None)
-            BotDB.update_driver_balance(driver_id, int(driverModel['balance'] + income))
-        except:
-            await message.bot.send_message(5615867597, ("Водителю " + driverModel['tg_user_id'] + " (@" + driverModel['tg_username'] + ") не удалось вернуть комиссию " + str(income) + " USDT в автоматическом режиме, необходимо вернуть вручную"))
-            pass
+        if (modelOrder['driver_id']):
+            driverModel = BotDB.get_driver(modelOrder['driver_id'])
+            driver_id = driverModel['tg_user_id']
+            income = int(math.ceil((modelOrder['amount_client'] / 100 * PERCENT) / RATE_1_USDT))
+            try:
+                BotDB.update_driver_status(driver_id, 'online')
+    #            BotDB.update_order_driver_id(order_id, None)
+                BotDB.update_driver_balance(driver_id, int(driverModel['balance'] + income))
+            except:
+                await message.bot.send_message(5615867597, ("Водителю " + driverModel['tg_user_id'] + " (@" + driverModel['tg_username'] + ") не удалось вернуть комиссию " + str(income) + " USDT в автоматическом режиме, необходимо вернуть вручную"))
+                pass
         # Cancel fee end
 
 
