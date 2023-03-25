@@ -1196,11 +1196,15 @@ async def getCategories(message, parentId, state: FSMContext):
     if len(locationModels) == 0:
         categoryModels = BotDB.get_categories(parentId)
         catMessage = t("Select category")
-        for categoryModel in categoryModels:
-            item = InlineKeyboardButton(text=str(categoryModel['name']), callback_data='catalog_' + str(categoryModel['id']))
-            markup.add(item)
-            if categoryModel['parent_id']:
-                catMessage = t('Select subcategory')
+        if len(categoryModels) == 0:
+            catMessage = t("Could not find options")
+            markup.add(types.InlineKeyboardButton(text=t('Catalog'), callback_data='catalog_0'))
+        else:
+            for categoryModel in categoryModels:
+                item = InlineKeyboardButton(text=str(categoryModel['name']), callback_data='catalog_' + str(categoryModel['id']))
+                markup.add(item)
+                if categoryModel['parent_id']:
+                    catMessage = t('Select subcategory')
     else:
         catMessage = t("Found locations")
         for locationModel in locationModels:
