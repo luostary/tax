@@ -45,6 +45,7 @@ language = {
         "I looking for a clients": "Я Водитель",
         "I looking for a taxi": "Я Пассажир",
         "I dont understand this message. Use the menu to get started": "Я не понимаю это сообщение. Используйте меню чтобы начать",
+        "Leave unchanged": "Оставить без изменения",
         "Look for a driver": "Иcкать водителя",
         "May be entered number only": "Укажите число",
         "Make an order":"Сделать заказ",

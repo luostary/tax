@@ -148,7 +148,7 @@ async def inlineClick(message, state: FSMContext):
                 await getOrderCardClient(message, modelOrder, True)
                 return
         print(message.from_user.id)
-        await setName(message)
+        await setName(message, state)
     elif message.data == 'clientNameSaved':
         await state.finish()
         await setPhone(message)
@@ -982,15 +982,21 @@ async def getClientOrders(message, offset, message_id, chat_id):
 
 
 
-async def setName(message):
+async def setName(message, state):
     await FormClient.name.set()
 
     clientModel = BotDB.get_client(message.from_user.id)
-    markup = InlineKeyboardMarkup(row_width=6)
-    if clientModel['name']:
-        markup.add(InlineKeyboardButton(text = 'Меня зовут ' + clientModel['name'], callback_data='clientNameSaved'))
-
-    await message.bot.send_message(message.from_user.id, t("What's your name?"), reply_markup = markup)
+    markup = InlineKeyboardMarkup(row_width=1)
+    nameExists = bool(len(clientModel['name']))
+    phoneExists = bool(len(clientModel['phone']))
+    await message.bot.send_message(message.from_user.id, t("What's your name?"))
+    if nameExists & phoneExists:
+        async with state.proxy() as data:
+            data['name'] = clientModel['name']
+            data['phone'] = clientModel['phone']
+            pass
+        markup.add(InlineKeyboardButton(text = t('Leave unchanged'), callback_data='clientPhoneSaved'))
+        await message.bot.send_message(message.from_user.id, ("Вы можете оставить без изменений имя и телефон"), reply_markup = markup)
 @dp.message_handler(state=FormClient.name)
 async def process_name(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
