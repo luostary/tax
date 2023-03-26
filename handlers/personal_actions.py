@@ -989,14 +989,15 @@ async def setName(message, state):
     markup = InlineKeyboardMarkup(row_width=1)
     nameExists = bool(len(clientModel['name']))
     phoneExists = bool(len(clientModel['phone']))
-    await message.bot.send_message(message.from_user.id, t("What's your name?"))
+    nameMessage = t("What's your name?")
     if nameExists & phoneExists:
         async with state.proxy() as data:
             data['name'] = clientModel['name']
             data['phone'] = clientModel['phone']
             pass
         markup.add(InlineKeyboardButton(text = t('Leave unchanged'), callback_data='clientPhoneSaved'))
-        await message.bot.send_message(message.from_user.id, ("Вы можете оставить без изменений имя и телефон"), reply_markup = markup)
+        nameMessage += '. Вы можете оставить без изменений имя и телефон'
+    await message.bot.send_message(message.from_user.id, nameMessage, reply_markup = markup)
 @dp.message_handler(state=FormClient.name)
 async def process_name(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
@@ -1061,7 +1062,9 @@ async def setDriverLocation(message, state: FSMContext):
 async def setDeparture(message, state: FSMContext):
     async with state.proxy() as data:
         data['locationType'] = 'clientDptLoc'
-    await message.bot.send_message(message.from_user.id, t("Set departure location"), parse_mode='html', reply_markup = await markupRemove())
+    markup = types.InlineKeyboardMarkup(row_width=1)
+    markup.add(types.InlineKeyboardButton(text=t('Catalog'), callback_data='catalog_0'))
+    await message.bot.send_message(message.from_user.id, t("Set departure location"), parse_mode='html', reply_markup = markup)
     pass
 async def setDestination(message, state: FSMContext):
     async with state.proxy() as data:
