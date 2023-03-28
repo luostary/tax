@@ -987,8 +987,14 @@ async def setName(message, state):
 
     clientModel = BotDB.get_client(message.from_user.id)
     markup = InlineKeyboardMarkup(row_width=1)
-    nameExists = bool(len(clientModel['name']))
-    phoneExists = bool(len(clientModel['phone']))
+    if clientModel['name']:
+        nameExists = True
+    else:
+        nameExists = False
+    if clientModel['phone']:
+        phoneExists = True
+    else:
+        phoneExists = False
     nameMessage = t("What's your name?")
     if nameExists & phoneExists:
         async with state.proxy() as data:
