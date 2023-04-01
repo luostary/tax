@@ -552,7 +552,7 @@ class BotDB:
 
     def get_locations_by_category_id(self, category_id):
         self.connect()
-        sql = ("SELECT * FROM `location` WHERE `category_id` = {category_id:d}")
+        sql = ("SELECT * FROM `location` WHERE `category_id` = {category_id:d} ORDER BY name_rus")
         sql = sql.format(
             category_id = category_id
         )
@@ -578,7 +578,7 @@ class BotDB:
             else:
                 condition = 'IS NULL';
             self.connect()
-            sql = "SELECT * FROM `category` WHERE `parent_id` {condition:s}".format(
+            sql = "SELECT * FROM `category` WHERE `parent_id` {condition:s} ORDER BY sort".format(
                 condition = condition
             )
             self.cursor.execute(sql)
