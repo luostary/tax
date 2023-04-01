@@ -1205,9 +1205,14 @@ async def sendClientNotification(message, orderModel):
 
 async def getCategories(message, parentId, state: FSMContext):
     locationModels = BotDB.get_locations_by_category_id(parentId)
-    async with state.proxy() as data:
-        locationType = data['locationType']
     markup = InlineKeyboardMarkup(row_width=2)
+    async with state.proxy() as data:
+        if not data:
+            item = InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='client')
+            markup.add(item)
+            await message.bot.send_message(message.from_user.id, '🤔 Хм, попробуйте начать заказ с начала', reply_markup = markup)
+            return
+        locationType = data['locationType']
     if len(locationModels) == 0:
         categoryModels = BotDB.get_categories(parentId)
         catMessage = t("Select category")
@@ -1220,6 +1225,9 @@ async def getCategories(message, parentId, state: FSMContext):
                 markup.add(item)
                 if categoryModel['parent_id']:
                     catMessage = t('Select subcategory')
+            if parentId != 0:
+                item = InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='catalog_0')
+                markup.add(item)
     else:
         catMessage = t("Found locations")
         for locationModel in locationModels:
@@ -1229,6 +1237,8 @@ async def getCategories(message, parentId, state: FSMContext):
                 callbackData = 'destinationLocationSavedByLocId_' + str(locationModel['id'])
             item = InlineKeyboardButton(text=str(locationModel['name_rus']), callback_data=callbackData)
             markup.add(item)
+        item = InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='catalog_0')
+        markup.add(item)
     await message.bot.send_message(message.from_user.id, (catMessage), reply_markup = markup)
 
 
