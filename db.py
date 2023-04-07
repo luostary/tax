@@ -108,6 +108,16 @@ class BotDB:
         return result
 
 
+    def update_client_tg_username(self, user_id, username):
+        self.connect()
+        try:
+            self.cursor.execute("UPDATE `client` SET tg_username = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (username, user_id))
+        except Error as e:
+            print(e)
+        result = self.conn.commit()
+        self.close()
+        return result
+
 
 
 
@@ -402,6 +412,17 @@ class BotDB:
         self.connect()
         try:
             self.cursor.execute("UPDATE `driver` SET name = " + self.replacer + ", phone = " + self.replacer + ", car_number = " + self.replacer + ", status = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (data['name'], data['phone'], data['car_number'], data['status'], user_id))
+        except Error as e:
+            print(e)
+        result = self.conn.commit()
+        self.close()
+        return result
+
+
+    def update_driver_tg_username(self, user_id, username):
+        self.connect()
+        try:
+            self.cursor.execute("UPDATE `driver` SET tg_username = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (username, user_id))
         except Error as e:
             print(e)
         result = self.conn.commit()

@@ -148,6 +148,7 @@ async def inlineClick(message, state: FSMContext):
                 await getOrderCardClient(message, modelOrder, True)
                 return
         print(message.from_user.id)
+        BotDB.update_client_tg_username(message.from_user.id, message.from_user.username)
         await setName(message, state)
     elif message.data == 'clientNameSaved':
         await state.finish()
@@ -416,6 +417,7 @@ async def inlineClick(message, state: FSMContext):
                 localMessage = t("You are online, already")
                 await message.bot.send_message(message.from_user.id, localMessage)
             elif driverModel['status'] == 'offline':
+                BotDB.update_driver_tg_username(message.from_user.id, message.from_user.username)
                 await setDriverLocation(message, state)
             else:
                 await message.bot.send_message(message.from_user.id, t('You have unknown status'))
@@ -530,7 +532,11 @@ async def timerForClient(message, onTimer = True):
             BotDB.driver_order_create(driverModel['tg_user_id'], order_id)
         BotDB.driver_order_increment_cancel_cn(driverModel['tg_user_id'], order_id)
         clientModel = BotDB.get_client(orderModel['client_id'])
-        print('Клиент: ' + clientModel['tg_first_name'] + " Заказ №: " + order_id + " Предложен водителю: " + driverModel['tg_first_name'])
+
+        msg = 'Клиент: ' + clientModel['tg_first_name'] + "(@" + clientModel['tg_username'] + ") Заказ №: " + order_id + " Предложен водителю: " + driverModel['tg_first_name'] + "(@" + driverModel['tg_username'] + ")"
+        print(msg)
+        await message.bot.send_message(ADMIN_ID, msg)
+
 
 
 
