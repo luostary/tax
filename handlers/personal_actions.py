@@ -1228,6 +1228,9 @@ async def getCategories(message, parentId, state: FSMContext):
             if parentId != 0:
                 item = InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='catalog_0')
                 markup.add(item)
+            else:
+                item = InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='client')
+                markup.add(item)
     else:
         catMessage = t("Found locations")
         for locationModel in locationModels:
