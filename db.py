@@ -560,10 +560,9 @@ class BotDB:
 
     def get_location_by_name(self, text):
         self.connect()
-        sql = ("SELECT * FROM `location` WHERE `name_rus` LIKE '%{name_rus:s}%' OR name_eng LIKE '%{name_eng:s}%'")
+        sql = ("SELECT * FROM `location` WHERE `name_rus` LIKE '%{text:s}%' OR name_eng LIKE '%{text:s}%' OR search_rus LIKE '%{text:s}%'")
         sql = sql.format(
-            name_rus = text,
-            name_eng = text
+            text = text
         )
         self.cursor.execute(sql)
         result = self.cursor.fetchall()
