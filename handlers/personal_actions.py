@@ -1134,10 +1134,14 @@ async def process_location(message: types.Message, state: FSMContext):
         for locationModel in locationModels:
             item = InlineKeyboardButton(text=str(locationModel['name_rus']), callback_data='departureLocationSavedByLocId_' + str(locationModel['id']))
             markup.add(item)
+        item = InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='clientPhoneSaved')
+        markup.add(item)
     elif locationType == 'clientDstLoc':
         for locationModel in locationModels:
             item = InlineKeyboardButton(text=str(locationModel['name_rus']), callback_data='destinationLocationSavedByLocId_' + str(locationModel['id']))
             markup.add(item)
+        item = InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='departureLocationSaved')
+        markup.add(item)
     elif locationType == 'driverCurLoc':
         for locationModel in locationModels:
             item = InlineKeyboardButton(text=str(locationModel['name_rus']), callback_data='driverLocationSavedByLocId_' + str(locationModel['id']))
