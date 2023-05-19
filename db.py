@@ -472,7 +472,7 @@ class BotDB:
                , d.*
             FROM driver d
             LEFT JOIN driver_order dror ON dror.driver_id = d.tg_user_id AND dror.order_id = {order_id:d}
-            where `status` = 'online'
+            where `status` IN ('online', 'offline')
             AND IFNULL(dror.driver_cancel_cn, 0) < 2
             having dif_lat IS NOT NULL AND dif_lon IS NOT NULL
             order by dif_lat, dif_lon ASC
