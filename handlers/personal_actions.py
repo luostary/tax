@@ -533,7 +533,7 @@ async def timerForClient(message, onTimer = True):
         BotDB.driver_order_increment_cancel_cn(driverModel['tg_user_id'], order_id)
         clientModel = BotDB.get_client(orderModel['client_id'])
 
-        msg = 'Клиент: ' + clientModel['tg_first_name'] + "(@" + clientModel['tg_username'] + ") Заказ №: " + order_id + " Предложен водителю: " + driverModel['tg_first_name'] + "(@" + driverModel['tg_username'] + ")"
+        msg = 'Клиент: ' + str(clientModel['tg_first_name']) + "(@" + str(clientModel['tg_username']) + ") Заказ №: " + order_id + " Предложен водителю: " + str(driverModel['tg_first_name']) + "(@" + str(driverModel['tg_username']) + ")"
         print(msg)
         await message.bot.send_message(ADMIN_ID, msg)
 
