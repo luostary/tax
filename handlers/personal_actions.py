@@ -533,9 +533,11 @@ async def timerForClient(message, onTimer = True):
         BotDB.driver_order_increment_cancel_cn(driverModel['tg_user_id'], order_id)
         clientModel = BotDB.get_client(orderModel['client_id'])
 
-        msg = 'Клиент: ' + str(clientModel['tg_first_name']) + "(@" + str(clientModel['tg_username']) + ") Заказ №: " + order_id + " Предложен водителю: " + str(driverModel['tg_first_name']) + "(@" + str(driverModel['tg_username']) + ")"
-        print(msg)
-        await message.bot.send_message(ADMIN_ID, msg)
+        modelDriverOrder = BotDB.get_driver_order(driverModel['tg_user_id'], order_id)
+        if modelDriverOrder['driver_cancel_cn'] == 2:
+            msg = 'Клиент: ' + await activeName(clientModel) + " Заказ №: " + str(order_id) + " Предложен водителю: " + await activeName(driverModel)
+            print(msg)
+            await message.bot.send_message(ADMIN_ID, msg, parse_mode='HTML')
 
 
 
@@ -1540,6 +1542,9 @@ async def shortStatistic(message):
     caption = '\n'.join(caption)
     await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML')
 
+
+async def activeName(userModel):
+    return '<a href="tg://openmessage?user_id=' + str(userModel['tg_user_id']) + '">' + str(userModel['tg_first_name']) + '</a>'
 
 async def incentiveDriverFillForm(message):
     unregisteredDriverModels = BotDB.get_drivers_unregistered()
