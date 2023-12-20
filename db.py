@@ -33,7 +33,7 @@ class BotDB:
     replacer = '?';
     dbFile = ''
 
-    def __init__(self, db_file):
+    def __init__(self, db_file = 'taxi.db'):
         self.dbFile = db_file
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
         db_path = os.path.join(BASE_DIR, db_file)
