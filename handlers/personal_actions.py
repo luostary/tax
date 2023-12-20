@@ -19,6 +19,7 @@ import json
 import pprint
 import googlemaps
 import qrcode
+from . import tClient
 
 # sudo apt-get install xclip
 import pyperclip
@@ -37,8 +38,8 @@ minBalanceAmount = MIN_BALANCE_AMOUNT
 
 PHONE_MASK = '^[+]{1,1}[\d]{11,12}$'
 
-
-
+# Подключаем класс для работы с пассажиром
+client = tClient.Passenger()
 
 @dp.message_handler(commands=["start", "Back"], state='*')
 async def start(message: types.Message, state: FSMContext):
