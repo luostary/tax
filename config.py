@@ -1,5 +1,7 @@
 BOT_TOKEN=""
 
+CURRENCY = "тл."
+
 LANGUAGE = "RU"
 
 WALLET = ""

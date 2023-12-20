@@ -669,7 +669,7 @@ async def getOrderCard(message, driver_id, modelOrder, buttons = True):
         'Имя <b>' + str(modelClient['name']) + '</b>',
         'Расстояние до клиента <b>' + str(distanceToClient) + '</b>',
         'Длина маршрута <b>' + str(modelOrder['route_length'] / 1000) + ' км.' + '</b>',
-        'Стоимость <b>' + str(modelOrder['amount_client']) + ' тл.' + '</b>',
+        'Стоимость <b>' + str(modelOrder['amount_client']) + ' ' + str(CURRENCY) + '</b>',
         'Рейтинг <b>' + (await getRating(message) * '⭐') + '(' + str(await getRating(message)) + '/5)</b>',
     ]
     if modelOrder['status'] == 'progress':
@@ -693,7 +693,7 @@ async def getOrderCardClient(message, orderModel, cancel = False, confirm = Fals
         'Имя <b>' + str(clientModel['name']) + '</b>',
         'Длина маршрута <b>' + str(orderModel['route_length'] / 1000) + ' км.' + '</b>',
         'Время в пути <b>' + str(gdata['duration']['text']) + '</b>',
-        'Стоимость <b>' + str(orderModel['amount_client']) + ' тл.' + '</b>',
+        'Стоимость <b>' + str(orderModel['amount_client']) + ' ' + str(CURRENCY) + '</b>',
         'Статус <b>' + str(BotDB.statuses[orderModel['status']]) + '</b>',
     ]
     if (orderModel['status'] == 'waiting') & (orderModel['driver_id'] == str(message.from_user.id)):
@@ -853,7 +853,7 @@ async def getActiveOrders(message):
             text = '\n'.join((
                 'Статус <b>' + row['status'] + '</b>',
                 'Дата <b>' + str(row['dt_order']) + '</b>',
-                'Стоимость, тл. <b>' + str(row['amount_client']) + '</b>',
+                'Стоимость, ' + str(CURRENCY) + ' <b>' + str(row['amount_client']) + '</b>',
                 'Длина маршрута, км. <b>' + str(row['route_length'] / 1000) + '</b>',
                 'Время поездки, мин. <b>' + str(row['route_time']) + '</b>'
             ));
@@ -879,7 +879,7 @@ async def getDriverDoneOrders(message):
                 '<b>Заказ № ' + str(row['id']) + '</b>',
                 'Статус <b>' + BotDB.statuses[row['status']] + '</b>',
                 'Дата <b>' + str(dateFormat) + '</b>',
-                'Стоимость, тл. <b>' + str(row['amount_client']) + '</b>',
+                'Стоимость, ' + str(CURRENCY) + ' <b>' + str(row['amount_client']) + '</b>',
                 'Длина маршрута, км. <b>' + str(row['route_length'] / 1000) + '</b>',
                 'Время поездки, мин. <b>' + str(row['route_time']) + '</b>'
             ));
@@ -961,7 +961,7 @@ async def getClientOrders(message, offset, message_id, chat_id):
                         'Имя <b>' + str(clientModel['name']) + '</b>',
                         'Статус <b>' + status + '</b>',
                         'Дата <b>' + str(dateFormat) + '</b>',
-                        'Стоимость <b>' + str(row['amount_client']) + ' тл.' + '</b>',
+                        'Стоимость <b>' + str(row['amount_client']) + ' ' + str(CURRENCY) + '</b>',
                         'Длина маршрута <b>' + str(row['route_length'] / 1000) + ' км.' + '</b>',
                         'Время поездки <b>' + str(row['route_time']) + ' мин.' + '</b>'
                     ));
@@ -1338,7 +1338,7 @@ async def clientRules(message):
 Бот поможет удобно и недорого заказать такси (частного водителя).
 
  • Как рассчитывается цена поездки?
-Стоимость за 1км = {rate1KM:d} TL (Турецких лир)
+Стоимость за 1км = {rate1KM:d} {currency:s}
 ℹ️ Стоимость поездки рассчитается автоматически и зависит от длины маршрута в километрах (км).
 К примеру стоимость поездки на расстояние {kilometers:d} км составит {amountKM:d} TL ({kilometers:d}км * {rate1KM:d} TL = {amountKM:d} TL)
 
@@ -1377,6 +1377,7 @@ async def clientRules(message):
         amountKM = amountKM,
         kilometers = kilometers,
         adminTg = ADMIN_TG,
+        currency = CURRENCY
     )
     backClientMenu = InlineKeyboardMarkup(row_width=1)
     backClientMenu.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='client'))
