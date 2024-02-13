@@ -108,6 +108,18 @@ class BotDB:
         return result
 
 
+    def update_client_referer(self, user_id, referer_user_id):
+        """Обновление referer_user_id"""
+        self.connect()
+        try:
+            self.cursor.execute("UPDATE `client` SET referer_user_id = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (referer_user_id, user_id))
+        except Error as e:
+            print(e)
+        result = self.conn.commit()
+        self.close()
+        return result
+
+
     def update_client_tg_username(self, user_id, username):
         self.connect()
         try:
@@ -412,6 +424,18 @@ class BotDB:
         self.connect()
         try:
             self.cursor.execute("UPDATE `driver` SET name = " + self.replacer + ", phone = " + self.replacer + ", car_number = " + self.replacer + ", status = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (data['name'], data['phone'], data['car_number'], data['status'], user_id))
+        except Error as e:
+            print(e)
+        result = self.conn.commit()
+        self.close()
+        return result
+
+
+    def update_driver_referer(self, user_id, referer_user_id):
+        """Обновление referer_user_id"""
+        self.connect()
+        try:
+            self.cursor.execute("UPDATE `driver` SET referer_user_id = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (referer_user_id, user_id))
         except Error as e:
             print(e)
         result = self.conn.commit()

@@ -43,8 +43,15 @@ client = tClient.Passenger()
 
 @dp.message_handler(commands=["start", "Back"], state='*')
 async def start(message: types.Message, state: FSMContext):
-#    await addReferer(message) пока не используем
     await state.finish()
+
+    if(not BotDB.driver_exists(message.from_user.id)):
+        BotDB.add_driver(message.from_user.id, message.from_user.first_name)
+    if(not BotDB.client_exists(message.from_user.id)):
+        BotDB.add_client(message.from_user.id, message.from_user.first_name)
+
+    await addReferer(message)
+
     await startMenu(message)
     # await setDriverPhone(message)
 
@@ -122,8 +129,6 @@ async def clientProfile(message, client_id):
 @dp.callback_query_handler(lambda message:True, state='*')
 async def inlineClick(message, state: FSMContext):
     if message.data == "client":
-        if(not BotDB.client_exists(message.from_user.id)):
-            BotDB.add_client(message.from_user.id, message.from_user.first_name)
         await menuClient(message)
     elif message.data == 'back':
         await state.finish()
@@ -161,8 +166,6 @@ async def inlineClick(message, state: FSMContext):
         await state.finish()
         await setDeparture(message, state)
     elif message.data == "driver":
-        if(not BotDB.driver_exists(message.from_user.id)):
-            BotDB.add_driver(message.from_user.id, message.from_user.first_name)
         await menuDriver(message)
         pass
     elif message.data == 'driver-profile':
@@ -1265,18 +1268,12 @@ async def deleteMessage(aio, dMessage):
 
 
 async def addReferer(m):
-    return
     user_id = m.from_user.id
     # Проверяем наличие закрепленного реферера за пользователем
     modelClient = BotDB.get_client(user_id)
     modelDriver = BotDB.get_driver(user_id)
-    print(m.text.split()[1])
-    print(modelClient['referer_user_id'])
-    print(modelDriver['referer_user_id'])
-
-    if not 1:
-        referrer = None
-
+    if not modelClient['referer_user_id'] and not modelDriver['referer_user_id']:
+        referer_user_id = None
         # Проверяем наличие хоть какой-то дополнительной информации из ссылки
         if " " in m.text:
             referrer_candidate = m.text.split()[1]
@@ -1287,11 +1284,15 @@ async def addReferer(m):
 
                 # Проверяем на несоответствие TG ID пользователя TG ID реферера
                 # Также проверяем, есть ли такой реферер в базе данных
-                if user_id != referrer_candidate and referrer_candidate in get_all_users():
-                    referer = referrer_candidate
+                if user_id != referrer_candidate and (BotDB.client_exists(referrer_candidate) or BotDB.driver_exists(referrer_candidate)):
+                    referer_user_id = referrer_candidate
 
             except ValueError:
                 pass
+
+            # Do update referer_user_id
+            BotDB.update_driver_referer(m.from_user.id, referer_user_id)
+            BotDB.update_client_referer(m.from_user.id, referer_user_id)
     pass
 
 
