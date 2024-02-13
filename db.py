@@ -5,6 +5,10 @@ import os.path
 import mysql.connector
 from config import *
 
+# show processlist;
+# Select concat('kill ',id,';') from information_schema.processlist where user='root';
+
+
 def dict_factory(cursor, row):
     d = {}
     for idx, col in enumerate(cursor.description):
@@ -53,10 +57,12 @@ class BotDB:
             )
             self.replacer = '%s';
             self.cursor = self.conn.cursor(buffered=True, dictionary=True)
+            self.cursor.execute("SET GLOBAL wait_timeout = 120")
 
     def connect(self):
         if not self.conn.is_connected():
             self.conn.reconnect()
+        pass
 
 
     # ЗАПРОСЫ ДЛЯ КЛИЕНТА
@@ -648,3 +654,4 @@ class BotDB:
         """Закрываем соединение с БД"""
         if config.DB_RECONNECT_CONNECTION_AFTER_QUERY:
             self.conn.reconnect()
+        pass
