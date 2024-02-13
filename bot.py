@@ -9,13 +9,13 @@ from config import *
 BotDB = BotDB('taxi.db')
 
 if __name__ == "__main__":
-    if ENV == "DEV":
-        executor.start_polling(dp, skip_updates=True)
-    else:
+    if ENV == "PROD":
         while True:
             try:
                 executor.start_polling(dp, skip_updates=True)
             except Exception as e:
                 time.sleep(2)
                 print(e)
+    else:
+        executor.start_polling(dp, skip_updates=True)
     pass
