@@ -85,7 +85,7 @@ async def startMenu(message):
     markup = InlineKeyboardMarkup(row_width=3)
     item10 = InlineKeyboardButton(text=t('I looking for a clients'), callback_data='driver')
     item20 = InlineKeyboardButton(t('I looking for a taxi'), callback_data='client')
-    item30 = InlineKeyboardButton(('Рассказать о нас другу 👍'), switch_inline_query='Привет. Хочу поделиться новым сервисом по поиску Такси')
+    item30 = InlineKeyboardButton(('Рассказать о нас другу2 👍'), callback_data='inviteLink')
     markup.add(item10).add(item20).add(item30)
     if message.from_user.id in [5615867597, 419839605]:
         markup.add(InlineKeyboardButton(("Показать статистику"), callback_data='admin-short-statistic'))
@@ -127,6 +127,8 @@ async def inlineClick(message, state: FSMContext):
     elif message.data == 'back':
         await state.finish()
         await startMenu(message)
+    elif message.data == 'inviteLink':
+        await inviteLink(message)
     elif message.data == 'test':
         await testFunction(message)
     elif message.data == 'client-rules':
@@ -1239,6 +1241,17 @@ async def driverRegistered(message, state: FSMContext):
     BotDB.update_driver(message.from_user.id, driverData)
     # time.sleep(2)
     await message.bot.send_message(message.from_user.id, t("Your profile is saved"))
+
+
+
+
+async def inviteLink(message):
+    await message.bot.send_message(message.from_user.id, 'Ниже отправлен текст сообщения. Скопируйте другу, которого хотите пригласить')
+    await message.bot.send_message(
+        message.from_user.id,
+        'Привет. Хочу поделиться новым сервисом по поиску Такси https://t.me/TaxiTRNCBot?start=' + str(message.from_user.id))
+
+
 
 
 
