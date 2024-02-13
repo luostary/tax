@@ -6,6 +6,8 @@ ENV = "PROD"
 
 LANGUAGE = "RU"
 
+LIMIT_THESE_USERS = []
+
 WALLET = ""
 
 PERCENT = 5

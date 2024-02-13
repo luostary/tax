@@ -3,6 +3,7 @@ from sqlite3 import Error
 import config
 import os.path
 import mysql.connector
+from config import *
 
 def dict_factory(cursor, row):
     d = {}
@@ -389,7 +390,11 @@ class BotDB:
 
     def get_drivers_unregistered(self):
         self.connect()
-        self.cursor.execute("SELECT * FROM `driver` WHERE `phone` IS NULL")
+        sql = "SELECT * FROM `driver` WHERE `phone` IS NULL"
+        if (LIMIT_THESE_USERS):
+            idsString = ", ".join(str(element) for element in LIMIT_THESE_USERS)
+            sql += " AND tg_user_id IN (" + idsString + ")"
+        self.cursor.execute(sql)
         result = self.cursor.fetchall()
         self.close()
         return result
@@ -497,7 +502,14 @@ class BotDB:
             FROM driver d
             LEFT JOIN driver_order dror ON dror.driver_id = d.tg_user_id AND dror.order_id = {order_id:d}
             where `status` IN ('online', 'offline')
-            AND IFNULL(dror.driver_cancel_cn, 0) < 2
+            AND IFNULL(dror.driver_cancel_cn, 0) < 2'''
+
+        if LIMIT_THESE_USERS:
+            idsString = ", ".join(str(element) for element in LIMIT_THESE_USERS)
+            sql+= '''
+            AND tg_user_id IN (''' + idsString + ''')'''
+
+        sql+='''
             having dif_lat IS NOT NULL AND dif_lon IS NOT NULL
             order by dif_lat, dif_lon ASC
             LIMIT 1;'''
