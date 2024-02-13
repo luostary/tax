@@ -2,6 +2,8 @@ BOT_TOKEN=""
 
 CURRENCY = "тл."
 
+ENV = "PROD"
+
 LANGUAGE = "RU"
 
 WALLET = ""
