@@ -43,6 +43,7 @@ client = tClient.Passenger()
 
 @dp.message_handler(commands=["start", "Back"], state='*')
 async def start(message: types.Message, state: FSMContext):
+#    await addReferer(message) пока не используем
     await state.finish()
     await startMenu(message)
     # await setDriverPhone(message)
@@ -1257,6 +1258,40 @@ async def inviteLink(message):
 
 async def deleteMessage(aio, dMessage):
     await dMessage.bot.delete_message(dMessage.from_user.id, dMessage.message_id)
+    pass
+
+
+
+
+
+async def addReferer(m):
+    return
+    user_id = m.from_user.id
+    # Проверяем наличие закрепленного реферера за пользователем
+    modelClient = BotDB.get_client(user_id)
+    modelDriver = BotDB.get_driver(user_id)
+    print(m.text.split()[1])
+    print(modelClient['referer_user_id'])
+    print(modelDriver['referer_user_id'])
+
+    if not 1:
+        referrer = None
+
+        # Проверяем наличие хоть какой-то дополнительной информации из ссылки
+        if " " in m.text:
+            referrer_candidate = m.text.split()[1]
+
+            # Пробуем преобразовать строку в число
+            try:
+                referrer_candidate = int(referrer_candidate)
+
+                # Проверяем на несоответствие TG ID пользователя TG ID реферера
+                # Также проверяем, есть ли такой реферер в базе данных
+                if user_id != referrer_candidate and referrer_candidate in get_all_users():
+                    referer = referrer_candidate
+
+            except ValueError:
+                pass
     pass
 
 
