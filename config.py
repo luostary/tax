@@ -1,5 +1,7 @@
 BOT_TOKEN=""
 
+BOT_ID = "UNIQ_BOT_ID"
+
 CURRENCY = "тл."
 
 ENV = "PROD"

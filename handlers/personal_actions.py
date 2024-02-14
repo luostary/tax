@@ -1253,7 +1253,7 @@ async def inviteLink(message):
     await message.bot.send_message(message.from_user.id, 'Ниже отправлен текст сообщения. Скопируйте другу, которого хотите пригласить')
     await message.bot.send_message(
         message.from_user.id,
-        'Привет. Хочу поделиться новым сервисом по поиску Такси https://t.me/TaxiTRNCBot?start=' + str(message.from_user.id))
+        'Привет. Хочу поделиться новым сервисом по поиску Такси https://t.me/' + BOT_ID + '?start=' + str(message.from_user.id))
 
 
 
