@@ -57,7 +57,7 @@ class BotDB:
             )
             self.replacer = '%s';
             self.cursor = self.conn.cursor(buffered=True, dictionary=True)
-            self.cursor.execute("SET GLOBAL wait_timeout = 120")
+#            self.cursor.execute("SET GLOBAL wait_timeout = 120")
 
     def connect(self):
         if not self.conn.is_connected():
