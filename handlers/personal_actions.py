@@ -1245,7 +1245,34 @@ async def driverRegistered(message, state: FSMContext):
     BotDB.update_driver(message.from_user.id, driverData)
     # time.sleep(2)
     await message.bot.send_message(message.from_user.id, t("Your profile is saved"))
+    await refererPayed(message)
 
+
+
+
+async def refererPayed(message):
+    driverModel = BotDB.get_driver(message.from_user.id)
+    if driverModel['referer_user_id'] and driverModel['referer_payed'] == None:
+        refererModel = BotDB.get_driver(driverModel['referer_user_id'])
+        refererBalanceUpdated = False
+        if refererModel:
+            BotDB.update_driver_balance(refererModel['tg_user_id'], refererModel['balance'] + RATE_REFERER)
+            refererBalanceUpdated = True
+        else:
+            refererModel = BotDB.get_client(driverModel['referer_user_id'])
+            if refererModel:
+                BotDB.update_client_balance(refererModel['tg_user_id'], refererModel['balance'] + RATE_REFERER)
+                refererBalanceUpdated = True
+        if refererBalanceUpdated:
+            BotDB.update_driver_referer_payed(message.from_user.id)
+            localMessage = "The user you invited has registered. You have received a bonus {rateReferer:d} {currencyWallet:s}"
+            localMessage = localMessage.format(
+                rateReferer = RATE_REFERER,
+                currencyWallet = CURRENCY_WALLET
+            )
+            await message.bot.send_message(refererModel['tg_user_id'], t(localMessage))
+    print('refererPayed() success done')
+    pass
 
 
 

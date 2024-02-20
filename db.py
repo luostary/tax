@@ -138,6 +138,17 @@ class BotDB:
         return result
 
 
+    def update_client_balance(self, user_id, data):
+        """Обновление баланса """
+        self.connect()
+        try:
+            self.cursor.execute("UPDATE `client` SET balance = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (data, user_id))
+        except Error as e:
+            print(e)
+        result = self.conn.commit()
+        self.close()
+        return result
+
 
 
 
@@ -423,6 +434,17 @@ class BotDB:
         self.connect()
         try:
             self.cursor.execute("UPDATE `driver` SET wallet = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (data, user_id))
+        except Error as e:
+            print(e)
+        result = self.conn.commit()
+        self.close()
+        return result
+
+
+    def update_driver_referer_payed(self, user_id):
+        self.connect()
+        try:
+            self.cursor.execute("UPDATE `driver` SET referer_payed = 1 WHERE tg_user_id = " + self.replacer, (user_id,))
         except Error as e:
             print(e)
         result = self.conn.commit()

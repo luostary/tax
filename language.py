@@ -80,6 +80,7 @@ language = {
         "Thank you for an order":"Спасибо за заказ",
         "Thank you, we will check the crediting of funds":"Спасибо, мы проверим зачисление средств",
         "Thanks for the information": "Спасибо за указанную информацию",
+        "The user you invited has registered. You have received a bonus {rateReferer:d} {currencyWallet:s}":"Приглашенный Вами пользователь зарегистрировался. Вам начислен бонус {rateReferer:d} {currencyWallet:s}",
         "This order cannot be canceled, it is not active":"Этот заказ нельзя отменить, заказ уже не активен",
         "This order cannot be taken, it is not active":"Этот заказ нельзя взять, заказ уже не активен",
         "Top up driver balance":"Пополнить баланс водителя",
