@@ -152,6 +152,20 @@ class BotDB:
 
 
 
+
+    def update_client_referer_payed(self, user_id):
+        self.connect()
+        try:
+            self.cursor.execute("UPDATE `client` SET referer_payed = 1 WHERE tg_user_id = " + self.replacer, (user_id,))
+        except Error as e:
+            print(e)
+        result = self.conn.commit()
+        self.close()
+        return result
+
+
+
+
     # Заявки
     def create_order(self, data):
         self.connect()

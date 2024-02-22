@@ -1288,7 +1288,10 @@ async def refererPayed(message, type):
                 BotDB.update_client_balance(refererModel['tg_user_id'], refererModel['balance'] + RATE_REFERER)
                 refererBalanceUpdated = True
         if refererBalanceUpdated:
-            BotDB.update_driver_referer_payed(message.from_user.id)
+            if type == 'driver':
+                BotDB.update_driver_referer_payed(message.from_user.id)
+            else:
+                BotDB.update_client_referer_payed(message.from_user.id)
             localMessage = "The user you invited has registered. You have received a bonus {rateReferer:d} {currencyWallet:s}"
             localMessage = localMessage.format(
                 rateReferer = RATE_REFERER,
