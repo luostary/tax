@@ -1158,6 +1158,8 @@ async def destinationLocationSaved(message, state: FSMContext):
 
     dump(dataOrder)
     orderId = BotDB.create_order(dataOrder)
+    # Оплата рефералу за приведенного клиента
+    await refererPayed(message, 'client')
 
     BotDB.update_client(message.from_user.id, dataClient)
 
@@ -1259,21 +1261,29 @@ async def driverRegistered(message, state: FSMContext):
     BotDB.update_driver(message.from_user.id, driverData)
     # time.sleep(2)
     await message.bot.send_message(message.from_user.id, t("Your profile is saved"))
-    await refererPayed(message)
+    # Оплата рефералу за приведенного клиента
+    await refererPayed(message, 'driver')
 
 
 
-
-async def refererPayed(message):
-    driverModel = BotDB.get_driver(message.from_user.id)
-    if driverModel['referer_user_id'] and driverModel['referer_payed'] == None:
-        refererModel = BotDB.get_driver(driverModel['referer_user_id'])
+# Оплата рефералу за приведенного клиента
+async def refererPayed(message, type):
+    if type == 'driver':
+        userModel = BotDB.get_driver(message.from_user.id)
+    else:
+        userModel = BotDB.get_client(message.from_user.id)
+    if userModel['referer_user_id'] and userModel['referer_payed'] == None:
+        refererModel = BotDB.get_driver(userModel['referer_user_id'])
         refererBalanceUpdated = False
         if refererModel:
+            if refererModel['balance'] == None:
+                refererModel['balance'] = 0;
             BotDB.update_driver_balance(refererModel['tg_user_id'], refererModel['balance'] + RATE_REFERER)
             refererBalanceUpdated = True
         else:
-            refererModel = BotDB.get_client(driverModel['referer_user_id'])
+            refererModel = BotDB.get_client(userModel['referer_user_id'])
+            if refererModel['balance'] == None:
+                refererModel['balance'] = 0;
             if refererModel:
                 BotDB.update_client_balance(refererModel['tg_user_id'], refererModel['balance'] + RATE_REFERER)
                 refererBalanceUpdated = True
@@ -1284,7 +1294,7 @@ async def refererPayed(message):
                 rateReferer = RATE_REFERER,
                 currencyWallet = CURRENCY_WALLET
             )
-            await message.bot.send_message(refererModel['tg_user_id'], t(localMessage))
+            await message.bot.send_message(refererModel['tg_user_id'], localMessage)
     print('refererPayed() success done')
     pass
 
