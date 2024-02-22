@@ -223,10 +223,23 @@ async def inlineClick(message, state: FSMContext):
         driverBalance = (BotDB.get_driver(message.from_user.id))
         if None == driverBalance['balance']:
             driverBalance['balance'] = 0
-        localMessage = t('Your balance is {driverBalance:d} usdt, min balance for use bot is {minBalance:d} usdt')
-        localMessage = localMessage.format(driverBalance = driverBalance['balance'], minBalance = minBalanceAmount)
+        localMessage = t('Your balance is {userBalance:d} usdt') + '. '
+        if minBalanceAmount > 0:
+            localMessage += t('Min balance for use bot is {minBalance:d} usdt')
+        else:
+            localMessage += t('No min balance for use bot')
+        localMessage = localMessage.format(userBalance = driverBalance['balance'], minBalance = minBalanceAmount)
         markupBack = InlineKeyboardMarkup(row_width=1)
         markupBack.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='driver'))
+        await message.bot.send_message(message.from_user.id, (localMessage), reply_markup = markupBack)
+    elif message.data == 'client-account':
+        clientBalance = (BotDB.get_client(message.from_user.id))
+        if None == clientBalance['balance']:
+            clientBalance['balance'] = 0
+        localMessage = t('Your balance is {userBalance:d} usdt')
+        localMessage = localMessage.format(userBalance = clientBalance['balance'])
+        markupBack = InlineKeyboardMarkup(row_width=1)
+        markupBack.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='client'))
         await message.bot.send_message(message.from_user.id, (localMessage), reply_markup = markupBack)
     elif message.data == 'how-topup-account':
         markupCopy = InlineKeyboardMarkup(row_width=1)
@@ -929,12 +942,13 @@ async def menuClient(message):
     item20 = InlineKeyboardButton(text=t('Make an order') + ' 🚕', callback_data='make-order')
     # item30 = InlineKeyboardButton(text=t('Free drivers'), callback_data='free-drivers')
     item40 = InlineKeyboardButton(text=t('My orders') + ' (' + orderCn + ')', callback_data='client-orders_0_0_0')
+    item42 = InlineKeyboardButton(text=t('Account'), callback_data='client-account')
     item45 = InlineKeyboardButton(text=t('Rules'), callback_data='client-rules')
 
     item50 = InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='back')
     if modelClient['name'] and modelClient['phone']:
         markup.add(item10)
-    markup.add(item20).add(item40).add(item45).add(item50)
+    markup.add(item20).add(item40).add(item42).add(item45).add(item50)
     await message.bot.send_message(message.from_user.id, t("You are in the client menu"), reply_markup = markup)
 
 
