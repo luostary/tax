@@ -96,11 +96,11 @@ async def startMenu(message):
     item30 = InlineKeyboardButton(('Рассказать о нас другу 👍'), callback_data='inviteLink')
     markup.add(item10).add(item20).add(item30)
     if message.from_user.id in [5615867597, 419839605]:
-        markup.add(InlineKeyboardButton(("Показать статистику"), callback_data='admin-short-statistic'))
-        markup.add(InlineKeyboardButton(("Пополнить баланс"), callback_data='drivers'))
+        markup.add(InlineKeyboardButton(("Админ - Показать статистику"), callback_data='admin-short-statistic'))
+        markup.add(InlineKeyboardButton(("Админ - Пополнить баланс"), callback_data='drivers'))
     if message.from_user.id == 419839605:
-        markup.add(InlineKeyboardButton(("Предложить зарегистрироваться В."), callback_data='driver-incentive-fill-form'))
-        markup.add(InlineKeyboardButton(text=('Coding') + ' 💻', callback_data='test'))
+        markup.add(InlineKeyboardButton(("Админ - Предложить зарегистрироваться В."), callback_data='driver-incentive-fill-form'))
+        markup.add(InlineKeyboardButton(text=('Админ - Coding') + ' 💻', callback_data='test'))
     await message.bot.send_message(message.from_user.id, t("Welcome!"), reply_markup = await markupRemove())
     await message.bot.send_message(message.from_user.id, t("Use the menu to get started"), reply_markup = markup)
 
