@@ -1388,7 +1388,7 @@ async def clientRules(message):
  • Как рассчитывается цена поездки?
 Стоимость за 1км = {rate1KM:d}{currency:s}
 ℹ️ Стоимость поездки рассчитается автоматически и зависит от длины маршрута в километрах (км).
-К примеру стоимость поездки на расстояние {kilometers:d} км составит {amountKM:d}{currency:s} ({kilometers:d}км * {rate1KM:d}{currency:s} = {amountKM:d}{currency:s})
+К примеру стоимость поездки на расстояние {kilometers:d}км составит {amountKM:d}{currency:s} ({kilometers:d}км * {rate1KM:d}{currency:s} = {amountKM:d}{currency:s})
 
  • Как оплатить поездку?
 Поездка оплачивается наличными напрямую водителю
