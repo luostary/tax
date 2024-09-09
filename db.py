@@ -524,6 +524,17 @@ class BotDB:
         return result
 
 
+    def update_driver_type(self, user_id, type):
+        self.connect()
+        try:
+            self.cursor.execute("UPDATE `driver` SET user_type = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (type, user_id))
+        except Error as e:
+            print(e)
+        result = self.conn.commit()
+        self.close()
+        return result
+
+
     def update_status_for_all_drivers(self, status):
         self.connect()
         result = False
