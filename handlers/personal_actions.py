@@ -621,7 +621,14 @@ async def menuDriver(message):
             markup.add(item5, item1)
         else:
             markup.add(item1)
-        markup.add(item2, item4).add(item6, item7).add(item3)
+        markup.add(item2, item4)
+        if driverModel['status'] != None:
+            if driverModel['status'] == 'offline':
+                markup.add(item6)
+            else:
+                markup.add(item7)
+
+        markup.add(item3)
         markup.add(item71)
         markup.add(item8)
         await message.bot.send_message(message.from_user.id, t("You are in the driver menu"), reply_markup = markup)
