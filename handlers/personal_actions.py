@@ -94,7 +94,16 @@ async def startMenu(message):
     item10 = InlineKeyboardButton(text=t('I looking for a clients'), callback_data='driver')
     item20 = InlineKeyboardButton(t('I looking for a taxi'), callback_data='client')
     item30 = InlineKeyboardButton(('Рассказать о нас другу 👍'), callback_data='inviteLink')
-    markup.add(item10).add(item20).add(item30)
+
+    driverModel = BotDB.get_driver(message.from_user.id)
+    if driverModel['user_type'] == 'driver':
+        markup.add(item10)
+        item40 = InlineKeyboardButton(('Переключиться на пассажира'), callback_data='clientType')
+    else:
+        markup.add(item20)
+        item40 = InlineKeyboardButton(('Переключиться на водителя'), callback_data='driverType')
+
+    markup.add(item40).add(item30)
     if message.from_user.id in [5615867597, 419839605]:
         markup.add(InlineKeyboardButton(("Админ - Показать статистику"), callback_data='admin-short-statistic'))
         markup.add(InlineKeyboardButton(("Админ - Пополнить баланс"), callback_data='drivers'))
@@ -445,6 +454,12 @@ async def inlineClick(message, state: FSMContext):
     elif message.data == 'switch-offline':
         await switchDriverOffline(message)
         pass
+    elif message.data == 'clientType':
+        BotDB.update_driver_type(message.from_user.id, 'client')
+        await startMenu(message)
+    elif message.data == 'driverType':
+        BotDB.update_driver_type(message.from_user.id, 'driver')
+        await startMenu(message)
 
 
     #Подтверждение локации отправления клиентом
