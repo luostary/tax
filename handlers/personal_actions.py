@@ -44,11 +44,8 @@ client = tClient.Passenger()
 @dp.message_handler(commands=["start", "Back"], state='*')
 async def start(message: types.Message, state: FSMContext):
     await state.finish()
-
-    if(not BotDB.driver_exists(message.from_user.id)):
-        BotDB.add_driver(message.from_user.id, message.from_user.first_name)
-    if(not BotDB.client_exists(message.from_user.id)):
-        BotDB.add_client(message.from_user.id, message.from_user.first_name)
+    if(not BotDB.userExists(message.from_user.id)):
+        BotDB.userAdd(message.from_user.id, message.from_user.first_name, 'driver')
 
     await addReferer(message)
 
@@ -95,7 +92,7 @@ async def startMenu(message):
     item20 = InlineKeyboardButton(t('I looking for a taxi'), callback_data='client')
     item30 = InlineKeyboardButton(('Рассказать о нас другу 👍'), callback_data='inviteLink')
 
-    driverModel = BotDB.get_driver(message.from_user.id)
+    driverModel = BotDB.userGetById(message.from_user.id) # Тут не уточняем тип
     if driverModel['user_type'] == 'driver':
         markup.add(item10)
         item40 = InlineKeyboardButton(('Переключиться на пассажира'), callback_data='clientType')
@@ -117,7 +114,7 @@ async def startMenu(message):
 
 
 async def clientProfile(message, client_id):
-    modelClient = BotDB.get_client(client_id)
+    modelClient = BotDB.userGet(client_id, 'client')
     if (not modelClient):
         await message.bot.send_message(message.from_user.id, t("Create at least one order and we will create your profile automatically"))
     else:
@@ -229,7 +226,7 @@ async def inlineClick(message, state: FSMContext):
         await state.finish()
         pass
     elif message.data == 'account':
-        driverBalance = (BotDB.get_driver(message.from_user.id))
+        driverBalance = (BotDB.userGet(message.from_user.id, 'driver'))
         if None == driverBalance['balance']:
             driverBalance['balance'] = 0
         localMessage = t('Your balance is {userBalance:d} usdt') + '. '
@@ -242,7 +239,7 @@ async def inlineClick(message, state: FSMContext):
         markupBack.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='driver'))
         await message.bot.send_message(message.from_user.id, (localMessage), reply_markup = markupBack)
     elif message.data == 'client-account':
-        clientBalance = (BotDB.get_client(message.from_user.id))
+        clientBalance = (BotDB.userGet(message.from_user.id), 'client')
         if None == clientBalance['balance']:
             clientBalance['balance'] = 0
         localMessage = t('Your balance is {userBalance:d} usdt')
@@ -276,7 +273,7 @@ async def inlineClick(message, state: FSMContext):
         await setDriverWallet(message)
         pass
     elif message.data == 'driver-done-orders':
-        driverModel = BotDB.get_driver(message.from_user.id)
+        driverModel = BotDB.userGet(message.from_user.id, 'driver')
         if (not driverModel):
             print('can`t get driver from db')
         else:
@@ -314,7 +311,7 @@ async def inlineClick(message, state: FSMContext):
             else:
                 if modelOrder['amount_client'] == None:
                     modelOrder['amount_client'] = 0
-            driverModel = BotDB.get_driver(message.from_user.id)
+            driverModel = BotDB.userGet(message.from_user.id, 'driver')
             if (not driverModel):
                 await message.bot.send_message(message.from_user.id, "Can`t do it, begin to /start")
             else:
@@ -376,7 +373,7 @@ async def inlineClick(message, state: FSMContext):
 
         # Cancel fee begin
         if (modelOrder['driver_id']):
-            driverModel = BotDB.get_driver(modelOrder['driver_id'])
+            driverModel = BotDB.userGet(modelOrder['driver_id'], 'driver')
             driver_id = driverModel['tg_user_id']
             income = int(math.ceil((modelOrder['amount_client'] / 100 * PERCENT) / RATE_1_USDT))
             try:
@@ -411,7 +408,7 @@ async def inlineClick(message, state: FSMContext):
         pass
     elif message.data == 'switch-online':
         await menuDriver(message)
-        driverModel = BotDB.get_driver(message.from_user.id)
+        driverModel = BotDB.userGet(message.from_user.id, 'driver')
         modelOrder = BotDB.get_order_waiting_by_driver_id(message.from_user.id)
         if (not driverModel):
             print('can`t get driver from db')
@@ -566,7 +563,7 @@ async def timerForClient(message, onTimer = True):
         if (not BotDB.driver_order_exists(driverModel['tg_user_id'], order_id)):
             BotDB.driver_order_create(driverModel['tg_user_id'], order_id)
         BotDB.driver_order_increment_cancel_cn(driverModel['tg_user_id'], order_id)
-        clientModel = BotDB.get_client(orderModel['client_id'])
+        clientModel = BotDB.userGet(orderModel['client_id'], 'client')
 
         modelDriverOrder = BotDB.get_driver_order(driverModel['tg_user_id'], order_id)
         if modelDriverOrder['driver_cancel_cn'] == 2:
@@ -613,7 +610,7 @@ async def menuDriver(message):
     item7 = InlineKeyboardButton(text=t('Go offline 🔴'), callback_data='switch-offline')
     item71 = InlineKeyboardButton(text=t('Rules'), callback_data='driver-rules')
     item8 = InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='back')
-    driverModel = BotDB.get_driver(message.from_user.id)
+    driverModel = BotDB.userGet(message.from_user.id, 'driver')
     if (not driverModel):
         await message.bot.send_message(message.from_user.id, "Can`t do it, begin to /start")
     else:
@@ -651,7 +648,7 @@ async def switchDriverOnline(message):
 
 # Пока отключена
 async def getNearWaitingOrder(message, onTimer = True):
-    driverModel = BotDB.get_driver(message.from_user.id)
+    driverModel = BotDB.userGet(message.from_user.id, 'driver')
     if driverModel['status'] != 'online':
         onTimer = False
     modelOrder = BotDB.get_near_order('waiting', driverModel['latitude'], driverModel['longitude'], message.from_user.id)
@@ -669,7 +666,7 @@ async def getNearWaitingOrder(message, onTimer = True):
 
 
 async def switchDriverOffline(message):
-    driverModel = BotDB.get_driver(message.from_user.id)
+    driverModel = BotDB.userGet(message.from_user.id, 'driver')
     modelOrder = BotDB.get_order_progress_by_driver_id(message.from_user.id)
     if not driverModel:
         print('can`t switch to offline')
@@ -686,9 +683,9 @@ async def switchDriverOffline(message):
 
 
 async def getOrderCard(message, driver_id, modelOrder, buttons = True):
-    driverModel = BotDB.get_driver(driver_id)
+    driverModel = BotDB.userGet(driver_id, 'driver')
     modelDriverOrder = BotDB.get_driver_order(driver_id, modelOrder['id'])
-    modelClient = BotDB.get_client(modelOrder['client_id'])
+    modelClient = BotDB.userGet(modelOrder['client_id'], 'client')
     data = {
         'departure_latitude': driverModel['latitude'],
         'departure_longitude': driverModel['longitude'],
@@ -721,7 +718,7 @@ async def getOrderCard(message, driver_id, modelOrder, buttons = True):
     caption = '\n'.join(caption)
     await message.bot.send_message(driver_id, caption, parse_mode='HTML', reply_markup = markup)
 async def getOrderCardClient(message, orderModel, cancel = False, confirm = False):
-    clientModel = BotDB.get_client(orderModel['client_id'])
+    clientModel = BotDB.userGet(orderModel['client_id'], 'client')
     markup = InlineKeyboardMarkup(row_width=3)
     if cancel & (not orderModel['driver_id']) & (orderModel['status'] in ['create', 'waiting']):
         item1 = InlineKeyboardButton(text=t('Cancel trip') + ' ❌', callback_data='orderCancelClient_' + str(orderModel['id']))
@@ -932,7 +929,7 @@ async def getDriverDoneOrders(message):
 
 
 async def setDriverWallet(message):
-    driverModel = BotDB.get_driver(message.from_user.id)
+    driverModel = BotDB.userGet(message.from_user.id, 'driver')
     if (not driverModel):
         await message.bot.send_message(message.from_user.id, t("You need fill the form"))
     else:
@@ -958,7 +955,7 @@ async def process_driver_wallet(message: types.Message, state: FSMContext):
 
 async def menuClient(message):
     orderCn = str(len(BotDB.get_client_orders(message.from_user.id)))
-    modelClient = BotDB.get_client(message.from_user.id)
+    modelClient = BotDB.userGet(message.from_user.id, 'client')
     markup = InlineKeyboardMarkup(row_width=1)
     item10 = InlineKeyboardButton(text=t('Profile'), callback_data='client-profile')
     item20 = InlineKeyboardButton(text=t('Make an order') + ' 🚕', callback_data='make-order')
@@ -980,7 +977,7 @@ async def menuClient(message):
 async def setName(message, state):
     await FormClient.name.set()
 
-    clientModel = BotDB.get_client(message.from_user.id)
+    clientModel = BotDB.userGet(message.from_user.id, 'client')
     markup = InlineKeyboardMarkup(row_width=1)
     if clientModel['name']:
         nameExists = True
@@ -1029,7 +1026,7 @@ async def process_name(message: types.Message, state: FSMContext):
 async def setPhone(message):
     await FormClient.phone.set()
 
-    clientModel = BotDB.get_client(message.from_user.id)
+    clientModel = BotDB.userGet(message.from_user.id, 'client')
     markup = InlineKeyboardMarkup(row_width=6)
     if clientModel['phone']:
         markup.add(InlineKeyboardButton(text = 'Мой номер ' + clientModel['phone'], callback_data='clientPhoneSaved'))
@@ -1150,7 +1147,7 @@ async def process_location(message: types.Message, state: FSMContext):
 async def destinationLocationSaved(message, state: FSMContext):
     dataClient = {}
     dataOrder = {}
-    clientModel = BotDB.get_client(message.from_user.id)
+    clientModel = BotDB.userGet(message.from_user.id, 'client')
 
     async with state.proxy() as data:
         if 'name' in data:
@@ -1290,25 +1287,15 @@ async def driverRegistered(message, state: FSMContext):
 
 # Оплата рефералу за приведенного клиента
 async def refererPayed(message, type):
-    if type == 'driver':
-        userModel = BotDB.get_driver(message.from_user.id)
-    else:
-        userModel = BotDB.get_client(message.from_user.id)
+    userModel = BotDB.userGet(message.from_user.id, type)
     if userModel['referer_user_id'] and userModel['referer_payed'] == None:
-        refererModel = BotDB.get_driver(userModel['referer_user_id'])
+        refererModel = BotDB.userGet(userModel['referer_user_id'], type)
         refererBalanceUpdated = False
         if refererModel:
             if refererModel['balance'] == None:
                 refererModel['balance'] = 0;
             BotDB.update_driver_balance(refererModel['tg_user_id'], refererModel['balance'] + RATE_REFERER)
             refererBalanceUpdated = True
-        else:
-            refererModel = BotDB.get_client(userModel['referer_user_id'])
-            if refererModel['balance'] == None:
-                refererModel['balance'] = 0;
-            if refererModel:
-                BotDB.update_client_balance(refererModel['tg_user_id'], refererModel['balance'] + RATE_REFERER)
-                refererBalanceUpdated = True
         if refererBalanceUpdated:
             if type == 'driver':
                 BotDB.update_driver_referer_payed(message.from_user.id)
@@ -1346,9 +1333,8 @@ async def deleteMessage(aio, dMessage):
 async def addReferer(m):
     user_id = m.from_user.id
     # Проверяем наличие закрепленного реферера за пользователем
-    modelClient = BotDB.get_client(user_id)
-    modelDriver = BotDB.get_driver(user_id)
-    if not modelClient['referer_user_id'] and not modelDriver['referer_user_id']:
+    modelDriver = BotDB.userGetById(user_id) # тут не уточняем тип
+    if not modelDriver['referer_user_id']:
         referer_user_id = None
         # Проверяем наличие хоть какой-то дополнительной информации из ссылки
         if " " in m.text:
@@ -1360,7 +1346,7 @@ async def addReferer(m):
 
                 # Проверяем на несоответствие TG ID пользователя TG ID реферера
                 # Также проверяем, есть ли такой реферер в базе данных
-                if user_id != referrer_candidate and (BotDB.client_exists(referrer_candidate) or BotDB.driver_exists(referrer_candidate)):
+                if user_id != referrer_candidate and BotDB.driver_exists(referrer_candidate):
                     referer_user_id = referrer_candidate
 
             except ValueError:
@@ -1491,7 +1477,7 @@ async def driverRules(message):
 
 
 async def driverProfile(message, driver_id, user_id, showPhone = False, showReturnButton = False):
-    driverModel = BotDB.get_driver(driver_id)
+    driverModel = BotDB.userGet(driver_id, 'driver')
     if (not driverModel):
         await message.bot.send_message(user_id, "Can`t do it, begin to /start")
     else:

@@ -66,15 +66,6 @@ class BotDB:
 
 
     # ЗАПРОСЫ ДЛЯ КЛИЕНТА
-    def client_exists(self, user_id):
-        """Проверяем, есть ли client в базе"""
-        self.connect()
-        sql = ""
-        self.cursor.execute("SELECT `tg_user_id` FROM `client` WHERE `tg_user_id` = " + self.replacer, (user_id,))
-        result = bool(self.cursor.fetchall())
-        self.close()
-        return result
-
     def get_client_id(self, user_id):
         """Достаем id client в базе по его user_id"""
         self.connect()
@@ -83,13 +74,6 @@ class BotDB:
         self.close()
         return result
 
-    def get_client(self, user_id):
-        """Достаем client в базе по его user_id"""
-        self.connect()
-        self.cursor.execute("SELECT * FROM `client` WHERE `tg_user_id` = " + self.replacer, (user_id,))
-        result = self.cursor.fetchone()
-        self.close()
-        return result
 
     def add_client(self, user_id, first_name):
         """Добавляем client в базу"""
@@ -323,6 +307,36 @@ class BotDB:
 
 
 
+    # Пользователь
+    def userExists(self, user_id):
+        self.connect()
+        """Проверяем, есть ли user в базе"""
+        self.cursor.execute("SELECT `id` FROM `driver` WHERE `tg_user_id` = " + self.replacer, (user_id,))
+        result = bool(len(self.cursor.fetchall()))
+        self.close()
+        return result
+
+
+    def userAdd(self, user_id, first_name, user_type):
+        """Добавляем user в базу"""
+        self.connect()
+        try:
+            self.cursor.execute("INSERT INTO `driver` (`tg_user_id`, `tg_first_name`, `wallet`, `user_type`) VALUES (" + self.replacer + ", " + self.replacer + ", " + self.replacer + ", " + self.replacer + ")", (user_id, first_name, user_id, user_type))
+        except Error as e:
+            print(e)
+        result = self.conn.commit()
+        self.close()
+        return result
+    def userGet(self, user_id, user_type):
+        """Достаем driver по его user_id"""
+        self.connect()
+        self.cursor.execute("SELECT * FROM `driver` WHERE tg_user_id = " + self.replacer + " AND user_type = " + self.replacer, (user_id, user_type))
+        result = self.cursor.fetchone()
+        self.close()
+        return result
+
+
+
     # Водитель
     def driver_exists(self, user_id):
         self.connect()
@@ -358,8 +372,8 @@ class BotDB:
         return result
 
 
-    def get_driver(self, user_id):
-        """Достаем driver по его user_id"""
+    def userGetById(self, user_id):
+        """Достаем user по его user_id"""
         self.connect()
         self.cursor.execute("SELECT * FROM `driver` WHERE tg_user_id = " + self.replacer, (user_id,))
         result = self.cursor.fetchone()
