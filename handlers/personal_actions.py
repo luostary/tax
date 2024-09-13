@@ -46,8 +46,8 @@ async def start(message: types.Message, state: FSMContext):
     await state.finish()
     if(not BotDB.userExists(message.from_user.id)):
         BotDB.userAdd(message.from_user.id, message.from_user.first_name, 'driver')
-
-    await addReferer(message)
+        time.sleep(1)
+        await addReferer(message)
 
     await startMenu(message)
     # await setDriverPhone(message)
