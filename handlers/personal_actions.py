@@ -586,7 +586,7 @@ async def timer_for_client(message, on_timer = True):
             except BotBlocked:
                 BotDB.cancel_all_orders_after_kicked_user(ADMIN_ID)
                 BotDB.user_delete(ADMIN_ID)
-                message_to_dev = 'Похоже что <a href="tg://openmessage?user_id=' + ADMIN_ID + '">ADMIN_ID</a> удалился из бота. Надо назначить ADMIN_ID в конфиге'
+                message_to_dev = 'Похоже что бот заблокирован пользователем <a href="tg://openmessage?user_id=' + ADMIN_ID + '">ADMIN_ID</a>. Надо назначить ADMIN_ID в конфиге'
                 await message.bot.send_message(DEVELOPER_ID, message_to_dev)
 
 
@@ -740,7 +740,7 @@ async def get_order_card(message, driver_id, model_order, buttons = True):
     except BotBlocked:
         BotDB.cancel_all_orders_after_kicked_user(driver_id)
         BotDB.user_delete(driver_id)
-        await message.bot.send_message(DEVELOPER_ID, '<a href="tg://openmessage?user_id=' + driver_id + '">' + driver_model['tg_first_name'] + '</a>  удалился из бота')
+        await message.bot.send_message(DEVELOPER_ID, 'Бот заблокирован пользователем <a href="tg://openmessage?user_id=' + driver_id + '">' + driver_model['tg_first_name'] + '</a>')
 async def get_order_card_client(message, order_model, cancel = False, confirm = False):
     client_model = BotDB.userGet(order_model['client_id'], 'client')
     markup = InlineKeyboardMarkup(row_width=3)
