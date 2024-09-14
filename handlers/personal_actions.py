@@ -1,12 +1,8 @@
 import re, math, time, datetime
-import urllib.request
-import json
 
 from aiogram import types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.exceptions import BotBlocked
-from softwareproperties.ppa import get_info_from_https
-from telebot.apihelper import ApiTelegramException
 
 from dispatcher import dp
 from aiogram.dispatcher import FSMContext
@@ -587,7 +583,7 @@ async def timer_for_client(message, on_timer = True):
             msg = 'Клиент: ' + await active_name(client_model) + " Заказ №: " + str(order_id) + " Предложен водителю: " + await active_name(driver_model)
             try:
                 await message.bot.send_message(ADMIN_ID, msg, parse_mode='HTML')
-            except(BotBlocked):
+            except BotBlocked:
                 BotDB.cancel_all_orders_after_kicked_user(ADMIN_ID)
                 BotDB.user_delete(ADMIN_ID)
                 message_to_dev = 'Похоже что <a href="tg://openmessage?user_id=' + ADMIN_ID + '">ADMIN_ID</a> удалился из бота. Надо назначить ADMIN_ID в конфиге'
@@ -741,7 +737,7 @@ async def get_order_card(message, driver_id, model_order, buttons = True):
     # Check that driver is not kicked
     try :
         await message.bot.send_message(driver_id, caption, parse_mode='HTML', reply_markup = markup)
-    except(BotBlocked):
+    except BotBlocked:
         BotDB.cancel_all_orders_after_kicked_user(driver_id)
         BotDB.user_delete(driver_id)
         await message.bot.send_message(DEVELOPER_ID, '<a href="tg://openmessage?user_id=' + driver_id + '">' + driver_model['tg_first_name'] + '</a>  удалился из бота')
@@ -1610,12 +1606,9 @@ async def get_google_data(locations_data):
         (locations_data['destination_latitude'], locations_data['destination_longitude']),
         language=LANGUAGE
     )
-    result_format = {}
-    result_format['distance'] = result[0]['legs'][0]['distance']
-    result_format['duration'] = result[0]['legs'][0]['duration']
-    result_format['start_address'] = result[0]['legs'][0]['start_address']
-    result_format['end_address'] = result[0]['legs'][0]['end_address']
-    result_format['summary'] = result[0]['summary']
+    result_format = {'distance': result[0]['legs'][0]['distance'], 'duration': result[0]['legs'][0]['duration'],
+                     'start_address': result[0]['legs'][0]['start_address'],
+                     'end_address': result[0]['legs'][0]['end_address'], 'summary': result[0]['summary']}
     return result_format
 
 
