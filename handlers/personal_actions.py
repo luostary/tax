@@ -41,13 +41,23 @@ PHONE_MASK = '^[+]{1,1}[\d]{11,12}$'
 # Подключаем класс для работы с пассажиром
 client = tClient.Passenger()
 
+@dp.my_chat_member_handler()
+async def my_chat_member_handler(message: types.ChatMemberUpdated):
+    if message.chat.type == 'private':
+        print('my_chat_member_handler')
+        if message.new_chat_member.status == "kicked":
+            BotDB.cancel_all_orders_after_kicked_user(message.from_user.id)
+            BotDB.user_delete(message.from_user.id)
+        elif message.new_chat_member.status == "member":
+            if not BotDB.userExists(message.from_user.id):
+                BotDB.userAdd(message.from_user.id, message.from_user.first_name, 'driver')
+                time.sleep(1)
+                await add_referer(message)
+
+
 @dp.message_handler(commands=["start", "Back"], state='*')
 async def start(message: types.Message, state: FSMContext):
     await state.finish()
-    if not BotDB.userExists(message.from_user.id):
-        BotDB.userAdd(message.from_user.id, message.from_user.first_name, 'driver')
-        time.sleep(1)
-        await add_referer(message)
 
     await start_menu(message)
     # await setDriverPhone(message)

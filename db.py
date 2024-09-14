@@ -103,6 +103,16 @@ class BotDB:
 
 
 
+    def user_delete(self, user_id):
+        """ Delete user """
+        self.connect()
+        try:
+            self.cursor.execute("DELETE FROM `driver` WHERE tg_user_id = " + self.replacer, (user_id,))
+        except Error as e:
+            print(e)
+        result = self.conn.commit()
+        self.close()
+        return result
 
 
     # Заявки
@@ -195,6 +205,18 @@ class BotDB:
         self.connect()
         try:
             self.cursor.execute("UPDATE `order` SET driver_id = " + self.replacer + " WHERE id = " + self.replacer, (driver_id, id,))
+        except Error as e:
+            print(e)
+        result = self.conn.commit()
+        self.close()
+        return result
+
+
+
+    def cancel_all_orders_after_kicked_user(self, client_id):
+        self.connect()
+        try:
+            self.cursor.execute("UPDATE `order` SET status = 'cancel' WHERE status IN ('create', 'waiting') AND client_id = " + self.replacer, (client_id,))
         except Error as e:
             print(e)
         result = self.conn.commit()
