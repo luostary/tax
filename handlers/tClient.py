@@ -19,10 +19,10 @@ class Passenger:
         print('This is a Passenger class')
 
     async def getClientOrders(self, message, offset, message_id, chat_id):
-        if (not BotDB.client_exists(message.from_user.id)):
+        if (not BotDB.userGet(message.from_user.id, 'client')):
             await message.bot.send_message(message.from_user.id, t('Client not found'))
         else:
-            clientModel = BotDB.get_client(message.from_user.id)
+            clientModel = BotDB.userGet(message.from_user.id, 'client')
             if (not clientModel):
                 await message.bot.send_message(message.from_user.id, t("Unable to find customer"))
                 pass
