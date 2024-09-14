@@ -163,7 +163,7 @@ async def inlineClick(message, state: FSMContext):
                 await getOrderCardClient(message, modelOrder, True)
                 return
         print(message.from_user.id)
-        BotDB.update_client_tg_username(message.from_user.id, message.from_user.username)
+        BotDB.userUpdateTgUsername(message.from_user.id, message.from_user.username)
         await setName(message, state)
     elif message.data == 'clientNameSaved':
         await state.finish()
@@ -651,7 +651,7 @@ async def getNearWaitingOrder(message, onTimer = True):
     driverModel = BotDB.userGet(message.from_user.id, 'driver')
     if driverModel['status'] != 'online':
         onTimer = False
-    modelOrder = BotDB.get_near_order('waiting', driverModel['latitude'], driverModel['longitude'], message.from_user.id)
+    modelOrder = BotDB.orderGetNear('waiting', driverModel['latitude'], driverModel['longitude'], message.from_user.id)
     if modelOrder:
         if not modelOrder['order_id']:
             modelOrder['order_id'] = 0
@@ -1297,10 +1297,7 @@ async def refererPayed(message, type):
             BotDB.update_driver_balance(refererModel['tg_user_id'], refererModel['balance'] + RATE_REFERER)
             refererBalanceUpdated = True
         if refererBalanceUpdated:
-            if type == 'driver':
-                BotDB.update_driver_referer_payed(message.from_user.id)
-            else:
-                BotDB.update_client_referer_payed(message.from_user.id)
+            BotDB.update_driver_referer_payed(message.from_user.id)
             localMessage = "The user you invited has registered. You have received a bonus {rateReferer:d} {currencyWallet:s}"
             localMessage = localMessage.format(
                 rateReferer = RATE_REFERER,
@@ -1354,7 +1351,6 @@ async def addReferer(m):
 
             # Do update referer_user_id
             BotDB.update_driver_referer(m.from_user.id, referer_user_id)
-            BotDB.update_client_referer(m.from_user.id, referer_user_id)
     pass
 
 
