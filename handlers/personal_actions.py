@@ -805,7 +805,7 @@ async def process_driver_deposit_balance(message: types.Message, state: FSMConte
     if message.text == t('Confirm'):
         pass
     else:
-        match = re.match('^[\-]?[\d]{1,10}$', message.text)
+        match = re.match('^\-?\d{1,10}$', message.text)
         if match:
             async with state.proxy() as data:
                 data['changeBalance'] = message.text
