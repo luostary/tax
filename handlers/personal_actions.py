@@ -585,7 +585,13 @@ async def timer_for_client(message, on_timer = True):
         model_driver_order = BotDB.get_driver_order(driver_model['tg_user_id'], order_id)
         if model_driver_order['driver_cancel_cn'] == 2:
             msg = 'Клиент: ' + await active_name(client_model) + " Заказ №: " + str(order_id) + " Предложен водителю: " + await active_name(driver_model)
-            await message.bot.send_message(ADMIN_ID, msg, parse_mode='HTML')
+            try:
+                await message.bot.send_message(ADMIN_ID, msg, parse_mode='HTML')
+            except(BotBlocked):
+                BotDB.cancel_all_orders_after_kicked_user(ADMIN_ID)
+                BotDB.user_delete(ADMIN_ID)
+                message_to_dev = 'Похоже что <a href="tg://openmessage?user_id=' + ADMIN_ID + '">ADMIN_ID</a> удалился из бота. Надо назначить ADMIN_ID в конфиге'
+                await message.bot.send_message(DEVELOPER_ID, message_to_dev)
 
 
 
