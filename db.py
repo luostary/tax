@@ -632,7 +632,7 @@ class BotDB:
 
     def get_location_by_name(self, text):
         self.connect()
-        sql = ("SELECT * FROM `location` WHERE `name_rus` LIKE '%{text:s}%' OR name_eng LIKE '%{text:s}%' OR search_rus LIKE '%{text:s}%'")
+        sql = ("SELECT * FROM " + Для + " WHERE `name_rus` LIKE '%{text:s}%' OR name_eng LIKE '%{text:s}%' OR search_rus LIKE '%{text:s}%'")
         sql = sql.format(
             text = text
         )
@@ -644,7 +644,7 @@ class BotDB:
 
     def get_locations_by_category_id(self, category_id):
         self.connect()
-        sql = ("SELECT * FROM `location` WHERE `category_id` = {category_id:d} ORDER BY name_rus")
+        sql = ("SELECT * FROM " + DB_TABLE_LOCATION + " WHERE `category_id` = {category_id:d} ORDER BY name_rus")
         sql = sql.format(
             category_id = category_id
         )
@@ -656,7 +656,7 @@ class BotDB:
 
     def get_location_by_id(self, id):
         self.connect()
-        self.cursor.execute("SELECT * FROM `location` WHERE `id` = " + self.replacer, (id,))
+        self.cursor.execute("SELECT * FROM " + DB_TABLE_LOCATION + " WHERE `id` = " + self.replacer, (id,))
         result = self.cursor.fetchone()
         self.close()
         return result
