@@ -632,7 +632,7 @@ class BotDB:
 
     def get_location_by_name(self, text):
         self.connect()
-        sql = ("SELECT * FROM " + Для + " WHERE `name_rus` LIKE '%{text:s}%' OR name_eng LIKE '%{text:s}%' OR search_rus LIKE '%{text:s}%'")
+        sql = ("SELECT * FROM " + DB_TABLE_LOCATION + " WHERE `name_rus` LIKE '%{text:s}%' OR name_eng LIKE '%{text:s}%' OR search_rus LIKE '%{text:s}%'")
         sql = sql.format(
             text = text
         )
