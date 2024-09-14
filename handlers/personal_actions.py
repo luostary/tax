@@ -1,6 +1,8 @@
 import re, math, time, datetime
 from aiogram import types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.apihelper import ApiTelegramException
+
 from dispatcher import dp
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
@@ -9,13 +11,11 @@ from bot import BotDB
 from language import t
 from config import *
 from os.path import exists
-import PIL
 from PIL import Image
 from pathlib import Path
 from io import BytesIO
 import asyncio
 from geopy.distance import geodesic
-import json
 import pprint
 import googlemaps
 import qrcode
@@ -131,7 +131,7 @@ async def client_profile(message, client_id):
 
 
 
-# Перехватчик кликов по инлайновой клавиатуре
+# Click handler
 @dp.callback_query_handler(lambda message:True, state='*')
 async def inline_click(message, state: FSMContext):
     if message.data == "client":
@@ -393,13 +393,13 @@ async def inline_click(message, state: FSMContext):
         await menu_client(message)
         pass
     elif 'orderWaitingClient_' in message.data:
-        #  What we doing here?
+        #  What are we doing here?
         array = message.data.split('_')
         order_id = array[1]
         BotDB.update_order_status(order_id, 'waiting')
         await client_registered(message)
 
-        # Запускаем таймер для клиента
+        # On timer for client
         message.data = order_id
         await timer_for_client(message)
 
@@ -461,7 +461,7 @@ async def inline_click(message, state: FSMContext):
         await start_menu(message)
 
 
-    #Подтверждение локации отправления клиентом
+    # Client location departure confirm
     elif message.data == 'departureLocationSaved':
         await set_destination(message, state)
         pass
@@ -504,7 +504,7 @@ async def inline_click(message, state: FSMContext):
         #Сохранение координатов
         location_model = BotDB.get_location_by_id(location_id)
         BotDB.update_driver_location(message.from_user.id, location_model['lat'], location_model['long'])
-        await switch_driver_online(message, state)
+        await switch_driver_online(message)
         pass
 
 
@@ -516,7 +516,7 @@ async def inline_click(message, state: FSMContext):
             await message.bot.send_message(message.from_user.id, t("Order not found"))
         elif model_order['status'] == 'done':
             await message.bot.send_message(message.from_user.id, t("Order is close already"))
-            return;
+            return
         else:
             try:
                 BotDB.update_order_status(order_id, 'done')
@@ -805,7 +805,7 @@ async def process_driver_deposit_balance(message: types.Message, state: FSMConte
     if message.text == t('Confirm'):
         pass
     else:
-        match = re.match('^\-?\d{1,10}$', message.text)
+        match = re.match('^-?\d{1,10}$', message.text)
         if match:
             async with state.proxy() as data:
                 data['changeBalance'] = message.text
@@ -885,7 +885,7 @@ async def get_active_orders(message):
                 'Стоимость, ' + str(CURRENCY) + ' <b>' + str(row['amount_client']) + '</b>',
                 'Длина маршрута, км. <b>' + str(row['route_length'] / 1000) + '</b>',
                 'Время поездки, мин. <b>' + str(row['route_time']) + '</b>'
-            ));
+            ))
             # await message.bot.send_location(message.from_user.id, row['departure_latitude'], row['departure_longitude'])
             await message.bot.send_message(message.from_user.id, text, reply_markup = await book_order('bookOrder_' + str(row['id'])))
             pass
@@ -911,7 +911,7 @@ async def get_driver_done_orders(message):
                 'Стоимость, ' + str(CURRENCY) + ' <b>' + str(row['amount_client']) + '</b>',
                 'Длина маршрута, км. <b>' + str(row['route_length'] / 1000) + '</b>',
                 'Время поездки, мин. <b>' + str(row['route_time']) + '</b>'
-            ));
+            ))
             await message.bot.send_message(message.from_user.id, text, reply_markup = await markup_remove())
             pass
 
@@ -1223,10 +1223,10 @@ async def get_categories(message, parent_id, state: FSMContext):
         cat_message = t("Found locations")
         for locationModel in location_models:
             if location_type == 'clientDptLoc':
-                callback_data = 'departureLocationSavedByLocId_' + str(locationModel['id'])
+                data = 'departureLocationSavedByLocId_' + str(locationModel['id'])
             elif location_type == 'clientDstLoc':
-                callback_data = 'destinationLocationSavedByLocId_' + str(locationModel['id'])
-            item = InlineKeyboardButton(text=str(locationModel['name_rus']), callback_data=callback_data)
+                data = 'destinationLocationSavedByLocId_' + str(locationModel['id'])
+            item = InlineKeyboardButton(text=str(locationModel['name_rus']), callback_data=data)
             markup.add(item)
         item = InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='catalog_0')
         markup.add(item)
@@ -1283,7 +1283,7 @@ async def referer_payed(message, user_type):
         referer_balance_updated = False
         if referer_model:
             if referer_model['balance'] is None:
-                referer_model['balance'] = 0;
+                referer_model['balance'] = 0
             BotDB.update_driver_balance(referer_model['tg_user_id'], referer_model['balance'] + RATE_REFERER)
             referer_balance_updated = True
         if referer_balance_updated:
@@ -1410,14 +1410,14 @@ async def driver_profile(message, driver_id, user_id, show_phone = False, show_r
         await message.bot.send_message(user_id, "Can`t do it, begin to /start")
     else:
         Path("merged").mkdir(parents=True, exist_ok=True)
-        car = 'cars/' + str(driver_id) + '.jpg';
-        driver_file_name = 'drivers/' + str(driver_id) + '.jpg';
+        car = 'cars/' + str(driver_id) + '.jpg'
+        driver_file_name = 'drivers/' + str(driver_id) + '.jpg'
         file_car_exist = exists(car)
         file_driver_exist = exists(driver_file_name)
 
         # Фото водителя не обязательный параметр
         if not file_driver_exist:
-            driver_file_name = 'images/anonim-user.jpg';
+            driver_file_name = 'images/anonim-user.jpg'
             file_driver_exist = True
 
         status_icon = str(BotDB.statuses[driver_model['status']])
@@ -1430,6 +1430,7 @@ async def driver_profile(message, driver_id, user_id, show_phone = False, show_r
             caption.insert(1, '<b>Телефон</b> ' + str(driver_model['phone']))
         caption = '\n'.join(caption)
         version_merge = 0
+        merged_image = ''
 
         if file_car_exist & file_driver_exist:
             x = 240
@@ -1549,7 +1550,7 @@ async def incentive_driver_fill_form(message):
 
 async def goto_start(message):
     await message.bot.send_message(message.from_user.id, t("can`t do it, start with the /start command"))
-async def standart_confirm():
+async def standard_confirm():
     markup = types.ReplyKeyboardMarkup(resize_keyboard = True)
     markup.add(types.KeyboardButton(t('Confirm')))
     return markup
