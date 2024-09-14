@@ -1,14 +1,16 @@
-import aiogram
-import asyncio
+import time
+
 from aiogram import executor
 from dispatcher import dp
-import handlers
 from db import BotDB
 from config import *
 
 BotDB = BotDB('taxi.db')
 
 if __name__ == "__main__":
+    schema = BotDB.get_sleep_queries_cn()
+    if schema['query_count'] > 50:
+        print('Warning! You should kill sleep queries... And use the "CTRL+C" command')
     if ENV == "PROD":
         while True:
             try:

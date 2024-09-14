@@ -7,6 +7,8 @@ from config import *
 
 # show processlist;
 # Select concat('kill ',id,';') from information_schema.processlist where user='root';
+# If you stop application by hotkeys "Ctrl+Z", you may catch many sql sleep queries.
+# Use a command "Ctrl+C" for the right stop application
 
 
 def dict_factory(cursor, row):
@@ -677,6 +679,17 @@ class BotDB:
             result = self.cursor.fetchall()
             self.close()
             return result
+
+
+
+
+    # Check count sleep queries
+    def get_sleep_queries_cn(self):
+        self.connect()
+        self.cursor.execute("SELECT count(*) query_count FROM INFORMATION_SCHEMA.PROCESSLIST")
+        result = self.cursor.fetchone()
+        self.close()
+        return result
 
 
 
