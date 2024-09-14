@@ -1,6 +1,11 @@
 import re, math, time, datetime
+import urllib.request
+import json
+
 from aiogram import types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.exceptions import BotBlocked
+from softwareproperties.ppa import get_info_from_https
 from telebot.apihelper import ApiTelegramException
 
 from dispatcher import dp
@@ -580,7 +585,6 @@ async def timer_for_client(message, on_timer = True):
         model_driver_order = BotDB.get_driver_order(driver_model['tg_user_id'], order_id)
         if model_driver_order['driver_cancel_cn'] == 2:
             msg = 'Клиент: ' + await active_name(client_model) + " Заказ №: " + str(order_id) + " Предложен водителю: " + await active_name(driver_model)
-            print(msg)
             await message.bot.send_message(ADMIN_ID, msg, parse_mode='HTML')
 
 
@@ -728,7 +732,13 @@ async def get_order_card(message, driver_id, model_order, buttons = True):
     if driver_cancel_cn > 0:
         caption.append('Вы отклоняли <b>' + str(driver_cancel_cn) + ' раз</b>',)
     caption = '\n'.join(caption)
-    await message.bot.send_message(driver_id, caption, parse_mode='HTML', reply_markup = markup)
+    # Check that driver is not kicked
+    try :
+        await message.bot.send_message(driver_id, caption, parse_mode='HTML', reply_markup = markup)
+    except(BotBlocked):
+        BotDB.cancel_all_orders_after_kicked_user(driver_id)
+        BotDB.user_delete(driver_id)
+        await message.bot.send_message(DEVELOPER_ID, '<a href="tg://openmessage?user_id=' + driver_id + '">' + driver_model['tg_first_name'] + '</a>  удалился из бота')
 async def get_order_card_client(message, order_model, cancel = False, confirm = False):
     client_model = BotDB.userGet(order_model['client_id'], 'client')
     markup = InlineKeyboardMarkup(row_width=3)

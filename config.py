@@ -38,6 +38,7 @@ ALLOW_MANY_ORDERS = False
 
 ADMIN_TG = "@your_admin_nickname"
 ADMIN_ID = 0
+DEVELOPER_ID = 0
 
 GOOGLE_API_KEY = "YOUR_API_KEY_FROM_GOOGLE"
 
