@@ -632,7 +632,7 @@ class BotDB:
 
     def get_location_by_name(self, text):
         self.connect()
-        sql = ("SELECT * FROM " + DB_TABLE_LOCATION + " WHERE `name_rus` LIKE '%{text:s}%' OR name_eng LIKE '%{text:s}%' OR search_rus LIKE '%{text:s}%'")
+        sql = ("SELECT * FROM location" + DB_LOCATION_POSTFIX + " WHERE `name_rus` LIKE '%{text:s}%' OR name_eng LIKE '%{text:s}%' OR search_rus LIKE '%{text:s}%'")
         sql = sql.format(
             text = text
         )
@@ -644,7 +644,7 @@ class BotDB:
 
     def get_locations_by_category_id(self, category_id):
         self.connect()
-        sql = ("SELECT * FROM " + DB_TABLE_LOCATION + " WHERE `category_id` = {category_id:d} ORDER BY name_rus")
+        sql = ("SELECT * FROM location" + DB_LOCATION_POSTFIX + " WHERE `category_id` = {category_id:d} ORDER BY name_rus")
         sql = sql.format(
             category_id = category_id
         )
@@ -656,7 +656,7 @@ class BotDB:
 
     def get_location_by_id(self, id):
         self.connect()
-        self.cursor.execute("SELECT * FROM " + DB_TABLE_LOCATION + " WHERE `id` = " + self.replacer, (id,))
+        self.cursor.execute("SELECT * FROM location" + DB_LOCATION_POSTFIX + " WHERE `id` = " + self.replacer, (id,))
         result = self.cursor.fetchone()
         self.close()
         return result
@@ -670,7 +670,7 @@ class BotDB:
             else:
                 condition = 'IS NULL';
             self.connect()
-            sql = "SELECT * FROM `category` WHERE `parent_id` {condition:s} ORDER BY sort".format(
+            sql = "SELECT * FROM `category" + DB_LOCATION_POSTFIX + "` WHERE `parent_id` {condition:s} ORDER BY sort".format(
                 condition = condition
             )
             self.cursor.execute(sql)

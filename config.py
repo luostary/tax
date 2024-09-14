@@ -49,7 +49,7 @@ DB_PASSWORD = "database_password"
 DB_NAME = "database_name"
 DB_CONNECTION_TIMEOUT = 610
 DB_RECONNECT_CONNECTION_AFTER_QUERY = True
-DB_TABLE_LOCATION = 'location'
+DB_LOCATION_POSTFIX = ''
 
 
 from os.path import exists
