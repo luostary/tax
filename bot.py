@@ -2,6 +2,7 @@ import time
 
 from aiogram import executor
 from dispatcher import dp
+import handlers
 from db import BotDB
 from config import *
 
