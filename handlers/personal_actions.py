@@ -3,6 +3,7 @@ import re, math, time, datetime
 from aiogram import types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.exceptions import BotBlocked
+from telebot.apihelper import send_message
 
 from dispatcher import dp
 from aiogram.dispatcher import FSMContext
@@ -1567,6 +1568,22 @@ async def incentive_driver_fill_form(message):
         except():
             await message.bot.send_message(message.from_user.id, 'Не удалось отправить сообщение контакту @' + str(unregisteredDriverModel['tg_first_name']) + ' ('+str(unregisteredDriverModel['tg_user_id']) + ')')
     await message.bot.send_message(5615867597, 'Предложение о регистрации доставлено ' + str(sended_cn) + ' водителям')
+
+
+
+async def notice_developer(m, user, type):
+    text = await active_name(user)
+    if  user['tg_username']:
+        text += ' @' + user['tg_username']
+    if type == 1:
+        text += ' зарегистрировался'
+    elif type == 2:
+        text += ' зашел посмотреть'
+    elif type == 3:
+        text += ' вышел на линию как водитель'
+    elif type == 4:
+        text += ' создал заказ как клиент'
+    await m.bot.send_message(DEVELOPER_ID, text, parse_mode='HTML')
 
 
 
