@@ -53,6 +53,8 @@ async def my_chat_member_handler(message: types.ChatMemberUpdated):
         elif message.new_chat_member.status == "member":
             if not BotDB.userExists(message.from_user.id):
                 BotDB.userAdd(message.from_user.id, message.from_user.first_name, 'driver')
+                user = BotDB.userGetById(message.from_user.id)
+                await notice_developer(message, user, 1)
                 time.sleep(1)
                 await add_referer(message)
 
@@ -63,6 +65,8 @@ async def start(message: types.Message, state: FSMContext):
 
     await start_menu(message)
     # await setDriverPhone(message)
+    user = BotDB.userGetById(message.from_user.id)
+    await notice_developer(message, user, 2)
 
 #return in kilometers
 # deprecated
@@ -657,7 +661,8 @@ async def switch_driver_online(message):
     BotDB.update_driver_status(message.from_user.id, 'online')
     local_message = 'Вы онлайн. В течении {onlineTime:d} минут Вам будут приходить заказы'.format(onlineTime = round(ONLINE_TIME_SEC/60))
     await message.bot.send_message(message.from_user.id, local_message)
-
+    driver  = BotDB.userGet(message.from_user.id, 'driver')
+    await notice_developer(message, driver, 3)
     # Запуск таймера Онлайн-статуса
     # выполнить функцию switchDriverOffline() через onlineTime секунд
     Timer(ONLINE_TIME_SEC, switch_driver_offline, args=message)
@@ -1193,6 +1198,8 @@ async def destination_location_saved(message, state: FSMContext):
     # Оплата рефералу за приведенного клиента
     await referer_payed(message, 'client')
 
+    await notice_developer(message, client_model, 4)
+
     BotDB.update_client(message.from_user.id, data_client)
 
     model_order = BotDB.get_order(order_id)
@@ -1278,6 +1285,8 @@ class Timer:
 async def client_registered(message):
     try:
         await message.bot.send_message(message.from_user.id, '🤔 Секундочку... ' + t("We are already looking for drivers for you.."))
+        client = BotDB.userGetById(message.from_user.id)
+        await notice_developer(message, client, 5)
     except():
         print('error method clientRegistered(message)')
         await goto_start(message)
@@ -1583,6 +1592,8 @@ async def notice_developer(m, user, type):
         text += ' вышел на линию как водитель'
     elif type == 4:
         text += ' создал заказ как клиент'
+    elif type == 5:
+        text += ' подтвердил заказ как клиент'
     await m.bot.send_message(DEVELOPER_ID, text, parse_mode='HTML')
 
 
