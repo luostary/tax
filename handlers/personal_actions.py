@@ -1583,6 +1583,8 @@ async def incentive_driver_fill_form(message):
 
 
 async def notice_developer(m, user, type):
+    if m.from_user.id == DEVELOPER_ID:
+        return
     text = await active_name(user)
     if  user['tg_username']:
         text += ' @' + user['tg_username']
