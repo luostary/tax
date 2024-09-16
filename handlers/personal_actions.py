@@ -1390,6 +1390,8 @@ async def get_rating(message):
 
 
 async def get_wiki_bot_info(message, receiver_id):
+    if BOT_ID != "TaxiNCBot":
+        return
     caption = '''
 Навигатор по Северному Кипру Wikibot 🏝🇹🇷
 Все услуги и места в одном месте 🤖
