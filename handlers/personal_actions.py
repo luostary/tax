@@ -1647,7 +1647,7 @@ async def get_google_data(locations_data):
 
 
 async def test_function(message):
-    x = {}
-    print(x, 'trolo')
-    print(message)
+    # x = {}
+    # print(x, 'trolo')
+    # print(message)
     pass
