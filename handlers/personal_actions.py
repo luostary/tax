@@ -633,6 +633,7 @@ async def menu_driver(message):
     item7 = InlineKeyboardButton(text=t('Go offline 🔴'), callback_data='switch-offline')
     item71 = InlineKeyboardButton(text=t('Rules'), callback_data='driver-rules')
     item8 = InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='back')
+    item9 = InlineKeyboardButton(text=t('Drivers chat') + ' 💬', url='https://t.me/' + DRIVER_CHAT_TG)
     driver_model = BotDB.userGet(message.from_user.id, 'driver')
     if not driver_model:
         await message.bot.send_message(message.from_user.id, "Can`t do it, begin to /start")
@@ -649,6 +650,7 @@ async def menu_driver(message):
                 markup.add(item7)
 
         markup.add(item3)
+        markup.add(item9)
         markup.add(item71)
         markup.add(item8)
         await message.bot.send_message(message.from_user.id, t("You are in the driver menu"), reply_markup = markup)

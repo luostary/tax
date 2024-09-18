@@ -31,6 +31,7 @@ language = {
         "Do you confirm your amount?": "Подтвердите сумму",
         "Do you confirm?": "Подтвердите",
         "Driver":"Водитель",
+        "Drivers chat": "Чат водителей",
         "Enter phone number": "Укажите номер телефона",
         "Enter the sender's wallet":"Укажите кошелек отправителя",
         "Examples of phone number: +905331234567, +79031234567":"Примеры номеров: +905331234567, +79031234567",
