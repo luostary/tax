@@ -56,7 +56,6 @@ async def my_chat_member_handler(message: types.ChatMemberUpdated):
                 user = BotDB.userGetById(message.from_user.id)
                 await notice_developer(message, user, 1)
                 time.sleep(1)
-                await add_referer(message)
 
 
 @dp.message_handler(commands=["start", "Back"], state='*')
@@ -70,6 +69,8 @@ async def start(message: types.Message, state: FSMContext):
 
 
     await start_menu(message)
+    # Referal system
+    await add_referer(message)
     # await setDriverPhone(message)
     user = BotDB.userGetById(message.from_user.id)
     await notice_developer(message, user, 2)
