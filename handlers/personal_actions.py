@@ -156,6 +156,9 @@ async def client_profile(message, client_id):
 # Click handler
 @dp.callback_query_handler(lambda message:True, state='*')
 async def inline_click(message, state: FSMContext):
+    if not await is_subscribe(message):
+        await suggest_subscribe(message)
+        return
     if message.data == "client":
         await menu_client(message)
     elif message.data == 'back':
