@@ -1,12 +1,10 @@
-import re, math, time, datetime
-from aiogram import types
+import datetime
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from datetime import datetime, timedelta
+from datetime import datetime
 from db import BotDB
 from config import *
 from language import t
 from io import BytesIO
-import PIL
 from PIL import Image
 
 db = BotDB()
@@ -49,7 +47,7 @@ class Passenger:
                             'Стоимость <b>' + str(row['amount_client']) + ' ' + str(CURRENCY) + '</b>',
                             'Длина маршрута <b>' + str(row['route_length'] / 1000) + ' км.' + '</b>',
                             'Время поездки <b>' + str(row['route_time']) + ' мин.' + '</b>'
-                        ));
+                        ))
                         if (message_id == 0):
                             message = await message.bot.send_message(message.from_user.id, '.')
                             message_id = message.message_id

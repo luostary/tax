@@ -37,7 +37,7 @@ class BotDB:
 
     dbType = config.DB_TYPE
 
-    replacer = '?';
+    replacer = '?'
     dbFile = ''
 
     def __init__(self, db_file = 'taxi.db'):
@@ -57,7 +57,7 @@ class BotDB:
                 database = config.DB_NAME,
                 connection_timeout = config.DB_CONNECTION_TIMEOUT
             )
-            self.replacer = '%s';
+            self.replacer = '%s'
             self.cursor = self.conn.cursor(buffered=True, dictionary=True)
 #            self.cursor.execute("SET GLOBAL wait_timeout = 120")
 
@@ -136,11 +136,10 @@ class BotDB:
                 data['route_length'],
                 data['route_time'],
             ))
-            id = self.cursor.lastrowid
             self.conn.commit()
         except Error as e:
             print(e)
-        result = id
+        result = self.cursor.lastrowid
         self.close()
         return result
 
@@ -670,7 +669,7 @@ class BotDB:
             if (parent_id > 0):
                 condition = '= ' + str(parent_id)
             else:
-                condition = 'IS NULL';
+                condition = 'IS NULL'
             self.connect()
             sql = "SELECT * FROM `category" + DB_LOCATION_POSTFIX + "` WHERE `parent_id` {condition:s} ORDER BY sort".format(
                 condition = condition

@@ -3,7 +3,6 @@ import re, math, time, datetime
 from aiogram import types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.exceptions import BotBlocked
-from telebot.apihelper import send_message
 
 from dispatcher import dp, bot
 from aiogram.dispatcher import FSMContext
