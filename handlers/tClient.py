@@ -9,7 +9,7 @@ from io import BytesIO
 import PIL
 from PIL import Image
 
-BotDB = BotDB()
+db = BotDB()
 
 class Passenger:
     def __init__(self):
@@ -19,24 +19,24 @@ class Passenger:
         print('This is a Passenger class')
 
     async def getClientOrders(self, message, offset, message_id, chat_id):
-        if (not BotDB.userGet(message.from_user.id, 'client')):
+        if (not db.userGet(message.from_user.id, 'client')):
             await message.bot.send_message(message.from_user.id, t('Client not found'))
         else:
-            clientModel = BotDB.userGet(message.from_user.id, 'client')
+            clientModel = db.userGet(message.from_user.id, 'client')
             if (not clientModel):
                 await message.bot.send_message(message.from_user.id, t("Unable to find customer"))
                 pass
             else:
-                modelOrders = BotDB.get_client_orders_by_one(message.from_user.id, offset)
-                modelOrdersCn = len(BotDB.get_client_orders(message.from_user.id))
+                modelOrders = db.get_client_orders_by_one(message.from_user.id, offset)
+                modelOrdersCn = len(db.get_client_orders(message.from_user.id))
                 if (modelOrdersCn) == 0:
                     await message.bot.send_message(message.from_user.id, t("You haven`t orders"))
                 else:
                     for row in modelOrders:
                         try:
-                            status = BotDB.statuses[row['status']]
+                            status = db.statuses[row['status']]
                         except:
-                            status = BotDB.statuses['unknown']
+                            status = db.statuses['unknown']
                         if not row['dt_order']:
                             dateFormat = 'Не указана'
                         else:

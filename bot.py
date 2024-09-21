@@ -6,10 +6,10 @@ import handlers
 from db import BotDB
 from config import *
 
-BotDB = BotDB('taxi.db')
+db = BotDB()
 
 if __name__ == "__main__":
-    schema = BotDB.get_sleep_queries_cn()
+    schema = db.get_sleep_queries_cn()
     if schema['query_count'] > 50:
         print('Warning! You should kill sleep queries... And use the "CTRL+C" command')
     if ENV == "PROD":
