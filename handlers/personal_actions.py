@@ -1609,7 +1609,12 @@ async def notice_developer(m, user, type):
         text += ' создал заказ как клиент'
     elif type == 5:
         text += ' подтвердил заказ как клиент'
-    await m.bot.send_message(DEVELOPER_ID, text, parse_mode='HTML')
+
+    try:
+        await m.bot.send_message(DEVELOPER_ID, text, parse_mode='HTML')
+    except(BaseException):
+        print('Except: notice_developer')
+        pass
 
 
 
