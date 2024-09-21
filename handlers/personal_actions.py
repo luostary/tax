@@ -66,6 +66,7 @@ async def start(message: types.Message, state: FSMContext):
         await suggest_subscribe(message)
         return
 
+    await message.bot.send_message(message.from_user.id, t("Welcome!"), reply_markup = await markup_remove())
 
     await start_menu(message)
     # Referal system
@@ -129,7 +130,6 @@ async def start_menu(message):
     if message.from_user.id == 419839605:
         markup.add(InlineKeyboardButton("Админ - Предложить зарегистрироваться В.", callback_data='driver-incentive-fill-form'))
         markup.add(InlineKeyboardButton(text='Админ - Coding' + ' 💻', callback_data='test'))
-    await message.bot.send_message(message.from_user.id, t("Welcome!"), reply_markup = await markup_remove())
     await message.bot.send_message(message.from_user.id, t("Use the menu to get started"), reply_markup = markup)
 
 
