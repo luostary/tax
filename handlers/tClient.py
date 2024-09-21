@@ -17,56 +17,56 @@ class Passenger:
         print('This is a Passenger class')
 
     async def getClientOrders(self, message, offset, message_id, chat_id):
-        if (not db.userGet(message.from_user.id, 'client')):
+        if not db.userGet(message.from_user.id, 'client'):
             await message.bot.send_message(message.from_user.id, t('Client not found'))
         else:
-            clientModel = db.userGet(message.from_user.id, 'client')
-            if (not clientModel):
+            client_model = db.userGet(message.from_user.id, 'client')
+            if not client_model:
                 await message.bot.send_message(message.from_user.id, t("Unable to find customer"))
                 pass
             else:
-                modelOrders = db.get_client_orders_by_one(message.from_user.id, offset)
-                modelOrdersCn = len(db.get_client_orders(message.from_user.id))
-                if (modelOrdersCn) == 0:
+                model_orders = db.get_client_orders_by_one(message.from_user.id, offset)
+                model_orders_cn = len(db.get_client_orders(message.from_user.id))
+                if model_orders_cn == 0:
                     await message.bot.send_message(message.from_user.id, t("You haven`t orders"))
                 else:
-                    for row in modelOrders:
+                    for row in model_orders:
                         try:
                             status = db.statuses[row['status']]
                         except:
                             status = db.statuses['unknown']
                         if not row['dt_order']:
-                            dateFormat = 'Не указана'
+                            date_format = 'Не указана'
                         else:
-                            dateFormat = datetime.strptime(str(row['dt_order']), "%Y-%m-%d %H:%M:%S").strftime("%H:%M %d-%m-%Y")
+                            date_format = datetime.strptime(str(row['dt_order']), "%Y-%m-%d %H:%M:%S").strftime("%H:%M %d-%m-%Y")
                         text = '\n'.join((
                             '<b>Заказ №' + str(row['id']) + '</b>',
-                            'Имя <b>' + str(clientModel['name']) + '</b>',
+                            'Имя <b>' + str(client_model['name']) + '</b>',
                             'Статус <b>' + status + '</b>',
-                            'Дата <b>' + str(dateFormat) + '</b>',
+                            'Дата <b>' + str(date_format) + '</b>',
                             'Стоимость <b>' + str(row['amount_client']) + ' ' + str(CURRENCY) + '</b>',
                             'Длина маршрута <b>' + str(row['route_length'] / 1000) + ' км.' + '</b>',
                             'Время поездки <b>' + str(row['route_time']) + ' мин.' + '</b>'
                         ))
-                        if (message_id == 0):
+                        if message_id == 0:
                             message = await message.bot.send_message(message.from_user.id, '.')
                             message_id = message.message_id
                             chat_id = message.chat.id
                             pass
-                        markupBack = InlineKeyboardMarkup(row_width=2)
-                        callbackBackward = 'client-orders_' + str(offset - 1) + '_' + str(message_id) + '_' + str(chat_id)
-                        callbackForward = 'client-orders_' + str(offset + 1) + '_' + str(message_id) + '_' + str(chat_id)
-                        if (offset + 1) == modelOrdersCn:
-                            markupBack.add(InlineKeyboardButton(text=('◀️'), callback_data = callbackBackward))
+                        markup_back = InlineKeyboardMarkup(row_width=2)
+                        callback_backward = 'client-orders_' + str(offset - 1) + '_' + str(message_id) + '_' + str(chat_id)
+                        callback_forward = 'client-orders_' + str(offset + 1) + '_' + str(message_id) + '_' + str(chat_id)
+                        if (offset + 1) == model_orders_cn:
+                            markup_back.add(InlineKeyboardButton(text='◀️', callback_data = callback_backward))
                         elif offset == 0:
-                            markupBack.add(InlineKeyboardButton(text=('▶️'), callback_data = callbackForward))
+                            markup_back.add(InlineKeyboardButton(text='▶️', callback_data = callback_forward))
                         else:
-                            markupBack.add(
-                                InlineKeyboardButton(text=('◀️'), callback_data = callbackBackward),
-                                InlineKeyboardButton(text=('▶️'), callback_data = callbackForward)
+                            markup_back.add(
+                                InlineKeyboardButton(text='◀️', callback_data = callback_backward),
+                                InlineKeyboardButton(text='▶️', callback_data = callback_forward)
                             )
-                        markupBack.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='client'))
-                        await message.bot.edit_message_text(chat_id = chat_id, message_id = message_id, text = text, reply_markup = markupBack)
+                        markup_back.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='client'))
+                        await message.bot.edit_message_text(chat_id = chat_id, message_id = message_id, text = text, reply_markup = markup_back)
                         pass
                 pass
     async def rules(self, message):
@@ -115,13 +115,13 @@ class Passenger:
             adminTg = ADMIN_TG,
             currency = CURRENCY
         )
-        backClientMenu = InlineKeyboardMarkup(row_width=1)
-        backClientMenu.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='client'))
+        back_client_menu = InlineKeyboardMarkup(row_width=1)
+        back_client_menu.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='client'))
         await message.bot.send_message(message.from_user.id, caption)
         bio = BytesIO()
         image = Image.open('rules_1.jpeg')
         image.save(bio, 'JPEG')
         bio.seek(0)
-        await message.bot.send_photo(message.from_user.id, bio, reply_markup = backClientMenu)
+        await message.bot.send_photo(message.from_user.id, bio, reply_markup = back_client_menu)
         pass
 

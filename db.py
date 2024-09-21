@@ -42,8 +42,8 @@ class BotDB:
 
     def __init__(self, db_file = 'taxi.db'):
         self.dbFile = db_file
-        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-        db_path = os.path.join(BASE_DIR, db_file)
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        db_path = os.path.join(base_dir, db_file)
 
         if self.dbType == 'sqlite':
             self.conn = sqlite3.connect(db_path, check_same_thread=False)
@@ -406,9 +406,9 @@ class BotDB:
     def get_drivers_unregistered(self):
         self.connect()
         sql = "SELECT * FROM `driver` WHERE `phone` IS NULL"
-        if (LIMIT_THESE_USERS):
-            idsString = ", ".join(str(element) for element in LIMIT_THESE_USERS)
-            sql += " AND tg_user_id IN (" + idsString + ")"
+        if LIMIT_THESE_USERS:
+            ids_string = ", ".join(str(element) for element in LIMIT_THESE_USERS)
+            sql += " AND tg_user_id IN (" + ids_string + ")"
         self.cursor.execute(sql)
         result = self.cursor.fetchall()
         self.close()
@@ -521,9 +521,8 @@ class BotDB:
 
     def update_status_for_all_drivers(self, status):
         self.connect()
-        result = False
         try:
-            self.cursor.execute("UPDATE `driver` SET status = " + self.replacer, (status))
+            self.cursor.execute("UPDATE `driver` SET status = " + self.replacer, status)
         except Error as e:
             print(e)
         result = self.conn.commit()
@@ -542,9 +541,9 @@ class BotDB:
             AND IFNULL(dror.driver_cancel_cn, 0) < 2'''
 
         if LIMIT_THESE_USERS:
-            idsString = ", ".join(str(element) for element in LIMIT_THESE_USERS)
+            ids_string = ", ".join(str(element) for element in LIMIT_THESE_USERS)
             sql+= '''
-            AND tg_user_id IN (''' + idsString + ''')'''
+            AND tg_user_id IN (''' + ids_string + ''')'''
 
         sql+='''
             having dif_lat IS NOT NULL AND dif_lon IS NOT NULL
@@ -666,7 +665,7 @@ class BotDB:
 
     # Каталог локаций
     def get_categories(self, parent_id):
-            if (parent_id > 0):
+            if parent_id > 0:
                 condition = '= ' + str(parent_id)
             else:
                 condition = 'IS NULL'
