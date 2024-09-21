@@ -5,7 +5,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.exceptions import BotBlocked
 from telebot.apihelper import send_message
 
-from dispatcher import dp
+from dispatcher import dp, bot
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from datetime import datetime
@@ -62,6 +62,12 @@ async def my_chat_member_handler(message: types.ChatMemberUpdated):
 @dp.message_handler(commands=["start", "Back"], state='*')
 async def start(message: types.Message, state: FSMContext):
     await state.finish()
+
+    # Check subscribe
+    if await is_subscribe(message) != True:
+        await suggest_subscribe(message)
+        return
+
 
     await start_menu(message)
     # await setDriverPhone(message)
@@ -1653,3 +1659,18 @@ async def test_function(message):
     # print(x, 'trolo')
     # print(message)
     pass
+
+async def is_subscribe(m):
+    try:
+        member = await bot.get_chat_member(chat_id='@' + CHAT_TG, user_id=m.from_user.id)
+        if member.status != 'left':
+            return True
+    except(BaseException):
+        pass
+    return False
+
+async def suggest_subscribe(message):
+    item = InlineKeyboardButton(text=('Группа') + ' 💬', url='https://t.me/' + CHAT_TG)
+    markup = InlineKeyboardMarkup(row_width=3)
+    markup.add(item)
+    await bot.send_message(message.from_user.id, "Чтобы пользоваться ботом, вступите, пожалуйста в нашу группу", reply_markup=markup)
