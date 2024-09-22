@@ -20,7 +20,7 @@ from geopy.distance import geodesic
 import pprint
 import googlemaps
 import qrcode
-from . import tClient
+from . import tClient, payment
 
 # sudo apt-get install xclip
 import pyperclip
@@ -41,6 +41,8 @@ PHONE_MASK = '^[+]{1,1}[\d]{11,12}$'
 
 # Подключаем класс для работы с пассажиром
 client = tClient.Passenger()
+
+payment.register_handlers(dp)
 
 @dp.my_chat_member_handler()
 async def my_chat_member_handler(message: types.ChatMemberUpdated):
