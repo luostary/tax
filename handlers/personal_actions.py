@@ -1139,9 +1139,14 @@ async def process_location(message, state: FSMContext):
 @dp.message_handler(content_types='text', state='*')
 async def process_location(message: types.Message, state: FSMContext):
     location_models = db.get_location_by_name(message.text)
-    async with state.proxy() as data:
-        location_type = data['locationType']
 
+    try:
+        async with state.proxy() as data:
+            location_type = data['locationType']
+            pass
+    except(BaseException):
+        pass
+    return
     markup = InlineKeyboardMarkup(row_width=3)
 
     if location_type == 'clientDptLoc':
