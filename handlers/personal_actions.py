@@ -1146,9 +1146,9 @@ async def process_location(message: types.Message, state: FSMContext):
         async with state.proxy() as data:
             location_type = data['locationType']
             pass
-    except(BaseException):
+    except BaseException:
+        return
         pass
-    return
     markup = InlineKeyboardMarkup(row_width=3)
 
     if location_type == 'clientDptLoc':
