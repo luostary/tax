@@ -1092,7 +1092,12 @@ async def set_departure(message, state: FSMContext):
         data['locationType'] = 'clientDptLoc'
     markup = types.InlineKeyboardMarkup(row_width=1)
     markup.add(types.InlineKeyboardButton(text=t('Catalog'), callback_data='catalog_0'))
-    await message.bot.send_message(message.from_user.id, t("Set departure location"), parse_mode='html', reply_markup = markup)
+    if DB_LOCATION_POSTFIX:
+        text = t("Set departure location") + t("Use ONE of 3 methods\n\n1️⃣ method - write the name and send \n2️⃣ method - select the name in the CATALOGUE OF PLACES \n3️⃣ method - indicate the coordinates on the map via PAPERCLIP + LOCATION")
+    else:
+        text = t("Set departure location") + t("Use the following method.\n\nSpecify coordinates on the map using PAPERCLIP+LOCATION")
+        markup = None
+    await bot.send_message(message.from_user.id, text=text, parse_mode='html', reply_markup = markup)
     pass
 async def set_destination(message, state: FSMContext):
     async with state.proxy() as data:
@@ -1140,6 +1145,10 @@ async def process_location(message, state: FSMContext):
 #Если пользователь хочет указать локацию "текстом"
 @dp.message_handler(content_types='text', state='*')
 async def process_location(message: types.Message, state: FSMContext):
+
+    if not DB_LOCATION_POSTFIX:
+        return
+
     location_models = db.get_location_by_name(message.text)
 
     try:
