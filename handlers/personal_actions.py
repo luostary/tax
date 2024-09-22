@@ -63,7 +63,7 @@ async def start(message: types.Message, state: FSMContext):
     await state.finish()
 
     # Check subscribe
-    if await is_subscribe(message) != True:
+    if not await is_subscribe(message):
         await suggest_subscribe(message)
         return
 
@@ -1146,7 +1146,7 @@ async def process_location(message: types.Message, state: FSMContext):
         async with state.proxy() as data:
             location_type = data['locationType']
             pass
-    except BaseException:
+    except UnboundLocalError:
         return
         pass
     markup = InlineKeyboardMarkup(row_width=3)
@@ -1302,8 +1302,8 @@ class Timer:
 async def client_registered(message):
     try:
         await message.bot.send_message(message.from_user.id, '🤔 Секундочку... ' + t("We are already looking for drivers for you.."))
-        client = db.userGetById(message.from_user.id)
-        await notice_developer(message, client, 5)
+        model_client = db.userGetById(message.from_user.id)
+        await notice_developer(message, model_client, 5)
     except():
         print('error method clientRegistered(message)')
         await goto_start(message)
@@ -1599,26 +1599,26 @@ async def incentive_driver_fill_form(message):
 
 
 
-async def notice_developer(m, user, type):
+async def notice_developer(m, user, notice_type):
     if m.from_user.id == DEVELOPER_ID:
         return
     text = await active_name(user)
     if  user['tg_username']:
         text += ' @' + user['tg_username']
-    if type == 1:
+    if notice_type == 1:
         text += ' зарегистрировался'
-    elif type == 2:
+    elif notice_type == 2:
         text += ' зашел посмотреть'
-    elif type == 3:
+    elif notice_type == 3:
         text += ' вышел на линию как водитель'
-    elif type == 4:
+    elif notice_type == 4:
         text += ' создал заказ как клиент'
-    elif type == 5:
+    elif notice_type == 5:
         text += ' подтвердил заказ как клиент'
 
     try:
         await m.bot.send_message(DEVELOPER_ID, text, parse_mode='HTML')
-    except(BaseException):
+    except UnboundLocalError:
         print('Except: notice_developer')
         pass
 
@@ -1671,7 +1671,7 @@ async def get_google_data(locations_data):
 async def test_function(message):
     # x = {}
     # print(x, 'trolo')
-    # print(message)
+    print(message)
     pass
 
 async def is_subscribe(m):
@@ -1679,12 +1679,12 @@ async def is_subscribe(m):
         member = await bot.get_chat_member(chat_id='@' + CHAT_TG, user_id=m.from_user.id)
         if member.status != 'left':
             return True
-    except(BaseException):
+    except UnboundLocalError:
         pass
     return False
 
 async def suggest_subscribe(message):
-    item = InlineKeyboardButton(text=('Группа') + ' 💬', url='https://t.me/' + CHAT_TG)
+    item = InlineKeyboardButton(text='Группа' + ' 💬', url='https://t.me/' + CHAT_TG)
     markup = InlineKeyboardMarkup(row_width=3)
     markup.add(item)
     await bot.send_message(message.from_user.id, "Чтобы пользоваться ботом, вступите, пожалуйста в нашу группу", reply_markup=markup)
