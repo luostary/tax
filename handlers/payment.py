@@ -12,16 +12,16 @@ def register_handlers(dp: Dispatcher):
     # buy
     @dp.message_handler(commands=["buy"])
     async def buy(message: types.Message):
-        price = types.LabeledPrice(label='Подписка на 1 месяц за 100 рублей.', amount=100 * 100)  # В копейках (руб)
+        price = types.LabeledPrice(label='Подписка на 1 месяц', amount=100 * 100)  # В копейках (руб)
 
         if PAYMENT_TOKEN.split(':')[1] == 'TEST':
             await bot.send_message(message.chat.id, "Тестовый платеж!!!")
         await bot.send_invoice(message.from_user.id,
-                               title="Подписка на бота",
-                               description="Активация подписки на бота на 1 месяц",
+                               title="Подписка на месяц",
+                               description="Активация подписки",
                                provider_token=PAYMENT_TOKEN,
                                currency="rub",
-                               photo_url="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRi1Jotlc8TCjejrCrXFrYufxd2lkQe4eK0nw&s",
+                               photo_url="https://media.istockphoto.com/id/466409279/ru/%D1%84%D0%BE%D1%82%D0%BE/%D1%81%D1%87%D0%B0%D1%81%D1%82%D0%BB%D0%B8%D0%B2%D1%8B%D0%B9-%D1%82%D0%B0%D0%BA%D1%81%D0%B8%D1%81%D1%82.jpg?s=1024x1024&w=is&k=20&c=7kS4MiWcKtxqB9FNP164J6c8dQioJYWYwkCFWlmph_o=",
                                photo_width="274",
                                photo_height="171",
                                photo_size="171",
