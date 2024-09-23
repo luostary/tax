@@ -1054,6 +1054,8 @@ async def process_location(message: types.Message, state: FSMContext):
 
     try:
         async with state.proxy() as data:
+            if not data:
+                return
             location_type = data['locationType']
             pass
     except UnboundLocalError:
