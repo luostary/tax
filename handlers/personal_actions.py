@@ -1730,8 +1730,8 @@ async def add_referer(m):
 
 # Дебаг
 async def test_function(message):
-    dict = message.message.__dict__
-    dump(dict)
+    dictionary = message.message.__dict__
+    dump(dictionary)
     pass
 
 
