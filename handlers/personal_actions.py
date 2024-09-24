@@ -1397,7 +1397,7 @@ async def get_wiki_bot_info(message, receiver_id):
 Все услуги и места в одном месте 🤖
 Каждый из вас может разместить в нем свою услугу или объявление - бесплатно😉'''
     bio = BytesIO()
-    image = Image.open('images/wikibot.jpg')
+    image = Image.open('images/wikiBot.jpg')
     image.save(bio, 'JPEG')
     bio.seek(0)
 
