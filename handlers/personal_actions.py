@@ -1568,16 +1568,16 @@ async def incentive_driver_fill_form(message):
     markup = types.InlineKeyboardMarkup(row_width=1)
     markup.add(types.InlineKeyboardButton(text='Заполнить анкету', callback_data='driver-form'))
     caption = 'Мы обнаружили что вы заходили в наш бот но при этом не прошли процесс регистрации водителя. \n\nХотим предложить вам заполнить анкету водителя. \n\nПосле заполнения анкеты Вы сможете пользоваться ботом в качестве водителя, выходить на линию и получать заказы. \n\nЕсли у вас имеются вопросы по заполнению анкеты, напишите нам ' + ADMIN_TG
-    sended_cn = 0
+    send_cn = 0
     for unregisteredDriverModel in unregistered_driver_models:
         try:
             await message.bot.send_message(unregisteredDriverModel['tg_user_id'], caption, parse_mode='HTML',
                                            reply_markup=markup)
-            sended_cn = sended_cn + 1
+            send_cn = send_cn + 1
         except():
             await message.bot.send_message(message.from_user.id, 'Не удалось отправить сообщение контакту @' + str(
                 unregisteredDriverModel['tg_first_name']) + ' (' + str(unregisteredDriverModel['tg_user_id']) + ')')
-    await message.bot.send_message(5615867597, 'Предложение о регистрации доставлено ' + str(sended_cn) + ' водителям')
+    await message.bot.send_message(5615867597, 'Предложение о регистрации доставлено ' + str(send_cn) + ' водителям')
 
 
 async def notice_developer(m, user, notice_type):
