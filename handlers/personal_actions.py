@@ -77,7 +77,7 @@ async def start(message: types.Message, state: FSMContext):
     await message.bot.send_message(message.from_user.id, t("Welcome!"), reply_markup=await markup_remove())
 
     await start_menu(message)
-    # Referal system
+    # Добавление реферальной ссылки
     await add_referer(message)
     # await setDriverPhone(message)
     user = db.userGetById(message.from_user.id)
@@ -442,7 +442,7 @@ async def inline_click(message, state: FSMContext):
     elif 'departureLocationSavedByLocId_' in message.data:
         array = message.data.split('_')
         location_id = int(array[1])
-        # Сохранение координатов
+        # Сохранение координат
         location_model = db.get_location_by_id(location_id)
         async with state.proxy() as data:
             data['departure_latitude'] = float(location_model['lat'])
@@ -459,7 +459,7 @@ async def inline_click(message, state: FSMContext):
     elif 'destinationLocationSavedByLocId_' in message.data:
         array = message.data.split('_')
         location_id = int(array[1])
-        # Сохранение координатов
+        # Сохранение координат
         location_model = db.get_location_by_id(location_id)
         async with state.proxy() as data:
             data['destination_latitude'] = float(location_model['lat'])
@@ -475,7 +475,7 @@ async def inline_click(message, state: FSMContext):
     elif 'driverLocationSavedByLocId_' in message.data:
         array = message.data.split('_')
         location_id = int(array[1])
-        # Сохранение координатов
+        # Сохранение координат
         location_model = db.get_location_by_id(location_id)
         db.update_driver_location(message.from_user.id, location_model['lat'], location_model['long'])
         await switch_driver_online(message)
@@ -527,7 +527,7 @@ async def process_car_photo(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         if not data:
             await message.bot.send_message(message.from_user.id,
-                                           'Прикрепление фото: Пройтите весь процесс создания анкеты сначала')
+                                           'Прикрепление фото: Пройдите весь процесс создания анкеты сначала')
             return
         directory = data['dir']
         saved_key = data['savedKey']
@@ -898,7 +898,7 @@ async def timer_for_client(message, on_timer=True):
                 await message.bot.send_message(DEVELOPER_ID, message_to_dev)
 
 
-# Помоему метод вообще не работает
+# Вроде бы метод вообще не работает
 async def driver_done_order(message):
     try:
         driver_id = db.get_driver_id(message.from_user.id)
@@ -1255,7 +1255,7 @@ async def destination_location_saved(message, state: FSMContext):
 
     dump(data_order)
     order_id = db.create_order(data_order)
-    # Оплата рефералу за приведенного клиента
+    # Оплата агенту за приведенного клиента
     await referer_payed(message, 'client')
 
     await notice_developer(message, client_model, 4)
@@ -1324,7 +1324,7 @@ async def get_categories(message, parent_id, state: FSMContext):
     await message.bot.send_message(message.from_user.id, cat_message, reply_markup=markup)
 
 
-# Тимер для Асинхронных методов
+# Таймер для асинхронных методов
 class Timer:
     def __init__(self, timeout, callback, args):
         self._timeout = timeout
@@ -1363,7 +1363,7 @@ async def driver_registered(message, state: FSMContext):
     db.update_driver(message.from_user.id, driver_data)
     # time.sleep(2)
     await message.bot.send_message(message.from_user.id, t("Your profile is saved"))
-    # Оплата рефералу за приведенного клиента
+    # Оплата агенту за приведенного клиента
     await referer_payed(message, 'driver')
 
 
@@ -1393,7 +1393,7 @@ async def get_wiki_bot_info(message, receiver_id):
     if BOT_ID != "TaxiNCBot":
         return
     caption = '''
-Навигатор по Северному Кипру Wikibot 🏝🇹🇷
+Навигатор по Северному Кипру WikiBot 🏝🇹🇷
 Все услуги и места в одном месте 🤖
 Каждый из вас может разместить в нем свою услугу или объявление - бесплатно😉'''
     bio = BytesIO()
@@ -1402,7 +1402,7 @@ async def get_wiki_bot_info(message, receiver_id):
     bio.seek(0)
 
     wiki = InlineKeyboardMarkup(row_width=1)
-    wiki.add(InlineKeyboardButton(text='Перейти в Wikibot', url='https://cazi.me/7R6XM'))
+    wiki.add(InlineKeyboardButton(text='Перейти в WikiBot', url='https://cazi.me/7R6XM'))
     wiki.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='client'))
     await message.bot.send_photo(receiver_id, bio, caption=caption, parse_mode='HTML', reply_markup=wiki)
 
@@ -1672,12 +1672,12 @@ async def is_subscribe_driver_week():
     pass
 
 
-# Платная подписка водителя на нелелю
+# Платная подписка водителя на неделю
 async def suggest_subscribe_driver_week():
     pass
 
 
-# Оплата рефералу за приведенного клиента
+# Оплата агенту за приведенного клиента
 async def referer_payed(message, user_type):
     user_model = db.userGet(message.from_user.id, user_type)
     if user_model['referer_user_id'] and user_model['referer_payed'] is None:
@@ -1700,10 +1700,10 @@ async def referer_payed(message, user_type):
     pass
 
 
-# Добавление реферала новому пользователю
+# Добавление реферальной ссылки новому пользователю
 async def add_referer(m):
     user_id = m.from_user.id
-    # Проверяем наличие закрепленного реферера за пользователем
+    # Проверяем наличие закрепленного агента за пользователем
     model_driver = db.userGetById(user_id)  # тут не уточняем тип
     if not model_driver['referer_user_id']:
         referer_user_id = None
@@ -1715,8 +1715,8 @@ async def add_referer(m):
             try:
                 referrer_candidate = int(referrer_candidate)
 
-                # Проверяем на несоответствие TG ID пользователя TG ID реферера
-                # Также проверяем, есть ли такой реферер в базе данных
+                # Проверяем на несоответствие TG ID пользователя TG ID агента
+                # Также проверяем, есть ли такой агент в базе данных
                 if user_id != referrer_candidate and db.driver_exists(referrer_candidate):
                     referer_user_id = referrer_candidate
 
@@ -1728,7 +1728,7 @@ async def add_referer(m):
     pass
 
 
-# Дебаг
+# Отладка
 async def test_function(message):
     dictionary = message.message.__dict__
     dump(dictionary)
