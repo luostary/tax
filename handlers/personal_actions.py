@@ -58,9 +58,9 @@ async def my_chat_member_handler(message: types.ChatMemberUpdated):
             db.cancel_all_orders_after_kicked_user(message.from_user.id)
             db.user_delete(message.from_user.id)
         elif message.new_chat_member.status == "member":
-            if not db.userExists(message.from_user.id):
-                db.userAdd(message.from_user.id, message.from_user.first_name, 'driver')
-                user = db.userGetById(message.from_user.id)
+            if not db.user_exists(message.from_user.id):
+                db.user_add(message.from_user.id, message.from_user.first_name, 'driver')
+                user = db.user_get_by_id(message.from_user.id)
                 await notice_developer(message, user, 1)
                 time.sleep(1)
 
@@ -80,7 +80,7 @@ async def start(message: types.Message, state: FSMContext):
     # Добавление реферальной ссылки
     await add_referer(message)
     # await setDriverPhone(message)
-    user = db.userGetById(message.from_user.id)
+    user = db.user_get_by_id(message.from_user.id)
     await notice_developer(message, user, 2)
 
 
@@ -119,7 +119,7 @@ async def inline_click(message, state: FSMContext):
                 await get_order_card_client(message, model_order, True)
                 return
         print(message.from_user.id)
-        db.userUpdateTgUsername(message.from_user.id, message.from_user.username)
+        db.user_update_tg_username(message.from_user.id, message.from_user.username)
         await set_name(message, state)
     elif message.data == 'clientNameSaved':
         await state.finish()
@@ -187,7 +187,7 @@ async def inline_click(message, state: FSMContext):
         await state.finish()
         pass
     elif message.data == 'account':
-        driver_balance = (db.userGet(message.from_user.id, 'driver'))
+        driver_balance = (db.user_get(message.from_user.id, 'driver'))
         if None == driver_balance['balance']:
             driver_balance['balance'] = 0
         local_message = t('Your balance is {userBalance:d} usdt') + '. '
@@ -200,7 +200,7 @@ async def inline_click(message, state: FSMContext):
         markup_back.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='driver'))
         await message.bot.send_message(message.from_user.id, local_message, reply_markup=markup_back)
     elif message.data == 'client-account':
-        client_balance = (db.userGet(message.from_user.id, 'client'))
+        client_balance = (db.user_get(message.from_user.id, 'client'))
         if None == client_balance['balance']:
             client_balance['balance'] = 0
         local_message = t('Your balance is {userBalance:d} usdt')
@@ -236,7 +236,7 @@ async def inline_click(message, state: FSMContext):
         await set_driver_wallet(message)
         pass
     elif message.data == 'driver-done-orders':
-        driver_model = db.userGet(message.from_user.id, 'driver')
+        driver_model = db.user_get(message.from_user.id, 'driver')
         if not driver_model:
             print('can`t get driver from db')
         else:
@@ -259,7 +259,7 @@ async def inline_click(message, state: FSMContext):
         await get_categories(message, int(array[1]), state)
     elif 'client-orders' in message.data:
         array = message.data.split('_')
-        await client.getClientOrders(message, int(array[1]), int(array[2]), int(array[3]))
+        await client.get_client_orders(message, int(array[1]), int(array[2]), int(array[3]))
         pass
     elif 'wallet' in message.data:
         array = message.data.split('_')
@@ -274,7 +274,7 @@ async def inline_click(message, state: FSMContext):
             else:
                 if model_order['amount_client'] is None:
                     model_order['amount_client'] = 0
-            driver_model = db.userGet(message.from_user.id, 'driver')
+            driver_model = db.user_get(message.from_user.id, 'driver')
             if not driver_model:
                 await message.bot.send_message(message.from_user.id, "Can`t do it, begin to /start")
             else:
@@ -343,7 +343,7 @@ async def inline_click(message, state: FSMContext):
 
         # Cancel fee begin
         if model_order['driver_id']:
-            driver_model = db.userGet(model_order['driver_id'], 'driver')
+            driver_model = db.user_get(model_order['driver_id'], 'driver')
             driver_id = driver_model['tg_user_id']
             income = int(math.ceil((model_order['amount_client'] / 100 * PERCENT) / RATE_1_USDT))
             try:
@@ -379,7 +379,7 @@ async def inline_click(message, state: FSMContext):
         pass
     elif message.data == 'switch-online':
         await menu_driver(message)
-        driver_model = db.userGet(message.from_user.id, 'driver')
+        driver_model = db.user_get(message.from_user.id, 'driver')
         model_order = db.get_order_waiting_by_driver_id(message.from_user.id)
         if not driver_model:
             print('can`t get driver from db')
@@ -778,7 +778,7 @@ async def start_menu(message):
     item20 = InlineKeyboardButton(t('I looking for a taxi'), callback_data='client')
     item30 = InlineKeyboardButton('Рассказать о нас другу 👍', callback_data='inviteLink')
 
-    driver_model = db.userGetById(message.from_user.id)  # Тут не уточняем тип
+    driver_model = db.user_get_by_id(message.from_user.id)  # Тут не уточняем тип
     if driver_model['user_type'] == 'driver':
         markup.add(item10)
         item40 = InlineKeyboardButton('Переключиться на пассажира', callback_data='clientType')
@@ -809,7 +809,7 @@ async def menu_driver(message):
     item71 = InlineKeyboardButton(text=t('Rules'), callback_data='driver-rules')
     item8 = InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='back')
     item9 = InlineKeyboardButton(text=t('Drivers chat') + ' 💬', url='https://t.me/' + DRIVER_CHAT_TG)
-    driver_model = db.userGet(message.from_user.id, 'driver')
+    driver_model = db.user_get(message.from_user.id, 'driver')
     if not driver_model:
         await message.bot.send_message(message.from_user.id, "Can`t do it, begin to /start")
     else:
@@ -833,7 +833,7 @@ async def menu_driver(message):
 
 async def menu_client(message):
     order_cn = str(len(db.get_client_orders(message.from_user.id)))
-    model_client = db.userGet(message.from_user.id, 'client')
+    model_client = db.user_get(message.from_user.id, 'client')
     markup = InlineKeyboardMarkup(row_width=1)
     item10 = InlineKeyboardButton(text=t('Profile'), callback_data='client-profile')
     item20 = InlineKeyboardButton(text=t('Make an order') + ' 🚕', callback_data='make-order')
@@ -850,7 +850,7 @@ async def menu_client(message):
 
 
 async def client_profile(message, client_id):
-    model_client = db.userGet(client_id, 'client')
+    model_client = db.user_get(client_id, 'client')
     if not model_client:
         await message.bot.send_message(message.from_user.id,
                                        t("Create at least one order and we will create your profile automatically"))
@@ -883,7 +883,7 @@ async def timer_for_client(message, on_timer=True):
         if not db.driver_order_exists(driver_model['tg_user_id'], order_id):
             db.driver_order_create(driver_model['tg_user_id'], order_id)
         db.driver_order_increment_cancel_cn(driver_model['tg_user_id'], order_id)
-        client_model = db.userGet(order_model['client_id'], 'client')
+        client_model = db.user_get(order_model['client_id'], 'client')
 
         model_driver_order = db.get_driver_order(driver_model['tg_user_id'], order_id)
         if model_driver_order['driver_cancel_cn'] == 2:
@@ -927,7 +927,7 @@ async def switch_driver_online(message):
     local_message = 'Вы онлайн. В течении {onlineTime:d} минут Вам будут приходить заказы'.format(
         onlineTime=round(ONLINE_TIME_SEC / 60))
     await message.bot.send_message(message.from_user.id, local_message)
-    driver = db.userGet(message.from_user.id, 'driver')
+    driver = db.user_get(message.from_user.id, 'driver')
     await notice_developer(message, driver, 3)
     # Запуск таймера Онлайн-статуса
     # выполнить функцию switchDriverOffline() через onlineTime секунд
@@ -937,10 +937,10 @@ async def switch_driver_online(message):
 
 # Пока отключена
 async def get_near_waiting_order(message, on_timer=True):
-    driver_model = db.userGet(message.from_user.id, 'driver')
+    driver_model = db.user_get(message.from_user.id, 'driver')
     if driver_model['status'] != 'online':
         on_timer = False
-    model_order = db.orderGetNear('waiting', driver_model['latitude'], driver_model['longitude'], message.from_user.id)
+    model_order = db.order_get_near('waiting', driver_model['latitude'], driver_model['longitude'], message.from_user.id)
     if model_order:
         if not model_order['order_id']:
             model_order['order_id'] = 0
@@ -953,7 +953,7 @@ async def get_near_waiting_order(message, on_timer=True):
 
 
 async def switch_driver_offline(message):
-    driver_model = db.userGet(message.from_user.id, 'driver')
+    driver_model = db.user_get(message.from_user.id, 'driver')
     model_order = db.get_order_progress_by_driver_id(message.from_user.id)
     if not driver_model:
         print('can`t switch to offline')
@@ -970,9 +970,9 @@ async def switch_driver_offline(message):
 
 
 async def get_order_card(message, driver_id, model_order, buttons=True):
-    driver_model = db.userGet(driver_id, 'driver')
+    driver_model = db.user_get(driver_id, 'driver')
     model_driver_order = db.get_driver_order(driver_id, model_order['id'])
-    model_client = db.userGet(model_order['client_id'], 'client')
+    model_client = db.user_get(model_order['client_id'], 'client')
     data = {
         'departure_latitude': driver_model['latitude'],
         'departure_longitude': driver_model['longitude'],
@@ -1015,7 +1015,7 @@ async def get_order_card(message, driver_id, model_order, buttons=True):
 
 
 async def get_order_card_client(message, order_model, cancel=False, confirm=False):
-    client_model = db.userGet(order_model['client_id'], 'client')
+    client_model = db.user_get(order_model['client_id'], 'client')
     markup = InlineKeyboardMarkup(row_width=3)
     if cancel & (not order_model['driver_id']) & (order_model['status'] in ['create', 'waiting']):
         item1 = InlineKeyboardButton(text=t('Cancel trip') + ' ❌',
@@ -1103,7 +1103,7 @@ async def set_driver_car_number(message):
 
 
 async def get_active_orders(message):
-    waiting_orders = db.get_orders(message.from_user.id, 'waiting')
+    waiting_orders = db.get_orders('waiting')
     if len(waiting_orders) == 0:
         await message.bot.send_message(message.from_user.id, t('Has not waiting orders'))
     else:
@@ -1122,7 +1122,7 @@ async def get_active_orders(message):
 
 
 async def get_driver_done_orders(message):
-    model_orders = db.get_orders(message.from_user.id, 'done')
+    model_orders = db.get_orders('done')
     if len(model_orders) == 0:
         await message.bot.send_message(message.from_user.id, t('Has not done orders'))
     else:
@@ -1145,7 +1145,7 @@ async def get_driver_done_orders(message):
 
 
 async def set_driver_wallet(message):
-    driver_model = db.userGet(message.from_user.id, 'driver')
+    driver_model = db.user_get(message.from_user.id, 'driver')
     if not driver_model:
         await message.bot.send_message(message.from_user.id, t("You need fill the form"))
     else:
@@ -1156,7 +1156,7 @@ async def set_driver_wallet(message):
 async def set_name(message, state):
     await FormClient.name.set()
 
-    client_model = db.userGet(message.from_user.id, 'client')
+    client_model = db.user_get(message.from_user.id, 'client')
     markup = InlineKeyboardMarkup(row_width=1)
     if client_model['name']:
         name_exists = True
@@ -1180,7 +1180,7 @@ async def set_name(message, state):
 async def set_phone(message):
     await FormClient.phone.set()
 
-    client_model = db.userGet(message.from_user.id, 'client')
+    client_model = db.user_get(message.from_user.id, 'client')
     markup = InlineKeyboardMarkup(row_width=6)
     if client_model['phone']:
         markup.add(InlineKeyboardButton(text='Мой номер ' + client_model['phone'], callback_data='clientPhoneSaved'))
@@ -1226,7 +1226,7 @@ async def set_destination(message, state: FSMContext):
 async def destination_location_saved(message, state: FSMContext):
     data_client = {}
     data_order = {}
-    client_model = db.userGet(message.from_user.id, 'client')
+    client_model = db.user_get(message.from_user.id, 'client')
 
     async with state.proxy() as data:
         if 'name' in data:
@@ -1344,7 +1344,7 @@ async def client_registered(message):
     try:
         await message.bot.send_message(message.from_user.id,
                                        '🤔 Секундочку... ' + t("We are already looking for drivers for you.."))
-        model_client = db.userGetById(message.from_user.id)
+        model_client = db.user_get_by_id(message.from_user.id)
         await notice_developer(message, model_client, 5)
     except():
         print('error method clientRegistered(message)')
@@ -1435,7 +1435,7 @@ async def driver_rules(message):
 
 
 async def driver_profile(message, driver_id, user_id, show_phone=False, show_return_button=False):
-    driver_model = db.userGet(driver_id, 'driver')
+    driver_model = db.user_get(driver_id, 'driver')
     if not driver_model:
         await message.bot.send_message(user_id, "Can`t do it, begin to /start")
     else:
@@ -1545,7 +1545,7 @@ async def short_statistic(message):
     driver_registered_models = db.get_drivers_registered()
     drivers_online_models = db.get_drivers_by_status('online')
     client_all_models = db.get_clients()
-    order_waiting_models = db.get_orders(message.from_user.id, 'waiting')
+    order_waiting_models = db.get_orders('waiting')
     caption = [
         '<b>Короткая статистика</b>',
         'Всего водителей <b>' + str(len(driver_all_models)) + '</b>',
@@ -1679,9 +1679,9 @@ async def suggest_subscribe_driver_week():
 
 # Оплата агенту за приведенного клиента
 async def referer_payed(message, user_type):
-    user_model = db.userGet(message.from_user.id, user_type)
+    user_model = db.user_get(message.from_user.id, user_type)
     if user_model['referer_user_id'] and user_model['referer_payed'] is None:
-        referer_model = db.userGet(user_model['referer_user_id'], user_type)
+        referer_model = db.user_get(user_model['referer_user_id'], user_type)
         referer_balance_updated = False
         if referer_model:
             if referer_model['balance'] is None:
@@ -1704,7 +1704,7 @@ async def referer_payed(message, user_type):
 async def add_referer(m):
     user_id = m.from_user.id
     # Проверяем наличие закрепленного агента за пользователем
-    model_driver = db.userGetById(user_id)  # тут не уточняем тип
+    model_driver = db.user_get_by_id(user_id)  # тут не уточняем тип
     if not model_driver['referer_user_id']:
         referer_user_id = None
         # Проверяем наличие хоть какой-то дополнительной информации из ссылки

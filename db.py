@@ -81,7 +81,7 @@ class BotDB:
         return result
 
 
-    def userUpdateTgUsername(self, user_id, username):
+    def user_update_tg_username(self, user_id, username):
         self.connect()
         try:
             self.cursor.execute("UPDATE `user` SET tg_username = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (username, user_id))
@@ -92,7 +92,7 @@ class BotDB:
         return result
 
 
-    def userUpdateBalance(self, user_id, data):
+    def user_update_balance(self, user_id, data):
         """Обновление баланса """
         self.connect()
         try:
@@ -152,7 +152,7 @@ class BotDB:
         return result
 
 
-    def get_orders(self, user_id, status):
+    def get_orders(self, status):
         self.connect()
         self.cursor.execute("SELECT * FROM `order` WHERE `status` = " + self.replacer + " ORDER BY `dt_order`", (status,))
         result = self.cursor.fetchall()
@@ -183,18 +183,20 @@ class BotDB:
         return result
 
 
-    def order_waiting_exists(self, id, status):
+    def order_waiting_exists(self, order_id, status):
         self.connect()
-        self.cursor.execute("SELECT `id` FROM `order` WHERE id = " + self.replacer + " AND status = " + self.replacer, (id, status))
+        self.cursor.execute("SELECT `id` FROM `order` WHERE id = " + self.replacer + " AND status = " +
+                            self.replacer, (order_id, status))
         result = bool(len(self.cursor.fetchall()))
         self.close()
         return result
 
 
-    def update_order_status(self, id, status):
+    def update_order_status(self, order_id, status):
         self.connect()
         try:
-            self.cursor.execute("UPDATE `order` SET status = " + self.replacer + " WHERE id = " + self.replacer, (status, id,))
+            self.cursor.execute("UPDATE `order` SET status = " + self.replacer + " WHERE id = " +
+                                self.replacer, (status, order_id,))
         except Error as e:
             print(e)
         result = self.conn.commit()
@@ -202,10 +204,10 @@ class BotDB:
         return result
 
 
-    def update_order_driver_id(self, id, driver_id):
+    def update_order_driver_id(self, order_id, driver_id):
         self.connect()
         try:
-            self.cursor.execute("UPDATE `order` SET driver_id = " + self.replacer + " WHERE id = " + self.replacer, (driver_id, id,))
+            self.cursor.execute("UPDATE `order` SET driver_id = " + self.replacer + " WHERE id = " + self.replacer, (driver_id, order_id,))
         except Error as e:
             print(e)
         result = self.conn.commit()
@@ -225,49 +227,49 @@ class BotDB:
         return result
 
 
-    def get_order(self, id):
+    def get_order(self, order_id):
         self.connect()
-        self.cursor.execute("SELECT * FROM `order` WHERE `id` = " + self.replacer, (id,))
+        self.cursor.execute("SELECT * FROM `order` WHERE `id` = " + self.replacer, (order_id,))
         result = self.cursor.fetchone()
         self.close()
         return result
 
 
-    def get_order_progress_by_driver_id(self, id):
+    def get_order_progress_by_driver_id(self, driver_id):
         self.connect()
-        self.cursor.execute("SELECT * FROM `order` WHERE `driver_id` = " + self.replacer + " AND status = 'progress'", (id,))
+        self.cursor.execute("SELECT * FROM `order` WHERE `driver_id` = " + self.replacer + " AND status = 'progress'", (driver_id,))
         result = self.cursor.fetchone()
         self.close()
         return result
 
 
-    def get_waiting_orders_by_client_id(self, id):
+    def get_waiting_orders_by_client_id(self, client_id):
         self.connect()
-        self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = " + self.replacer + " AND status = 'waiting'", (id,))
+        self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = " + self.replacer + " AND status = 'waiting'", (client_id,))
         result =  self.cursor.fetchall()
         self.close()
         return result
 
 
-    def get_waiting_order_by_client_id(self, id):
+    def get_waiting_order_by_client_id(self, client_id):
         self.connect()
-        self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = " + self.replacer + " AND status = 'waiting'", (id,))
+        self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = " + self.replacer + " AND status = 'waiting'", (client_id,))
         result = self.cursor.fetchone()
         self.close()
         return result
 
 
-    def get_create_order_by_client_id(self, id):
+    def get_create_order_by_client_id(self, client_id):
         self.connect()
-        self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = " + self.replacer + " AND status = 'create'", (id,))
+        self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = " + self.replacer + " AND status = 'create'", (client_id,))
         result = self.cursor.fetchone()
         self.close()
         return result
 
 
-    def get_done_orders_by_client_id(self, id):
+    def get_done_orders_by_client_id(self, client_id):
         self.connect()
-        self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = " + self.replacer + " AND status = 'done'", (id,))
+        self.cursor.execute("SELECT * FROM `order` WHERE `client_id` = " + self.replacer + " AND status = 'done'", (client_id,))
         result = self.cursor.fetchall()
         self.close()
         return result
@@ -278,7 +280,7 @@ class BotDB:
 
 
     # Пользователь
-    def userExists(self, user_id):
+    def user_exists(self, user_id):
         self.connect()
         """Проверяем, есть ли user в базе"""
         self.cursor.execute("SELECT `id` FROM `user` WHERE `tg_user_id` = " + self.replacer, (user_id,))
@@ -287,7 +289,7 @@ class BotDB:
         return result
 
 
-    def userAdd(self, user_id, first_name, user_type):
+    def user_add(self, user_id, first_name, user_type):
         """Добавляем user в базу"""
         self.connect()
         try:
@@ -297,7 +299,7 @@ class BotDB:
         result = self.conn.commit()
         self.close()
         return result
-    def userGet(self, user_id, user_type):
+    def user_get(self, user_id, user_type):
         """Достаем user по его user_id"""
         self.connect()
         self.cursor.execute("SELECT * FROM `user` WHERE tg_user_id = " + self.replacer + " AND user_type = " + self.replacer, (user_id, user_type))
@@ -342,7 +344,7 @@ class BotDB:
         return result
 
 
-    def userGetById(self, user_id):
+    def user_get_by_id(self, user_id):
         """Достаем user по его user_id"""
         self.connect()
         self.cursor.execute("SELECT * FROM `user` WHERE tg_user_id = " + self.replacer, (user_id,))
@@ -508,10 +510,10 @@ class BotDB:
         return result
 
 
-    def update_driver_type(self, user_id, type):
+    def update_driver_type(self, user_id, new_type):
         self.connect()
         try:
-            self.cursor.execute("UPDATE `user` SET user_type = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (type, user_id))
+            self.cursor.execute("UPDATE `user` SET user_type = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (new_type, user_id))
         except Error as e:
             print(e)
         result = self.conn.commit()
@@ -565,7 +567,7 @@ class BotDB:
 
 
     # Связи таблиц
-    def orderGetNear(self, status, latitude, longitude, driver_id):
+    def order_get_near(self, status, latitude, longitude, driver_id):
         self.connect()
         sql = '''
             select
@@ -654,9 +656,9 @@ class BotDB:
         return result
 
 
-    def get_location_by_id(self, id):
+    def get_location_by_id(self, location_id):
         self.connect()
-        self.cursor.execute("SELECT * FROM location" + DB_LOCATION_POSTFIX + " WHERE `id` = " + self.replacer, (id,))
+        self.cursor.execute("SELECT * FROM location" + DB_LOCATION_POSTFIX + " WHERE `id` = " + self.replacer, (location_id,))
         result = self.cursor.fetchone()
         self.close()
         return result
