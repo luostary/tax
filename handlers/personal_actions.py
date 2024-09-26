@@ -162,7 +162,7 @@ async def inline_click(message, state: FSMContext):
         await set_driver_name(message)
     elif message.data == 'driverDoneOrder':
         await driver_done_order(message)
-    elif message.data == 'driverTopupBalanceConfirm':
+    elif message.data == 'driverTopUpBalanceConfirm':
         async with state.proxy() as data:
             local_wallet = (data['wallet'])
             local_balance = int(data['changeBalance'])
@@ -208,7 +208,7 @@ async def inline_click(message, state: FSMContext):
         markup_back = InlineKeyboardMarkup(row_width=1)
         markup_back.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='client'))
         await message.bot.send_message(message.from_user.id, local_message, reply_markup=markup_back)
-    elif message.data == 'how-topup-account':
+    elif message.data == 'how-top-up-account':
         markup_copy = InlineKeyboardMarkup(row_width=1)
         # markupCopy.add(InlineKeyboardButton(text=t('Copy wallet'), callback_data='copy-wallet'))
         markup_copy.add(InlineKeyboardButton(text=t('Confirm the transfer'), callback_data='confirm-transfer'))
@@ -263,7 +263,7 @@ async def inline_click(message, state: FSMContext):
         pass
     elif 'wallet' in message.data:
         array = message.data.split('_')
-        await set_driver_topup_balance(message, array[1], state)
+        await set_driver_top_up_balance(message, array[1], state)
     elif "orderConfirm" in message.data:
         book_order_array = message.data.split('_')
         order_id = book_order_array[1]
@@ -555,7 +555,7 @@ async def process_driver_deposit_balance(message: types.Message, state: FSMConte
             async with state.proxy() as data:
                 data['changeBalance'] = message.text
             await message.bot.send_message(message.from_user.id, t('Do you confirm?'),
-                                           reply_markup=await inline_confirm('driverTopupBalanceConfirm'))
+                                           reply_markup=await inline_confirm('driverTopUpBalanceConfirm'))
         else:
             await message.bot.send_message(message.from_user.id, t("Only digits can be entered"))
             await message.bot.send_message(message.from_user.id, t("You can input from 1 to 10 digits"))
@@ -801,7 +801,7 @@ async def menu_driver(message):
     markup = InlineKeyboardMarkup(row_width=3)
     item1 = InlineKeyboardButton(text=t('Driver form') + ' 📝', callback_data='driver-form')
     item2 = InlineKeyboardButton(text=t('Account'), callback_data='account')
-    item4 = InlineKeyboardButton(text=t('How to top up') + ' ❓', callback_data='how-topup-account')
+    item4 = InlineKeyboardButton(text=t('How to top up') + ' ❓', callback_data='how-top-up-account')
     item3 = InlineKeyboardButton(text=t('Done orders'), callback_data='driver-done-orders')
     item5 = InlineKeyboardButton(text=t('My profile') + ' 🔖', callback_data='driver-profile')
     item6 = InlineKeyboardButton(text=t("Go online 🟢"), callback_data='switch-online')
@@ -1069,7 +1069,7 @@ async def get_wallet_drivers(message):
     await message.bot.send_message(message.from_user.id, 'Выберите водителя', reply_markup=markup)
 
 
-async def set_driver_topup_balance(message, wallet, state):
+async def set_driver_top_up_balance(message, wallet, state):
     drivers = len(db.get_drivers_by_wallet(wallet))
     if drivers > 1:
         local_message = "Нельзя пополнить кошелек поскольку найдено {drivers:d} водителей с таким кошельком"
