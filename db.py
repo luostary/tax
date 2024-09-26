@@ -73,7 +73,7 @@ class BotDB:
         """Обновление клиента после сохранения локаций"""
         self.connect()
         try:
-            self.cursor.execute("UPDATE `driver` SET name = " + self.replacer + ", phone = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (data['name'], data['phone'], user_id))
+            self.cursor.execute("UPDATE `user` SET name = " + self.replacer + ", phone = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (data['name'], data['phone'], user_id))
         except Error as e:
             print(e)
         result = self.conn.commit()
@@ -84,7 +84,7 @@ class BotDB:
     def userUpdateTgUsername(self, user_id, username):
         self.connect()
         try:
-            self.cursor.execute("UPDATE `driver` SET tg_username = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (username, user_id))
+            self.cursor.execute("UPDATE `user` SET tg_username = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (username, user_id))
         except Error as e:
             print(e)
         result = self.conn.commit()
@@ -96,7 +96,7 @@ class BotDB:
         """Обновление баланса """
         self.connect()
         try:
-            self.cursor.execute("UPDATE `driver` SET balance = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (data, user_id))
+            self.cursor.execute("UPDATE `user` SET balance = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (data, user_id))
         except Error as e:
             print(e)
         result = self.conn.commit()
@@ -109,7 +109,7 @@ class BotDB:
         """ Delete user """
         self.connect()
         try:
-            self.cursor.execute("DELETE FROM `driver` WHERE tg_user_id = " + self.replacer, (user_id,))
+            self.cursor.execute("DELETE FROM `user` WHERE tg_user_id = " + self.replacer, (user_id,))
         except Error as e:
             print(e)
         result = self.conn.commit()
@@ -170,7 +170,7 @@ class BotDB:
 
     def get_clients(self):
         self.connect()
-        self.cursor.execute("SELECT * FROM `driver` WHERE user_type = 'client'")
+        self.cursor.execute("SELECT * FROM `user` WHERE user_type = 'client'")
         result = self.cursor.fetchall()
         self.close()
         return result
@@ -281,7 +281,7 @@ class BotDB:
     def userExists(self, user_id):
         self.connect()
         """Проверяем, есть ли user в базе"""
-        self.cursor.execute("SELECT `id` FROM `driver` WHERE `tg_user_id` = " + self.replacer, (user_id,))
+        self.cursor.execute("SELECT `id` FROM `user` WHERE `tg_user_id` = " + self.replacer, (user_id,))
         result = bool(len(self.cursor.fetchall()))
         self.close()
         return result
@@ -291,16 +291,16 @@ class BotDB:
         """Добавляем user в базу"""
         self.connect()
         try:
-            self.cursor.execute("INSERT INTO `driver` (`tg_user_id`, `tg_first_name`, `wallet`, `user_type`) VALUES (" + self.replacer + ", " + self.replacer + ", " + self.replacer + ", " + self.replacer + ")", (user_id, first_name, user_id, user_type))
+            self.cursor.execute("INSERT INTO `user` (`tg_user_id`, `tg_first_name`, `wallet`, `user_type`) VALUES (" + self.replacer + ", " + self.replacer + ", " + self.replacer + ", " + self.replacer + ")", (user_id, first_name, user_id, user_type))
         except Error as e:
             print(e)
         result = self.conn.commit()
         self.close()
         return result
     def userGet(self, user_id, user_type):
-        """Достаем driver по его user_id"""
+        """Достаем user по его user_id"""
         self.connect()
-        self.cursor.execute("SELECT * FROM `driver` WHERE tg_user_id = " + self.replacer + " AND user_type = " + self.replacer, (user_id, user_type))
+        self.cursor.execute("SELECT * FROM `user` WHERE tg_user_id = " + self.replacer + " AND user_type = " + self.replacer, (user_id, user_type))
         result = self.cursor.fetchone()
         self.close()
         return result
@@ -310,8 +310,8 @@ class BotDB:
     # Водитель
     def driver_exists(self, user_id):
         self.connect()
-        """Проверяем, есть ли driver в базе"""
-        self.cursor.execute("SELECT `id` FROM `driver` WHERE `tg_user_id` = " + self.replacer, (user_id,))
+        """Проверяем, есть ли user в базе"""
+        self.cursor.execute("SELECT `id` FROM `user` WHERE `tg_user_id` = " + self.replacer, (user_id,))
         result = bool(len(self.cursor.fetchall()))
         self.close()
         return result
@@ -319,7 +319,7 @@ class BotDB:
 
     def get_drivers(self):
         self.connect()
-        self.cursor.execute("SELECT * FROM `driver` WHERE user_type = 'driver'")
+        self.cursor.execute("SELECT * FROM `user` WHERE user_type = 'driver'")
         result = self.cursor.fetchall()
         self.close()
         return result
@@ -327,16 +327,16 @@ class BotDB:
 
     def get_drivers_with_wallets(self):
         self.connect()
-        self.cursor.execute("SELECT * FROM `driver` WHERE wallet IS NOT NULL")
+        self.cursor.execute("SELECT * FROM `user` WHERE wallet IS NOT NULL")
         result = self.cursor.fetchall()
         self.close()
         return result
 
 
     def get_driver_id(self, user_id):
-        """Достаем id driver в базе по его user_id"""
+        """Достаем id user в базе по его user_id"""
         self.connect()
-        self.cursor.execute("SELECT `id` FROM `driver` WHERE `tg_user_id` = " + self.replacer, (user_id,))
+        self.cursor.execute("SELECT `id` FROM `user` WHERE `tg_user_id` = " + self.replacer, (user_id,))
         result = self.cursor.fetchone()['id']
         self.close()
         return result
@@ -345,17 +345,17 @@ class BotDB:
     def userGetById(self, user_id):
         """Достаем user по его user_id"""
         self.connect()
-        self.cursor.execute("SELECT * FROM `driver` WHERE tg_user_id = " + self.replacer, (user_id,))
+        self.cursor.execute("SELECT * FROM `user` WHERE tg_user_id = " + self.replacer, (user_id,))
         result = self.cursor.fetchone()
         self.close()
         return result
 
 
     def add_driver(self, user_id, first_name):
-        """Добавляем driver в базу"""
+        """Добавляем user в базу"""
         self.connect()
         try:
-            self.cursor.execute("INSERT INTO `driver` (`tg_user_id`, `tg_first_name`, `wallet`) VALUES (" + self.replacer + ", " + self.replacer + ", " + self.replacer + ")", (user_id, first_name, user_id,))
+            self.cursor.execute("INSERT INTO `user` (`tg_user_id`, `tg_first_name`, `wallet`) VALUES (" + self.replacer + ", " + self.replacer + ", " + self.replacer + ")", (user_id, first_name, user_id,))
         except Error as e:
             print(e)
         result = self.conn.commit()
@@ -365,7 +365,7 @@ class BotDB:
 
     def get_driver_balance(self, user_id):
         self.connect()
-        self.cursor.execute("SELECT `balance` FROM `driver` WHERE `tg_user_id` = " + self.replacer, (user_id,))
+        self.cursor.execute("SELECT `balance` FROM `user` WHERE `tg_user_id` = " + self.replacer, (user_id,))
         result = self.cursor.fetchone()['balance']
         self.close()
         return result
@@ -373,7 +373,7 @@ class BotDB:
 
     def get_driver_by_wallet(self, wallet):
         self.connect()
-        self.cursor.execute("SELECT * FROM `driver` WHERE `wallet` = " + self.replacer, (wallet,))
+        self.cursor.execute("SELECT * FROM `user` WHERE `wallet` = " + self.replacer, (wallet,))
         result = self.cursor.fetchone()
         self.close()
         return result
@@ -381,7 +381,7 @@ class BotDB:
 
     def get_drivers_by_wallet(self, wallet):
         self.connect()
-        self.cursor.execute("SELECT * FROM `driver` WHERE `wallet` = " + self.replacer, (wallet,))
+        self.cursor.execute("SELECT * FROM `user` WHERE `wallet` = " + self.replacer, (wallet,))
         result = self.cursor.fetchall()
         self.close()
         return result
@@ -389,7 +389,7 @@ class BotDB:
 
     def get_drivers_by_status(self, status):
         self.connect()
-        self.cursor.execute("SELECT * FROM `driver` WHERE `status` = " + self.replacer, (status,))
+        self.cursor.execute("SELECT * FROM `user` WHERE `status` = " + self.replacer, (status,))
         result = self.cursor.fetchall()
         self.close()
         return result
@@ -397,7 +397,7 @@ class BotDB:
 
     def get_drivers_registered(self):
         self.connect()
-        self.cursor.execute("SELECT * FROM `driver` WHERE `name` IS NOT NULL AND phone IS NOT NULL")
+        self.cursor.execute("SELECT * FROM `user` WHERE `name` IS NOT NULL AND phone IS NOT NULL")
         result = self.cursor.fetchall()
         self.close()
         return result
@@ -405,7 +405,7 @@ class BotDB:
 
     def get_drivers_unregistered(self):
         self.connect()
-        sql = "SELECT * FROM `driver` WHERE `phone` IS NULL"
+        sql = "SELECT * FROM `user` WHERE `phone` IS NULL"
         if LIMIT_THESE_USERS:
             ids_string = ", ".join(str(element) for element in LIMIT_THESE_USERS)
             sql += " AND tg_user_id IN (" + ids_string + ")"
@@ -419,7 +419,7 @@ class BotDB:
         """Обновление баланса водителя"""
         self.connect()
         try:
-            self.cursor.execute("UPDATE `driver` SET balance = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (data, user_id))
+            self.cursor.execute("UPDATE `user` SET balance = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (data, user_id))
         except Error as e:
             print(e)
         result = self.conn.commit()
@@ -431,7 +431,7 @@ class BotDB:
         """Обновление значения кошелька водителя"""
         self.connect()
         try:
-            self.cursor.execute("UPDATE `driver` SET wallet = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (data, user_id))
+            self.cursor.execute("UPDATE `user` SET wallet = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (data, user_id))
         except Error as e:
             print(e)
         result = self.conn.commit()
@@ -442,7 +442,7 @@ class BotDB:
     def update_driver_referer_payed(self, user_id):
         self.connect()
         try:
-            self.cursor.execute("UPDATE `driver` SET referer_payed = 1 WHERE tg_user_id = " + self.replacer, (user_id,))
+            self.cursor.execute("UPDATE `user` SET referer_payed = 1 WHERE tg_user_id = " + self.replacer, (user_id,))
         except Error as e:
             print(e)
         result = self.conn.commit()
@@ -454,7 +454,7 @@ class BotDB:
         """Обновление записи водителя"""
         self.connect()
         try:
-            self.cursor.execute("UPDATE `driver` SET name = " + self.replacer + ", phone = " + self.replacer + ", car_number = " + self.replacer + ", status = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (data['name'], data['phone'], data['car_number'], data['status'], user_id))
+            self.cursor.execute("UPDATE `user` SET name = " + self.replacer + ", phone = " + self.replacer + ", car_number = " + self.replacer + ", status = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (data['name'], data['phone'], data['car_number'], data['status'], user_id))
         except Error as e:
             print(e)
         result = self.conn.commit()
@@ -466,7 +466,7 @@ class BotDB:
         """Обновление referer_user_id"""
         self.connect()
         try:
-            self.cursor.execute("UPDATE `driver` SET referer_user_id = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (referer_user_id, user_id))
+            self.cursor.execute("UPDATE `user` SET referer_user_id = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (referer_user_id, user_id))
         except Error as e:
             print(e)
         result = self.conn.commit()
@@ -477,7 +477,7 @@ class BotDB:
     def update_driver_tg_username(self, user_id, username):
         self.connect()
         try:
-            self.cursor.execute("UPDATE `driver` SET tg_username = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (username, user_id))
+            self.cursor.execute("UPDATE `user` SET tg_username = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (username, user_id))
         except Error as e:
             print(e)
         result = self.conn.commit()
@@ -489,7 +489,7 @@ class BotDB:
         """Обновление статуса водителя"""
         self.connect()
         try:
-            self.cursor.execute("UPDATE `driver` SET status = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (status, user_id))
+            self.cursor.execute("UPDATE `user` SET status = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (status, user_id))
         except Error as e:
             print(e)
         result = self.conn.commit()
@@ -500,7 +500,7 @@ class BotDB:
     def update_driver_location(self, user_id, latitude, longitude):
         self.connect()
         try:
-            self.cursor.execute("UPDATE `driver` SET latitude = " + self.replacer + ", longitude = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (latitude, longitude, user_id))
+            self.cursor.execute("UPDATE `user` SET latitude = " + self.replacer + ", longitude = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (latitude, longitude, user_id))
         except Error as e:
             print(e)
         result = self.conn.commit()
@@ -511,7 +511,7 @@ class BotDB:
     def update_driver_type(self, user_id, type):
         self.connect()
         try:
-            self.cursor.execute("UPDATE `driver` SET user_type = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (type, user_id))
+            self.cursor.execute("UPDATE `user` SET user_type = " + self.replacer + " WHERE tg_user_id = " + self.replacer, (type, user_id))
         except Error as e:
             print(e)
         result = self.conn.commit()
@@ -522,7 +522,7 @@ class BotDB:
     def update_status_for_all_drivers(self, status):
         self.connect()
         try:
-            self.cursor.execute("UPDATE `driver` SET status = " + self.replacer, status)
+            self.cursor.execute("UPDATE `user` SET status = " + self.replacer, status)
         except Error as e:
             print(e)
         result = self.conn.commit()
@@ -535,7 +535,7 @@ class BotDB:
         sql = '''SELECT
                ABS(d.latitude - {latitude:f}) dif_lat, ABS(d.longitude - {longitude:f}) dif_lon
                , d.*
-            FROM driver d
+            FROM user d
             LEFT JOIN driver_order dror ON dror.driver_id = d.tg_user_id AND dror.order_id = {order_id:d}
             where `status` IN ('online', 'offline')
             AND IFNULL(dror.driver_cancel_cn, 0) < 2'''
@@ -575,7 +575,7 @@ class BotDB:
                 , d.*
                 , o.id order_id
             from `order` o
-            left join driver d ON d.tg_user_id = o.client_id
+            left join user d ON d.tg_user_id = o.client_id
             left join driver_order do ON do.order_id = o.id
             where o.status = ''' + self.replacer + ''' AND o.departure_latitude > 0 AND o.departure_longitude > 0
             and (do.driver_id IS NULL OR (do.driver_id = ''' + self.replacer + ''' and do.driver_cancel_cn < 2))
