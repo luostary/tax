@@ -1447,10 +1447,14 @@ async def driver_rules(message):
     ⁃ Укажите номер телефона по которому клиенты смогут связываться с вами
 
 По любым вопросам связывайтесь с администратором {adminTg:s}
-
- • Комиссия
-Комиссия составляет {percent:d}% от суммы заказа. Комиссия списывается с вашего личного баланса
 '''
+    caption_commission = '''
+ • Комиссия
+Комиссия составляет {percent:d}% от суммы заказа.
+    '''
+    if PERCENT > 0:
+        caption_commission += 'Комиссия списывается с вашего личного баланса'
+    caption += caption_commission
     caption = caption.format(
         minBalanceAmount=MIN_BALANCE_AMOUNT,
         percent=PERCENT,
