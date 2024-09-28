@@ -223,7 +223,7 @@ async def inline_click(message, state: FSMContext):
                 local_message = local_message.format(SUBSCRIBE_WEEK_AMOUNT=SUBSCRIBE_WEEK_AMOUNT, CURRENCY_WALLET=CURRENCY_WALLET)
 
         local_message += '\n\n' + t(
-            'To replenish the account, you need to transfer the currency to the specified crypto wallet. After the payment has been made Confirm the transfer with the button')
+            'To pay for a subscription you need to transfer the currency to the specified crypto wallet. After the payment has been made Confirm the transfer with the button')
 
         data = WALLET
         qr = qrcode.make(data)
@@ -394,7 +394,10 @@ async def inline_click(message, state: FSMContext):
             await suggest_subscribe_chat(message)
             return
 
-        # todo check subscribe period
+        # Check subscribe period
+        if not await is_subscribe_driver_week(message):
+            await bot.send_message(message.from_user.id, t('You need to pay for a subscription'))
+            return
 
         await menu_driver(message)
         driver_model = db.user_get(message.from_user.id, 'driver')
