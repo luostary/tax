@@ -69,11 +69,6 @@ async def my_chat_member_handler(message: types.ChatMemberUpdated):
 async def start(message: types.Message, state: FSMContext):
     await state.finish()
 
-    # Check subscribe
-    if not await is_subscribe_chat(message):
-        await suggest_subscribe_chat(message)
-        return
-
     await message.bot.send_message(message.from_user.id, t("Welcome!"), reply_markup=await markup_remove())
 
     await start_menu(message)
@@ -87,9 +82,6 @@ async def start(message: types.Message, state: FSMContext):
 # Click handler
 @dp.callback_query_handler(lambda message: True, state='*')
 async def inline_click(message, state: FSMContext):
-    if not await is_subscribe_chat(message):
-        await suggest_subscribe_chat(message)
-        return
     if message.data == "client":
         await menu_client(message)
     elif message.data == 'back':
@@ -102,6 +94,9 @@ async def inline_click(message, state: FSMContext):
     elif message.data == 'client-rules':
         await client.rules(message)
     elif message.data == 'driver-rules':
+        if not await is_subscribe_chat(message):
+            await suggest_subscribe_chat(message)
+            return
         await driver_rules(message)
     elif message.data == 'client-profile':
         await client_profile(message, message.from_user.id)
@@ -131,9 +126,15 @@ async def inline_click(message, state: FSMContext):
         await menu_driver(message)
         pass
     elif message.data == 'driver-profile':
+        if not await is_subscribe_chat(message):
+            await suggest_subscribe_chat(message)
+            return
         await driver_profile(message, message.from_user.id, message.from_user.id, True, True)
         pass
     elif message.data == "driver-form":
+        if not await is_subscribe_chat(message):
+            await suggest_subscribe_chat(message)
+            return
         await set_car_photo(message, state)
     elif message.data == 'drivers':
         await get_wallet_drivers(message)
@@ -240,6 +241,9 @@ async def inline_click(message, state: FSMContext):
         await set_driver_wallet(message)
         pass
     elif message.data == 'driver-done-orders':
+        if not await is_subscribe_chat(message):
+            await suggest_subscribe_chat(message)
+            return
         driver_model = db.user_get(message.from_user.id, 'driver')
         if not driver_model:
             print('can`t get driver from db')
@@ -382,6 +386,12 @@ async def inline_click(message, state: FSMContext):
         await get_order_card_client(message, model_order, cancel=True, confirm=False)
         pass
     elif message.data == 'switch-online':
+        if not await is_subscribe_chat(message):
+            await suggest_subscribe_chat(message)
+            return
+
+        # todo check subscribe period
+
         await menu_driver(message)
         driver_model = db.user_get(message.from_user.id, 'driver')
         model_order = db.get_order_waiting_by_driver_id(message.from_user.id)
