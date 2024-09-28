@@ -209,6 +209,9 @@ async def inline_click(message, state: FSMContext):
         markup_back.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='client'))
         await message.bot.send_message(message.from_user.id, local_message, reply_markup=markup_back)
     elif message.data == 'how-top-up-account':
+        if MIN_BALANCE_AMOUNT == 0:
+            await bot.send_message(message.from_user.id, t('Working in the system is free'))
+            return
         markup_copy = InlineKeyboardMarkup(row_width=1)
         # markupCopy.add(InlineKeyboardButton(text=t('Copy wallet'), callback_data='copy-wallet'))
         markup_copy.add(InlineKeyboardButton(text=t('Confirm the transfer'), callback_data='confirm-transfer'))
@@ -225,9 +228,10 @@ async def inline_click(message, state: FSMContext):
         image.save(bio, 'JPEG')
         bio.seek(0)
         qr_msg = 'Если вы пользуетесь услугами обменного пункта - покажите кассиру QR-код кошелька'
-        wallet_msg = 'Наш криптокошелек: \n' + '<b>' + WALLET + '</b>'
-        caption = local_message + '\n\n' + wallet_msg + '\n\n' + qr_msg
-        await message.bot.send_photo(message.from_user.id, bio, caption=caption, parse_mode='HTML',
+        wallet_msg = 'Наш криптокошелек: \n' + '`' + WALLET + '`' + '\n\n' + qr_msg
+        caption = local_message
+        await bot.send_message(message.from_user.id, caption, parse_mode='HTML')
+        await bot.send_photo(message.from_user.id, bio, caption=wallet_msg, parse_mode='MARKDOWN',
                                      reply_markup=markup_copy)
     elif message.data == 'copy-wallet':
         pyperclip.copy(WALLET)

@@ -115,6 +115,7 @@ language = {
         "What's your name?": "Укажите Ваше имя",
         "When you deliver the passenger, please press the button to done the order":"Когда доставите пассажира, нажмите, пожалуйста, кнопку \n&#171;завершить текущий заказ&#187;",
         "When you reach your destination, please click on the button to complete the current order":"Когда вы доберётесь до места назначения, нажмите, пожалуйста кнопку \n&#171;завершить текущий заказ&#187;",
+        "Working in the system is free": "Работа в системе бесплатна",
         "You are in the client menu": "Вы находитесь в меню клиента",
         "You are in the driver menu": "Вы находитесь в меню водителя",
         "You are offline, already":"Вы уже оффлайн",
