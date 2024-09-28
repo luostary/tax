@@ -55,6 +55,7 @@ language = {
         "In 2 hours":"Через 2 часа",
         "In 30 minutes":"Через 30 минут",
         "In one hour":"Через час",
+        "It is necessary to check the payment": "Необходимо проверить оплату",
         "Leave unchanged": "Оставить без изменения",
         "Make an order":"Сделать заказ",
         "May be entered number only": "Укажите число",

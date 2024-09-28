@@ -633,6 +633,7 @@ async def process_driver_wallet(message: types.Message, state: FSMContext):
         db.update_driver_wallet(message.from_user.id, wallet)
         await message.bot.send_message(message.from_user.id, t('Thank you, we will check the crediting of funds'),
                                        reply_markup=await markup_remove())
+        await reminder_admin_about_payment(message)
     else:
         async with state.proxy() as data:
             data['wallet'] = message.text
@@ -1357,6 +1358,18 @@ async def get_categories(message, parent_id, state: FSMContext):
         item = InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='catalog_0')
         markup.add(item)
     await message.bot.send_message(message.from_user.id, cat_message, reply_markup=markup)
+
+
+async def reminder_admin_about_payment(message):
+    """
+    Напоминание админу о поступившей оплате
+    :param message:
+    """
+    model_driver = db.user_get(message.from_user.id, 'driver')
+    text = t('It is necessary to check the payment')
+    text += "\nПользоатель: " + await active_name(model_driver)
+    await bot.send_message(DEVELOPER_ID, text, parse_mode='HTML')
+    await bot.send_message(DEVELOPER_ID, 'Кошелек: `' + model_driver['wallet'] + '`', parse_mode='MARKDOWN')
 
 
 # Таймер для асинхронных методов
