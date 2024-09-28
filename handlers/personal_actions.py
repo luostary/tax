@@ -94,9 +94,6 @@ async def inline_click(message, state: FSMContext):
     elif message.data == 'client-rules':
         await client.rules(message)
     elif message.data == 'driver-rules':
-        if not await is_subscribe_chat(message):
-            await suggest_subscribe_chat(message)
-            return
         await driver_rules(message)
     elif message.data == 'client-profile':
         await client_profile(message, message.from_user.id)
@@ -813,12 +810,29 @@ async def start_menu(message):
 
 async def menu_driver(message):
     markup = InlineKeyboardMarkup(row_width=3)
-    item1 = InlineKeyboardButton(text=t('Driver form') + ' 📝', callback_data='driver-form')
+
+    # Subscribed labels
+    item_label_1 = t('Driver form') + ' 📝'
+    item_label_3 = t('Done orders')
+    item_label_5 = t('My profile') + ' 🔖'
+    item_label_6 = t("Go online 🟢")
+
+    if not await is_subscribe_chat(message):
+        item_label_1 += '🔒'
+        item_label_3 += '🔒'
+        item_label_5 += '🔒'
+        item_label_6 += '🔒'
+
+    # Subscribed items
+    item1 = InlineKeyboardButton(text=item_label_1, callback_data='driver-form')
+    item3 = InlineKeyboardButton(text=item_label_3, callback_data='driver-done-orders')
+    item5 = InlineKeyboardButton(text=item_label_5, callback_data='driver-profile')
+    item6 = InlineKeyboardButton(text=item_label_6, callback_data='switch-online')
+
+
+    # Common items
     item2 = InlineKeyboardButton(text=t('Account'), callback_data='account')
     item4 = InlineKeyboardButton(text=t('How to top up') + ' ❓', callback_data='how-top-up-account')
-    item3 = InlineKeyboardButton(text=t('Done orders'), callback_data='driver-done-orders')
-    item5 = InlineKeyboardButton(text=t('My profile') + ' 🔖', callback_data='driver-profile')
-    item6 = InlineKeyboardButton(text=t("Go online 🟢"), callback_data='switch-online')
     item7 = InlineKeyboardButton(text=t('Go offline 🔴'), callback_data='switch-offline')
     item71 = InlineKeyboardButton(text=t('Rules'), callback_data='driver-rules')
     item8 = InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='back')
@@ -1677,7 +1691,7 @@ async def suggest_subscribe_chat(message):
     item = InlineKeyboardButton(text=chat.title + ' 💬', url='https://t.me/' + CHAT_TG)
     markup = InlineKeyboardMarkup(row_width=3)
     markup.add(item)
-    await bot.send_message(message.from_user.id, "Чтобы пользоваться ботом, вступите, пожалуйста в нашу группу",
+    await bot.send_message(message.from_user.id, "🔒Чтобы пользоваться ботом, вступите, пожалуйста в чат водителей",
                            reply_markup=markup)
 
 
