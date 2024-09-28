@@ -207,16 +207,23 @@ async def inline_click(message, state: FSMContext):
         markup_back.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='client'))
         await message.bot.send_message(message.from_user.id, local_message, reply_markup=markup_back)
     elif message.data == 'how-top-up-account':
-        if MIN_BALANCE_AMOUNT == 0:
-            await bot.send_message(message.from_user.id, t('Working in the system is free'))
-            return
         markup_copy = InlineKeyboardMarkup(row_width=1)
         # markupCopy.add(InlineKeyboardButton(text=t('Copy wallet'), callback_data='copy-wallet'))
         markup_copy.add(InlineKeyboardButton(text=t('Confirm the transfer'), callback_data='confirm-transfer'))
         markup_copy.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='driver'))
-        local_message = t(
-            'To work in the system, you must have at least {minAmount:d} usdt on your account. To replenish the account, you need to transfer the currency to the specified crypto wallet. After the payment has been made Confirm the transfer with the button')
-        local_message = local_message.format(minAmount=minBalanceAmount)
+
+        local_message = ''
+        if MIN_BALANCE_AMOUNT:
+            local_message = t('To work in the system, you must have at least {minAmount:d} usdt on your account')
+            local_message = local_message.format(minAmount=minBalanceAmount)
+        else:
+            if ALLOW_SUBSCRIBE:
+                local_message = t('To work in the system you need to pay for a subscription')
+                local_message += '\n' + t('Weekly subscription costs <b>{SUBSCRIBE_WEEK_AMOUNT:d} {CURRENCY_WALLET:s}</b>')
+                local_message = local_message.format(SUBSCRIBE_WEEK_AMOUNT=SUBSCRIBE_WEEK_AMOUNT, CURRENCY_WALLET=CURRENCY_WALLET)
+
+        local_message += '\n\n' + t(
+            'To replenish the account, you need to transfer the currency to the specified crypto wallet. After the payment has been made Confirm the transfer with the button')
 
         data = WALLET
         qr = qrcode.make(data)
@@ -226,7 +233,7 @@ async def inline_click(message, state: FSMContext):
         image.save(bio, 'JPEG')
         bio.seek(0)
         qr_msg = 'Если вы пользуетесь услугами обменного пункта - покажите кассиру QR-код кошелька'
-        wallet_msg = 'Наш криптокошелек: \n' + '`' + WALLET + '`' + '\n\n' + qr_msg
+        wallet_msg = 'QR-код нашего кошелька 👆\n\nНаш криптокошелек: \n' + '`' + WALLET + '`' + '\n\n' + qr_msg
         caption = local_message
         await bot.send_message(message.from_user.id, caption, parse_mode='HTML')
         await bot.send_photo(message.from_user.id, bio, caption=wallet_msg, parse_mode='MARKDOWN',
@@ -1681,7 +1688,7 @@ async def get_google_data(locations_data):
 # Проверка подписки на чат
 async def is_subscribe_chat(m):
     try:
-        member = await bot.get_chat_member(chat_id='@' + CHAT_TG, user_id=m.from_user.id)
+        member = await bot.get_chat_member(chat_id='@' + DRIVER_CHAT_TG, user_id=m.from_user.id)
         if member.status != 'left':
             return True
     except UnboundLocalError:
@@ -1691,8 +1698,8 @@ async def is_subscribe_chat(m):
 
 # Подписка на чат
 async def suggest_subscribe_chat(message):
-    chat = await bot.get_chat(chat_id='@' + CHAT_TG)
-    item = InlineKeyboardButton(text=chat.title + ' 💬', url='https://t.me/' + CHAT_TG)
+    chat = await bot.get_chat(chat_id='@' + DRIVER_CHAT_TG)
+    item = InlineKeyboardButton(text=chat.title + ' 💬', url='https://t.me/' + DRIVER_CHAT_TG)
     markup = InlineKeyboardMarkup(row_width=3)
     markup.add(item)
     await bot.send_message(message.from_user.id, "🔒Чтобы пользоваться ботом, вступите, пожалуйста в чат водителей",
