@@ -1707,7 +1707,15 @@ async def suggest_subscribe_chat(message):
 
 
 # Проверка платной подписки водителя на неделю
-async def is_subscribe_driver_week():
+async def is_subscribe_driver_week(message):
+    model_driver = db.user_get_by_id(message.from_user.id)
+    if not model_driver:
+        return False
+    if not model_driver['dt_subscribe_until']:
+        return False
+    if model_driver['dt_subscribe_until'] > datetime.now():
+        return True
+    return False
     pass
 
 
