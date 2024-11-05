@@ -69,6 +69,9 @@ async def my_chat_member_handler(message: types.ChatMemberUpdated):
 async def start(message: types.Message, state: FSMContext):
     await state.finish()
 
+    if not db.user_exists(message.from_user.id):
+        db.user_add(message.from_user.id, message.from_user.first_name, 'driver')
+
     await message.bot.send_message(message.from_user.id, t("Welcome!"), reply_markup=await markup_remove())
 
     await start_menu(message)
