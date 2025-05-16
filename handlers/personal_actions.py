@@ -1374,7 +1374,7 @@ async def reminder_admin_about_payment(message):
     """
     model_driver = db.user_get(message.from_user.id, 'driver')
     text = t('It is necessary to check the payment')
-    text += "\nПользоатель: " + await active_name(model_driver)
+    text += "\nПользователь: " + await active_name(model_driver)
     await bot.send_message(DEVELOPER_ID, text, parse_mode='HTML')
     await bot.send_message(DEVELOPER_ID, 'Кошелек: `' + model_driver['wallet'] + '`', parse_mode='MARKDOWN')
 
