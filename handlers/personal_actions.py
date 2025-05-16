@@ -4,6 +4,7 @@ import re, math, time, datetime
 from aiogram import types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.exceptions import BotBlocked
+from numpy.ma.core import append
 
 from dispatcher import dp, bot
 from aiogram.dispatcher import FSMContext
@@ -1045,11 +1046,12 @@ async def get_order_card(message, driver_id, model_order, buttons=True):
         'Имя <b>' + str(model_client['name']) + '</b>',
         'Расстояние до клиента <b>' + str(distance_to_client) + '</b>',
         'Длина маршрута <b>' + str(model_order['route_length'] / 1000) + ' км.' + '</b>',
-        'Стоимость <b>' + str(model_order['amount_client']) + ' ' + str(CURRENCY) + '</b>',
         'Рейтинг <b>' + (await get_rating(message) * '⭐') + '(' + str(await get_rating(message)) + '/5)</b>',
     ]
     if model_order['status'] == 'progress':
         caption.insert(2, 'Телефон <b>' + str(model_client['phone']) + '</b>')
+    if MIN_BALANCE_AMOUNT > 0:
+        caption.append('Стоимость <b>' + str(model_order['amount_client']) + ' ' + str(CURRENCY) + '</b>')
     if driver_cancel_cn > 0:
         caption.append('Вы отклоняли <b>' + str(driver_cancel_cn) + ' раз</b>', )
     caption = '\n'.join(caption)
@@ -1081,11 +1083,12 @@ async def get_order_card_client(message, order_model, cancel=False, confirm=Fals
         'Имя <b>' + str(client_model['name']) + '</b>',
         'Длина маршрута <b>' + str(order_model['route_length'] / 1000) + ' км.' + '</b>',
         'Время в пути <b>' + str(gdata['duration']['text']) + '</b>',
-        'Стоимость <b>' + str(order_model['amount_client']) + ' ' + str(CURRENCY) + '</b>',
         'Статус <b>' + str(db.statuses[order_model['status']]) + '</b>',
     ]
     if (order_model['status'] == 'waiting') & (order_model['driver_id'] == str(message.from_user.id)):
         caption.insert(1, 'Телефон <b>' + str(client_model['phone']) + '</b>')
+    if MIN_BALANCE_AMOUNT > 0:
+        caption.append('Стоимость <b>' + str(order_model['amount_client']) + ' ' + str(CURRENCY) + '</b>')
     caption = '\n'.join(caption)
     await message.bot.send_message(message.from_user.id, caption, parse_mode='HTML', reply_markup=markup)
 
@@ -1158,13 +1161,15 @@ async def get_active_orders(message):
         await message.bot.send_message(message.from_user.id, t('Has not waiting orders'))
     else:
         for row in waiting_orders:
-            text = '\n'.join((
+            text = [
                 'Статус <b>' + row['status'] + '</b>',
                 'Дата <b>' + str(row['dt_order']) + '</b>',
-                'Стоимость, ' + str(CURRENCY) + ' <b>' + str(row['amount_client']) + '</b>',
                 'Длина маршрута, км. <b>' + str(row['route_length'] / 1000) + '</b>',
                 'Время поездки, мин. <b>' + str(row['route_time']) + '</b>'
-            ))
+            ]
+            if MIN_BALANCE_AMOUNT > 0:
+                text.append('Стоимость, ' + str(CURRENCY) + ' <b>' + str(row['amount_client']) + '</b>')
+            text = '\n'.join(text)
             # await message.bot.send_location(message.from_user.id, row['departure_latitude'], row['departure_longitude'])
             await message.bot.send_message(message.from_user.id, text,
                                            reply_markup=await book_order('bookOrder_' + str(row['id'])))
@@ -1182,14 +1187,16 @@ async def get_driver_done_orders(message):
                 date_format = 'Не указана'
             else:
                 date_format = datetime.strptime(str(row['dt_order']), "%Y-%m-%d %H:%M:%S").strftime("%H:%M %d-%m-%Y")
-            text = '\n'.join((
+            text = [
                 '<b>Заказ № ' + str(row['id']) + '</b>',
                 'Статус <b>' + db.statuses[row['status']] + '</b>',
                 'Дата <b>' + str(date_format) + '</b>',
-                'Стоимость, ' + str(CURRENCY) + ' <b>' + str(row['amount_client']) + '</b>',
                 'Длина маршрута, км. <b>' + str(row['route_length'] / 1000) + '</b>',
                 'Время поездки, мин. <b>' + str(row['route_time']) + '</b>'
-            ))
+            ]
+            if MIN_BALANCE_AMOUNT > 0:
+                text.append('Стоимость, ' + str(CURRENCY) + ' <b>' + str(row['amount_client']) + '</b>')
+            text = '\n'.join(text)
             await message.bot.send_message(message.from_user.id, text, reply_markup=await markup_remove())
             pass
 
