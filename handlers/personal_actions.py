@@ -22,6 +22,7 @@ import pprint
 import googlemaps
 import qrcode
 from . import tClient, payment
+from pyrogram import Client
 
 # sudo apt-get install xclip
 import pyperclip
@@ -49,6 +50,12 @@ PHONE_MASK = '^[+]{1,1}[\d]{11,12}$'
 client = tClient.Passenger()
 
 payment.register_handlers(dp)
+
+'''
+Пользователь от которого производим рассылку
+'''
+api_user = Client(name='my_session', api_id=API_ID, api_hash=API_HASH)
+api_user.start()
 
 
 @dp.my_chat_member_handler()
@@ -1818,15 +1825,38 @@ async def invite_users(m):
 - Даем заказ рядом с тобой
 - Бесплатный промо-период'''
 
+    chats = [
+        {'alias': 'wifiwife', 'thread': None},
+        # {'alias': 'project_Caesar', 'thread': 20},
+
+        # {'alias': 'severniy_kipr_chat', 'thread': 2772},  # Свой чат по СК
+    ]
+
     # if ratio bigger than 1, send message to clients
     if ratio > 1:
-        await m.bot.send_message(m.from_user.id, looking_clients)
+        for chat in chats:
+            await api_user.send_message(
+                chat['alias'],
+                looking_clients,
+                None,
+                None,
+                None,
+                None,
+                chat['thread'])
     # if ratio smaller than 1, send message to drivers
     if ratio < 1:
-        await m.bot.send_message(m.from_user.id, looking_drivers)
+        for chat in chats:
+            await api_user.send_message(
+                chat['alias'],
+                looking_drivers,
+                None,
+                None,
+                None,
+                None,
+                chat['thread'])
 
     # Запуск таймера
-    # выполнить функцию invite_users() через invite_interval секунд
+    # выполнить функцию invite_users(m) через INVITE_INTERVAL секунд
     Timer(INVITE_INTERVAL, invite_users, args=m)
     pass
 
