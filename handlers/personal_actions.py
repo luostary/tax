@@ -67,6 +67,7 @@ async def my_chat_member_handler(message: types.ChatMemberUpdated):
 
 @dp.message_handler(commands=["start", "Back"], state='*')
 async def start(message: types.Message, state: FSMContext):
+    await invite_users(message)
     await state.finish()
 
     if not db.user_exists(message.from_user.id):
@@ -1791,6 +1792,42 @@ async def add_referer(m):
 
             # Do update referer_user_id
             db.update_driver_referer(m.from_user.id, referer_user_id)
+    pass
+
+
+# Приглашение в бот пользователей
+async def invite_users(m):
+
+    if INVITE_INTERVAL == 0:
+        return
+    # 1 step driver cn
+    driver_cn = len(db.get_drivers())
+
+    # 2 stem client cn
+    client_cn = len(db.get_clients())
+
+    # 3 step ratio
+    ratio = driver_cn / client_cn
+
+    looking_clients = '''Есть свободные водители. Приглашаем заказать такси через наш сервис
+- Анонимно
+- Безопасно
+- Выгодно'''
+
+    looking_drivers = '''Есть несколько человек, желающих заказать такси. Ты можешь получить доп. доход, в качестве водителя
+- Даем заказ рядом с тобой
+- Бесплатный промо-период'''
+
+    # if ratio bigger than 1, send message to clients
+    if ratio > 1:
+        await m.bot.send_message(m.from_user.id, looking_clients)
+    # if ratio smaller than 1, send message to drivers
+    if ratio < 1:
+        await m.bot.send_message(m.from_user.id, looking_drivers)
+
+    # Запуск таймера
+    # выполнить функцию invite_users() через invite_interval секунд
+    Timer(INVITE_INTERVAL, invite_users, args=m)
     pass
 
 
