@@ -1199,7 +1199,7 @@ async def get_driver_done_orders(message: Message):
             if not row['dt_order']:
                 date_format = 'Не указана'
             else:
-                date_format = datetime.strptime(str(row['dt_order']), "%Y-%m-%d %H:%M:%S").strftime("%H:%M %d-%m-%Y")
+                date_format = datetime.strptime(str(row['dt_order']), "%Y-%m-%d %H:%M:%S").strftime("%H:%M %d.%m.%Y")
             text = [
                 '<b>Заказ № ' + str(row['id']) + '</b>',
                 'Статус <b>' + db.statuses[row['status']] + '</b>',
