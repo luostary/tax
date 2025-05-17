@@ -44,7 +44,7 @@ language = {
         "Found the following options":"Найдены следующие варианты",
         "Free drivers": "Свободные водители",
         "Go offline 🔴":"Отключиться 🔴",
-        "Go online 🟢":"Выйти на линию 🟢",
+        "Go online":"Выйти на линию",
         "Has not done orders":"Нету завершенных заказов",
         "Has not waiting orders":"Нету активных заказов",
         "How much do you want to pay?": "Сколько Вы готовы заплатить?",

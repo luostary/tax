@@ -843,7 +843,7 @@ async def menu_driver(message):
     item_label_1 = t('Driver form') + ' 📝'
     item_label_3 = t('Done orders')
     item_label_5 = t('My profile') + ' 🔖'
-    item_label_6 = t("Go online 🟢")
+    item_label_6 = t("Go online") + ' 🟢'
 
     if not await is_subscribe_chat(message):
         item_label_1 += '🔒'
