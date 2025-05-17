@@ -87,6 +87,7 @@ language = {
         "Set destination location": "Укажите координаты <b>назначения</b>",
         "Show destination location":"Показать локацию назначения",
         "Sorry can`t saved data":"Извините, не смогли сохранить данные",
+        "Tell a friend about us": "Рассказать о нас другу",
         "Thank you for an order":"Спасибо за заказ",
         "Thank you, we will check the crediting of funds":"Спасибо, мы проверим зачисление средств",
         "Thanks for the information": "Спасибо за указанную информацию",

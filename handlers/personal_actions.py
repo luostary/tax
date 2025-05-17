@@ -812,7 +812,7 @@ async def start_menu(message):
     markup = InlineKeyboardMarkup(row_width=3)
     item10 = InlineKeyboardButton(text=t('I looking for a clients'), callback_data='driver')
     item20 = InlineKeyboardButton(t('I looking for a taxi'), callback_data='client')
-    item30 = InlineKeyboardButton('Рассказать о нас другу 👍', callback_data='inviteLink')
+    item30 = InlineKeyboardButton(t('Tell a friend about us') +' 👍', callback_data='inviteLink')
 
     driver_model = db.user_get_by_id(message.from_user.id)  # Тут не уточняем тип
     if driver_model['user_type'] == 'driver':
