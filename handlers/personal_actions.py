@@ -1889,7 +1889,7 @@ async def is_referer_users(m):
 
 
 # Необходимость пригласить минимальное кол-во знакомых
-async def need_referer_users(m):
+async def need_referer_users(m: Message):
     if INVITE_COUNT == 0:
         return
     caption = [
