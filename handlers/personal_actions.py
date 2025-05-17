@@ -407,6 +407,10 @@ async def inline_click(message, state: FSMContext):
         await get_order_card_client(message, model_order, cancel=True, confirm=False)
         pass
     elif message.data == 'switch-online':
+        if not await is_referer_users(message):
+            await need_referer_users(message)
+            return
+
         if not await is_subscribe_chat(message):
             await suggest_subscribe_chat(message)
             return
