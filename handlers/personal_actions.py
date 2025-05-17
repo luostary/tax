@@ -1893,8 +1893,7 @@ async def need_referer_users(m):
         'Но для работы в системе мы просим вас пригласить знакомых.',
         'Вернитесь назад в основное меню и нажмите кнопку',
         '«' + t('Tell a friend about us') + '».',
-        'Пригласите пожалуйста ' + str(INVITE_COUNT) + ' чел. и вам станет доступна кнопка',
-        '«' + t('Make an order') + '»',
+        'Пригласите пожалуйста ' + str(INVITE_COUNT) + ' чел. и вам станет доступна работа системы',
     ]
     caption = ' '.join(caption)
     await m.bot.send_message(m.from_user.id, '' + caption, parse_mode='HTML')
