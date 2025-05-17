@@ -232,7 +232,7 @@ async def inline_click(message, state: FSMContext):
             local_message = t('To work in the system, you must have at least {minAmount:d} usdt on your account')
             local_message = local_message.format(minAmount=minBalanceAmount)
         else:
-            if ALLOW_SUBSCRIBE:
+            if SUBSCRIBE_WEEK_AMOUNT:
                 local_message = t('To work in the system you need to pay for a subscription')
                 local_message += '\n' + t(
                     'Weekly subscription costs <b>{SUBSCRIBE_WEEK_AMOUNT:d} {CURRENCY_WALLET:s}</b>')
