@@ -46,6 +46,11 @@ CHAT_TG = "YOUR_CHAT_NICKNAME"
 DRIVER_CHAT_TG = "YOUR_DRIVER_CHAT_NICKNAME"
 INVITE_INTERVAL = 0
 
+'''
+Необходимое количество приглашенных пользователей для работы с ботом
+'''
+INVITE_COUNT = 0
+
 GOOGLE_API_KEY = "YOUR_API_KEY_FROM_GOOGLE"
 
 DB_TYPE = "sqlite"

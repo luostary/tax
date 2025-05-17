@@ -1867,6 +1867,21 @@ async def invite_users(m):
     Timer(INVITE_INTERVAL, invite_users, args=m)
     pass
 
+# Проверка, что пользователь пригласил минимальное кол-во знакомых
+def is_invited_users():
+    if INVITE_COUNT == 0:
+        return True
+
+    # 1 id user
+    # todo пользователя брять из m.from_user.id
+    user_id = 419839605
+
+    # 2 Запрос кол-ва пользователей с referer_user_id = user_id
+    cn_referer_user = db.user_get_by_id(user_id)
+
+    return cn_referer_user >= INVITE_COUNT
+    pass
+
 
 # Отладка
 async def test_function(message):
