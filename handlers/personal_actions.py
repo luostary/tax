@@ -231,8 +231,10 @@ async def inline_click(message, state: FSMContext):
         else:
             if ALLOW_SUBSCRIBE:
                 local_message = t('To work in the system you need to pay for a subscription')
-                local_message += '\n' + t('Weekly subscription costs <b>{SUBSCRIBE_WEEK_AMOUNT:d} {CURRENCY_WALLET:s}</b>')
-                local_message = local_message.format(SUBSCRIBE_WEEK_AMOUNT=SUBSCRIBE_WEEK_AMOUNT, CURRENCY_WALLET=CURRENCY_WALLET)
+                local_message += '\n' + t(
+                    'Weekly subscription costs <b>{SUBSCRIBE_WEEK_AMOUNT:d} {CURRENCY_WALLET:s}</b>')
+                local_message = local_message.format(SUBSCRIBE_WEEK_AMOUNT=SUBSCRIBE_WEEK_AMOUNT,
+                                                     CURRENCY_WALLET=CURRENCY_WALLET)
 
         local_message += '\n\n' + t(
             'To pay for a subscription you need to transfer the currency to the specified crypto wallet. After the payment has been made Confirm the transfer with the button')
@@ -249,7 +251,7 @@ async def inline_click(message, state: FSMContext):
         caption = local_message
         await bot.send_message(message.from_user.id, caption, parse_mode='HTML')
         await bot.send_photo(message.from_user.id, bio, caption=wallet_msg, parse_mode='MARKDOWN',
-                                     reply_markup=markup_copy)
+                             reply_markup=markup_copy)
     elif message.data == 'copy-wallet':
         pyperclip.copy(WALLET)
         pass
@@ -852,7 +854,6 @@ async def menu_driver(message):
     item5 = InlineKeyboardButton(text=item_label_5, callback_data='driver-profile')
     item6 = InlineKeyboardButton(text=item_label_6, callback_data='switch-online')
 
-
     # Common items
     item2 = InlineKeyboardButton(text=t('Account'), callback_data='account')
     item4 = InlineKeyboardButton(text=t('How to top up') + ' ❓', callback_data='how-top-up-account')
@@ -991,7 +992,8 @@ async def get_near_waiting_order(message, on_timer=True):
     driver_model = db.user_get(message.from_user.id, 'driver')
     if driver_model['status'] != 'online':
         on_timer = False
-    model_order = db.order_get_near('waiting', driver_model['latitude'], driver_model['longitude'], message.from_user.id)
+    model_order = db.order_get_near('waiting', driver_model['latitude'], driver_model['longitude'],
+                                    message.from_user.id)
     if model_order:
         if not model_order['order_id']:
             model_order['order_id'] = 0
@@ -1811,7 +1813,6 @@ async def add_referer(m):
 
 # Приглашение в бот пользователей
 async def invite_users(m):
-
     if INVITE_INTERVAL == 0:
         return
     # 1 step driver cn
@@ -1866,6 +1867,7 @@ async def invite_users(m):
     # выполнить функцию invite_users(m) через INVITE_INTERVAL секунд
     Timer(INVITE_INTERVAL, invite_users, args=m)
     pass
+
 
 # Проверка, что пользователь пригласил минимальное кол-во знакомых
 def is_invited_users():
