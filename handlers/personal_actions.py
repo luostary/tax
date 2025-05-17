@@ -1734,6 +1734,8 @@ async def get_google_data(locations_data):
 
 # Проверка подписки на чат
 async def is_subscribe_chat(m):
+    if not ALLOW_SUBSCRIBE:
+        return True
     try:
         member = await bot.get_chat_member(chat_id='@' + DRIVER_CHAT_TG, user_id=m.from_user.id)
         if member.status != 'left':
@@ -1745,6 +1747,8 @@ async def is_subscribe_chat(m):
 
 # Подписка на чат
 async def suggest_subscribe_chat(message):
+    if not ALLOW_SUBSCRIBE:
+        return
     chat = await bot.get_chat(chat_id='@' + DRIVER_CHAT_TG)
     item = InlineKeyboardButton(text=chat.title + ' 💬', url='https://t.me/' + DRIVER_CHAT_TG)
     markup = InlineKeyboardMarkup(row_width=3)
