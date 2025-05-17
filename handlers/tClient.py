@@ -56,15 +56,16 @@ class Passenger:
                         markup_back = InlineKeyboardMarkup(row_width=2)
                         callback_backward = 'client-orders_' + str(offset - 1) + '_' + str(message_id) + '_' + str(chat_id)
                         callback_forward = 'client-orders_' + str(offset + 1) + '_' + str(message_id) + '_' + str(chat_id)
-                        if (offset + 1) == model_orders_cn:
-                            markup_back.add(InlineKeyboardButton(text='◀️', callback_data = callback_backward))
-                        elif offset == 0:
-                            markup_back.add(InlineKeyboardButton(text='▶️', callback_data = callback_forward))
-                        else:
-                            markup_back.add(
-                                InlineKeyboardButton(text='◀️', callback_data = callback_backward),
-                                InlineKeyboardButton(text='▶️', callback_data = callback_forward)
-                            )
+                        if model_orders_cn > 1:
+                            if (offset + 1) == model_orders_cn:
+                                markup_back.add(InlineKeyboardButton(text='◀️', callback_data = callback_backward))
+                            elif offset == 0:
+                                markup_back.add(InlineKeyboardButton(text='▶️', callback_data = callback_forward))
+                            else:
+                                markup_back.add(
+                                    InlineKeyboardButton(text='◀️', callback_data = callback_backward),
+                                    InlineKeyboardButton(text='▶️', callback_data = callback_forward)
+                                )
                         markup_back.add(InlineKeyboardButton(text=t('Back') + ' ↩', callback_data='client'))
                         await message.bot.edit_message_text(chat_id = chat_id, message_id = message_id, text = text, reply_markup = markup_back)
                         pass
