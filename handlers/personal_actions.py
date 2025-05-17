@@ -114,6 +114,9 @@ async def inline_click(message, state: FSMContext):
     elif message.data == 'driver-incentive-fill-form':
         await incentive_driver_fill_form(message)
     elif message.data == 'make-order':
+        if not await is_referer_users(message):
+            await need_referer_users(message)
+            return
         if not ALLOW_MANY_ORDERS:
             model_orders = db.get_waiting_orders_by_client_id(message.from_user.id)
             if model_orders:
@@ -1870,18 +1873,31 @@ async def invite_users(m):
 
 
 # Проверка, что пользователь пригласил минимальное кол-во знакомых
-def is_invited_users():
+async def is_referer_users(m):
     if INVITE_COUNT == 0:
         return True
 
-    # 1 id user
-    # todo пользователя брять из m.from_user.id
-    user_id = 419839605
-
-    # 2 Запрос кол-ва пользователей с referer_user_id = user_id
-    cn_referer_user = db.user_get_by_id(user_id)
+    # Запрос кол-ва пользователей с referer_user_id = user_id
+    cn_referer_user = db.user_cn_referer(m.from_user.id)
 
     return cn_referer_user >= INVITE_COUNT
+    pass
+
+
+# Необходимость пригласить минимальное кол-во знакомых
+async def need_referer_users(m):
+    if INVITE_COUNT == 0:
+        return
+    caption = [
+        'Наш бот бесплатный.',
+        'Но для работы в системе мы просим вас пригласить знакомых.',
+        'Вернитесь назад в основное меню и нажмите кнопку',
+        '«' + t('Tell a friend about us') + '».',
+        'Пригласите пожалуйста ' + str(INVITE_COUNT) + ' чел. и вам станет доступна кнопка',
+        '«' + t('Make an order') + '»',
+    ]
+    caption = ' '.join(caption)
+    await m.bot.send_message(m.from_user.id, '' + caption, parse_mode='HTML')
     pass
 
 

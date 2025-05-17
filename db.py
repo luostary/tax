@@ -305,6 +305,13 @@ class BotDB:
         self.close()
         return result
 
+    def user_cn_referer(self, user_id):
+        self.connect()
+        self.cursor.execute("SELECT id FROM user WHERE referer_user_id = " + self.replacer, (user_id,))
+        result = self.cursor.rowcount
+        self.close()
+        return result
+
     # Водитель
     def driver_exists(self, user_id):
         self.connect()
