@@ -1170,9 +1170,13 @@ async def get_active_orders(message):
         await message.bot.send_message(message.from_user.id, t('Has not waiting orders'))
     else:
         for row in waiting_orders:
+            if not row['dt_order']:
+                date_format = 'Не указана'
+            else:
+                date_format = datetime.strptime(str(row['dt_order']), "%Y-%m-%d %H:%M:%S").strftime("%H:%M %d.%m.%Y")
             text = [
                 'Статус <b>' + row['status'] + '</b>',
-                'Дата <b>' + str(row['dt_order']) + '</b>',
+                'Дата <b>' + str(date_format) + '</b>',
                 'Длина маршрута, км. <b>' + str(row['route_length'] / 1000) + '</b>',
                 'Время поездки, мин. <b>' + str(row['route_time']) + '</b>'
             ]

@@ -38,7 +38,7 @@ class Passenger:
                         if not row['dt_order']:
                             date_format = 'Не указана'
                         else:
-                            date_format = datetime.strptime(str(row['dt_order']), "%Y-%m-%d %H:%M:%S").strftime("%H:%M %d-%m-%Y")
+                            date_format = datetime.strptime(str(row['dt_order']), "%Y-%m-%d %H:%M:%S").strftime("%H:%M %d.%m.%Y")
                         text = '\n'.join((
                             '<b>Заказ №' + str(row['id']) + '</b>',
                             'Имя <b>' + str(client_model['name']) + '</b>',
