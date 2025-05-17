@@ -1759,6 +1759,8 @@ async def suggest_subscribe_chat(message):
 
 # Проверка платной подписки водителя на неделю
 async def is_subscribe_driver_week(message):
+    if not SUBSCRIBE_WEEK_AMOUNT:
+        return True
     model_driver = db.user_get_by_id(message.from_user.id)
     if not model_driver:
         return False
