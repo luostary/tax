@@ -2,7 +2,7 @@ import json
 import re, math, time, datetime
 
 from aiogram import types
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 from aiogram.utils.exceptions import BotBlocked
 from numpy.ma.core import append
 
@@ -1185,7 +1185,7 @@ async def get_active_orders(message):
             pass
 
 
-async def get_driver_done_orders(message):
+async def get_driver_done_orders(message: Message):
     model_orders = db.get_orders('done')
     if len(model_orders) == 0:
         await message.bot.send_message(message.from_user.id, t('Has not done orders'))
